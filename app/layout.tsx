@@ -26,11 +26,12 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/logo-192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-title" content="Ibe World Cup" />
         <meta
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
+        <meta name="apple-mobile-web-app-title" content="Ibe World Cup" />
+        <meta name="application-name" content="Ibe World Cup" />
         <meta name="theme-color" content="#ffffff" />
       </head>
       <body>{children}</body>
