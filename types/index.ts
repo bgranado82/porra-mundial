@@ -70,11 +70,18 @@ export type KnockoutMatch = {
   awayTeamId: string | null;
 };
 
+export type KnockoutBracketMatch = {
+  id: string;
+  stage: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
+};
+
 export type KnockoutBracket = {
-  round32: KnockoutMatch[];
-  round16: KnockoutMatch[];
-  quarterfinals: KnockoutMatch[];
-  semifinals: KnockoutMatch[];
-  finals: KnockoutMatch[];
+  round32: KnockoutBracketMatch[];
+  round16: KnockoutBracketMatch[];
+  quarterfinals: KnockoutBracketMatch[];
+  semifinals: KnockoutBracketMatch[];
+  finals: KnockoutBracketMatch[];
   championId: string | null;
 };
