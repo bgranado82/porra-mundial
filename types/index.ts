@@ -1,12 +1,3 @@
-export type Stage =
-  | "group"
-  | "round32"
-  | "round16"
-  | "quarterfinal"
-  | "semifinal"
-  | "thirdPlace"
-  | "final";
-
 export type KnockoutStage =
   | "round32"
   | "round16"
@@ -25,7 +16,6 @@ export type Match = {
   id: string;
   stage: string;
   group?: string | null;
-  day: number;
   homeTeamId: string | null;
   awayTeamId: string | null;
   homeGoals: number | null;
@@ -49,21 +39,42 @@ export type ScoreSettings = {
   championPoints: number;
 };
 
-export type MatchPredictionScore = {
-  points: number;
-  exactHit: boolean;
-  outcomeHit: boolean;
-  homeGoalsHit: boolean;
-  awayGoalsHit: boolean;
+export type MatchPrediction = {
+  homeGoals: number | null;
+  awayGoals: number | null;
 };
 
-export type KnockoutBracketMatch = {
-  id: string;
-  stage: KnockoutStage;
-  homeTeamId: string | null;
-  awayTeamId: string | null;
-  homeLabel?: string;
-  awayLabel?: string;
-};
+export type PredictionMap = Record<string, MatchPrediction>;
 
 export type KnockoutPredictionMap = Record<string, string | null>;
+
+export type StandingRow = {
+  teamId: string;
+  teamName: string;
+  teamFlag: string;
+  group: string | null;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+};
+
+export type KnockoutMatch = {
+  id: string;
+  stage: string;
+  homeTeamId: string | null;
+  awayTeamId: string | null;
+};
+
+export type KnockoutBracket = {
+  round32: KnockoutMatch[];
+  round16: KnockoutMatch[];
+  quarterfinals: KnockoutMatch[];
+  semifinals: KnockoutMatch[];
+  finals: KnockoutMatch[];
+  championId: string | null;
+};
