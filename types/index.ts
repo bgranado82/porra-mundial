@@ -44,6 +44,14 @@ export type MatchPrediction = {
   awayGoals: number | null;
 };
 
+export type MatchPredictionScore = {
+  exact: boolean;
+  outcome: boolean;
+  homeGoals: boolean;
+  awayGoals: boolean;
+  points: number;
+};
+
 export type PredictionMap = Record<string, MatchPrediction>;
 
 export type KnockoutPredictionMap = Record<string, string | null>;
