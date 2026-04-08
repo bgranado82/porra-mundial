@@ -21,7 +21,7 @@ export type Match = {
   homeGoals: number | null;
   awayGoals: number | null;
   matchNumber?: number;
-  kickoff?: string;
+  kickoff?: string | null;
   day: number;
   order: number;
 };
@@ -45,10 +45,10 @@ export type MatchPrediction = {
 };
 
 export type MatchPredictionScore = {
-  exact: boolean;
-  outcome: boolean;
-  homeGoals: boolean;
-  awayGoals: boolean;
+  exactHit: boolean;
+  outcomeHit: boolean;
+  homeGoalsHit: boolean;
+  awayGoalsHit: boolean;
   points: number;
 };
 
@@ -95,3 +95,11 @@ export type KnockoutBracket = {
   finals: KnockoutBracketMatch[];
   championId: string | null;
 };
+
+export type DailyPointsRow = {
+  dateKey: string;
+  label: string;
+  points: number;
+};
+
+export type TimezoneValue = "local" | "est" | "cet" | "utc";
