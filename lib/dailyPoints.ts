@@ -1,52 +1,51 @@
-import { Match, ScoreSettings } from "@/types";
+import { Match } from "@/types";
 import { calculateMatchPredictionScore } from "@/lib/scoring";
+import { getDateKey, formatKickoff } from "@/lib/timezone";
+
+type PredictionMap = Record<
+  string,
+  { homeGoals: number | null; awayGoals: number | null }
+>;
+
+export type DailyPointsRow = {
+  dateKey: string;
+  label: string;
+  points: number;
+};
 
 export function calculateDailyPoints(
-  matches: Match[],
-  predictions: Record<
-    string,
-    { homeGoals: number | null; awayGoals: number | null }
-  >,
-  settings: ScoreSettings
-) {
-  const playedMatches = matches.filter(
-    (match) =>
-      match.stage === "group" &&
-      match.homeTeamId &&
-      match.awayTeamId
-  );
+  officialMatches: Match[],
+  predictions: PredictionMap,
+  scoreSettings: any,
+  timeZone: string
+): DailyPointsRow[] {
+  const totals = new Map<string, number>();
 
-  const distinctDays = [...new Set(playedMatches.map((match) => match.day))].sort(
-    (a, b) => a - b
-  );
+  for (const match of officialMatches) {
+    if (match.stage !== "group") continue;
 
-  const normalizedDayMap = new Map(
-    distinctDays.map((day, index) => [day, index + 1])
-  );
+    const dateKey = getDateKey((match as any).kickoff ?? null, timeZone);
+    if (!dateKey) continue;
 
-  const pointsByDay: Record<number, number> = {};
-
-  for (const match of playedMatches) {
-    const normalizedDay = normalizedDayMap.get(match.day);
-    if (!normalizedDay) continue;
-
-    const prediction = predictions[match.id];
-    if (!prediction) continue;
+    const label = formatKickoff((match as any).kickoff ?? null, timeZone).date;
 
     const score = calculateMatchPredictionScore(
       match.homeGoals,
       match.awayGoals,
-      prediction.homeGoals,
-      prediction.awayGoals,
-      settings
+      predictions[match.id]?.homeGoals ?? null,
+      predictions[match.id]?.awayGoals ?? null,
+      scoreSettings
     );
 
-    if (pointsByDay[normalizedDay] === undefined) {
-      pointsByDay[normalizedDay] = 0;
-    }
-
-    pointsByDay[normalizedDay] += score.points;
+    const key = `${dateKey}|${label}`;
+    const current = totals.get(key) ?? 0;
+    totals.set(key, current + score.points);
   }
 
-  return pointsByDay;
+  return [...totals.entries()]
+    .map(([key, points]) => {
+      const [dateKey, label] = key.split("|");
+      return { dateKey, label, points };
+    })
+    .sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 }

@@ -1,6 +1,7 @@
 import { Match } from "@/types";
+import { getKickoff } from "@/lib/getKickoff";
 
-export const matches: Match[] = [
+const baseMatches: Match[] = [
   // ===== GRUPO A =====
   { id: "a1", stage: "group", group: "A", day: 1, order: 1, homeTeamId: "mex", awayTeamId: "rsa", homeGoals: null, awayGoals: null },
   { id: "a2", stage: "group", group: "A", day: 1, order: 2, homeTeamId: "kor", awayTeamId: "cze", homeGoals: null, awayGoals: null },
@@ -138,3 +139,9 @@ export const matches: Match[] = [
   // ===== FINAL PREPARADA =====
   { id: "final-1", stage: "final", group: null, day: 29, order: 103, homeTeamId: null, awayTeamId: null, homeGoals: null, awayGoals: null },
 ];
+
+export const matches: Match[] = baseMatches.map((match) => ({
+  ...match,
+  matchNumber: match.order,
+  kickoff: getKickoff(match.day),
+}));

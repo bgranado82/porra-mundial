@@ -1,17 +1,21 @@
-type TeamView = {
+import { formatKickoff } from "@/lib/timezone";
+
+type TeamDisplay = {
   name: string;
   flag: string;
 };
 
 type Props = {
-  homeTeam: TeamView;
-  awayTeam: TeamView;
+  matchNumber?: number | null;
+  kickoff?: string | null;
+  timeZone: string;
+  homeTeam: TeamDisplay;
+  awayTeam: TeamDisplay;
   homePrediction: number | null;
   awayPrediction: number | null;
   officialHomeGoals: number | null;
   officialAwayGoals: number | null;
   points: number;
-  pointsLabel: string;
   pointsShortLabel: string;
   officialLabel: string;
   officialPendingLabel: string;
@@ -20,6 +24,9 @@ type Props = {
 };
 
 export default function GroupMatchRow({
+  matchNumber,
+  kickoff,
+  timeZone,
   homeTeam,
   awayTeam,
   homePrediction,
@@ -33,22 +40,29 @@ export default function GroupMatchRow({
   onChangeHome,
   onChangeAway,
 }: Props) {
-  const officialResultText =
-    officialHomeGoals === null || officialAwayGoals === null
-      ? `${officialLabel}: ${officialPendingLabel}`
-      : `${officialLabel}: ${officialHomeGoals} - ${officialAwayGoals}`;
+  const kickoffInfo = formatKickoff(kickoff, timeZone);
+
+  const officialText =
+    officialHomeGoals !== null && officialAwayGoals !== null
+      ? `${officialLabel}: ${officialHomeGoals}-${officialAwayGoals}`
+      : `${officialLabel}: ${officialPendingLabel}`;
 
   return (
-    <div className="grid grid-cols-[1.4fr_160px_1.4fr_60px] items-center gap-2 rounded-2xl border border-[var(--iberdrola-green)] bg-white p-2.5 shadow-sm">
-      <div className="flex items-center gap-2 overflow-hidden">
-        <span className="text-lg">{homeTeam.flag}</span>
-        <span className="truncate text-sm font-medium text-[var(--iberdrola-forest)] md:text-base">
-          {homeTeam.name}
-        </span>
+    <div className="py-2">
+      <div className="mb-1 flex items-center justify-between text-[10px] leading-none text-gray-500 md:text-[11px]">
+        <span>#{matchNumber ?? "-"}</span>
+        <span>{kickoffInfo.short || "-"}</span>
       </div>
 
-      <div className="flex flex-col items-center justify-center gap-1">
-        <div className="flex items-center justify-center gap-1.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_74px_minmax(0,1fr)_30px] items-center gap-2 md:grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)_34px] md:gap-2.5">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="shrink-0 text-sm md:text-base">{homeTeam.flag}</span>
+          <span className="truncate text-sm text-[var(--iberdrola-forest)] md:text-[15px]">
+            {homeTeam.name}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-center gap-1">
           <input
             type="number"
             min="0"
@@ -56,9 +70,11 @@ export default function GroupMatchRow({
             onChange={(e) =>
               onChangeHome(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="w-11 rounded border border-[var(--iberdrola-sky)] p-1 text-center text-sm text-[var(--iberdrola-forest)]"
+            className="h-8 w-8 rounded-md border border-[var(--iberdrola-sky)] bg-white p-0 text-center text-sm text-[var(--iberdrola-forest)] md:h-9 md:w-9"
           />
-          <span className="font-bold text-[var(--iberdrola-forest)]">-</span>
+          <span className="text-sm font-semibold text-[var(--iberdrola-forest)]">
+            -
+          </span>
           <input
             type="number"
             min="0"
@@ -66,27 +82,29 @@ export default function GroupMatchRow({
             onChange={(e) =>
               onChangeAway(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="w-11 rounded border border-[var(--iberdrola-sky)] p-1 text-center text-sm text-[var(--iberdrola-forest)]"
+            className="h-8 w-8 rounded-md border border-[var(--iberdrola-sky)] bg-white p-0 text-center text-sm text-[var(--iberdrola-forest)] md:h-9 md:w-9"
           />
         </div>
 
-        <div className="text-[10px] text-gray-500 md:text-[11px]">
-          {officialResultText}
+        <div className="flex min-w-0 items-center justify-end gap-1.5">
+          <span className="truncate text-right text-sm text-[var(--iberdrola-forest)] md:text-[15px]">
+            {awayTeam.name}
+          </span>
+          <span className="shrink-0 text-sm md:text-base">{awayTeam.flag}</span>
+        </div>
+
+        <div className="text-right">
+          <div className="text-[9px] leading-none text-gray-500 md:text-[10px]">
+            {pointsShortLabel}
+          </div>
+          <div className="text-sm font-semibold leading-tight text-[var(--iberdrola-green)] md:text-base">
+            {points}
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 overflow-hidden">
-        <span className="text-lg">{awayTeam.flag}</span>
-        <span className="truncate text-sm font-medium text-[var(--iberdrola-forest)] md:text-base">
-          {awayTeam.name}
-        </span>
-      </div>
-
-      <div className="text-center">
-        <div className="text-[10px] text-gray-500">{pointsShortLabel}</div>
-        <div className="text-sm font-bold text-[var(--iberdrola-green)] md:text-base">
-          {points}
-        </div>
+      <div className="mt-1 text-center text-[10px] leading-none text-gray-500 md:text-[11px]">
+        {officialText}
       </div>
     </div>
   );

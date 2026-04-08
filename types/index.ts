@@ -23,14 +23,14 @@ export type Team = {
 
 export type Match = {
   id: string;
-  stage: Stage;
-  group: string | null;
-  day: number;
-  order: number;
+  stage: string;
+  group?: string | null;
   homeTeamId: string | null;
   awayTeamId: string | null;
   homeGoals: number | null;
   awayGoals: number | null;
+  matchNumber?: number;
+  kickoff?: string;
 };
 
 export type ScoreSettings = {

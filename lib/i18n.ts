@@ -61,6 +61,31 @@ type Messages = {
   eliminated: string;
   bestThirdPlaced: string;
   bestThirdPlacedSubtitle: string;
+
+  welcomeTitle: string;
+  welcomeSubtitle1: string;
+  welcomeSubtitle2: string;
+  accessCode: string;
+  entryNumber: string;
+  entryOne: string;
+  entryTwo: string;
+  accessPool: string;
+  entering: string;
+
+  authWelcome: string;
+  login: string;
+  register: string;
+  password: string;
+  confirmPassword: string;
+  passwordsDoNotMatch: string;
+  passwordMinLength: string;
+  nameRequired: string;
+  accessCodeRequired: string;
+  invalidPoolCode: string;
+  userCreationError: string;
+  loading: string;
+
+  entryCreationError: string;
 };
 
 export const messages: Record<Locale, Messages> = {
@@ -125,6 +150,31 @@ export const messages: Record<Locale, Messages> = {
     eliminated: "Eliminado",
     bestThirdPlaced: "Mejores terceros",
     bestThirdPlacedSubtitle: "Los 8 mejores terceros pasarán a la Round of 32.",
+    
+    welcomeTitle: "Bienvenidos a la Porra del Mundial 2026",
+    welcomeSubtitle1: "Participa en la porra oficial y demuestra que sabes de fútbol.",
+    welcomeSubtitle2: "Introduce tu email, el código de acceso y selecciona tu número de porra.",
+    accessCode: "Código de acceso",
+    entryNumber: "Número de porra",
+    entryOne: "Porra 1",
+    entryTwo: "Porra 2",
+    accessPool: "Acceder a la porra",
+    entering: "Entrando...",
+
+    authWelcome: "Accede o regístrate para entrar en tu porra del Mundial 2026.",
+    login: "Login",
+    register: "Registro",
+    password: "Contraseña",
+    confirmPassword: "Confirmar contraseña",
+    passwordsDoNotMatch: "Las contraseñas no coinciden",
+    passwordMinLength: "La contraseña debe tener al menos 6 caracteres",
+    nameRequired: "El nombre es obligatorio",
+    accessCodeRequired: "El código de porra es obligatorio",
+    invalidPoolCode: "Código de porra inválido",
+    userCreationError: "Error creando usuario",
+    loading: "Cargando...",
+
+    entryCreationError: "No se pudo crear la entrada",
   },
   en: {
     appTitle: "World Cup Pool 2026",
@@ -187,6 +237,31 @@ export const messages: Record<Locale, Messages> = {
     eliminated: "Eliminated",
     bestThirdPlaced: "Best third-placed teams",
     bestThirdPlacedSubtitle: "The 8 best third-placed teams will advance to the Round of 32.",
+    
+    welcomeTitle: "Welcome to the World Cup 2026 Pool",
+    welcomeSubtitle1: "Join the official pool and prove your football knowledge.",
+    welcomeSubtitle2: "Enter your email, access code and choose your entry number.",
+    accessCode: "Access code",
+    entryNumber: "Entry number",
+    entryOne: "Entry 1",
+    entryTwo: "Entry 2",
+    accessPool: "Enter the pool",
+    entering: "Entering...",
+    authWelcome: "Log in or register to enter your World Cup 2026 pool.",
+    login: "Login",
+    register: "Register",
+    password: "Password",
+    confirmPassword: "Confirm password",
+    passwordsDoNotMatch: "Passwords do not match",
+    passwordMinLength: "Password must be at least 6 characters long",
+    nameRequired: "Name is required",
+    accessCodeRequired: "Pool code is required",
+    invalidPoolCode: "Invalid pool code",
+    userCreationError: "Error creating user",
+    loading: "Loading...",
+
+    entryCreationError: "Could not create entry",
+
   },
   pt: {
     appTitle: "Bolão Mundial 2026",
@@ -249,5 +324,30 @@ export const messages: Record<Locale, Messages> = {
     eliminated: "Eliminado",
     bestThirdPlaced: "Melhores terceiros",
     bestThirdPlacedSubtitle: "Os 8 melhores terceiros avançam para a Round of 32.",
+    
+    welcomeTitle: "Bem-vindo ao Bolão da Copa do Mundo 2026",
+    welcomeSubtitle1: "Participe do bolão oficial e mostre que entende de futebol.",
+    welcomeSubtitle2: "Insira seu e-mail, código de acesso e escolha o número da sua aposta.",
+    accessCode: "Código de acesso",
+    entryNumber: "Número da aposta",
+    entryOne: "Aposta 1",
+    entryTwo: "Aposta 2",
+    accessPool: "Entrar no bolão",
+    entering: "Entrando...",
+
+    authWelcome: "Entre ou registre-se para acessar seu bolão da Copa do Mundo 2026.",
+    login: "Entrar",
+    register: "Registro",
+    password: "Senha",
+    confirmPassword: "Confirmar senha",
+    passwordsDoNotMatch: "As senhas não coincidem",
+    passwordMinLength: "A senha deve ter pelo menos 6 caracteres",
+    nameRequired: "O nome é obrigatório",
+    accessCodeRequired: "O código do bolão é obrigatório",
+    invalidPoolCode: "Código do bolão inválido",
+    userCreationError: "Erro ao criar usuário",
+    loading: "Carregando...",
+
+    entryCreationError: "Não foi possível criar a entrada",
   },
 };
