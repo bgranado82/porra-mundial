@@ -1,23 +1,39 @@
-import { NextResponse } from "next/server";
+import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
-export async function POST(req: Request) {
+export default async function Page() {
   const supabase = await createClient();
 
-  const body = await req.json();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { entryId, predictions } = body;
-
-  const { error } = await supabase
-    .from("predictions")
-    .upsert({
-      entry_id: entryId,
-      data: predictions,
-    });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!user) {
+    redirect("/");
   }
 
-  return NextResponse.json({ success: true });
+  const { data: entries } = await supabase
+    .from("entries")
+    .select(`
+      id,
+      entry_number,
+      pools (
+        slug,
+        name
+      )
+    `)
+    .eq("user_id", user.id);
+
+  if (!entries || entries.length === 0) {
+    redirect("/");
+  }
+
+  if (entries.length === 1) {
+    const entry = entries[0];
+    const pool = Array.isArray(entry.pools) ? entry.pools[0] : entry.pools;
+
+    redirect(`/pool/${pool.slug}/entry/${entry.id}`);
+  }
+
+  redirect("/my-entries");
 }
