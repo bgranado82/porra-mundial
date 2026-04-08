@@ -25,12 +25,15 @@ export type Match = {
   id: string;
   stage: string;
   group?: string | null;
+  day: number;
   homeTeamId: string | null;
   awayTeamId: string | null;
   homeGoals: number | null;
   awayGoals: number | null;
   matchNumber?: number;
   kickoff?: string;
+  day: number;
+  order: number;
 };
 
 export type ScoreSettings = {
