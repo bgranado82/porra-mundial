@@ -75,6 +75,8 @@ export type KnockoutBracketMatch = {
   stage: string;
   homeTeamId: string | null;
   awayTeamId: string | null;
+  homeLabel?: string;
+  awayLabel?: string;
 };
 
 export type KnockoutBracket = {
