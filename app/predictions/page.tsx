@@ -12,8 +12,6 @@ import ThirdPlaceTable from "@/components/ThirdPlaceTable";
 import { matches as initialMatches } from "@/data/matches";
 import { scoreSettings } from "@/data/settings";
 import { teams } from "@/data/teams";
-import { userPredictions } from "@/data/userPredictions";
-import { userKnockoutPredictions } from "@/data/userKnockoutPredictions";
 import { realKnockoutPredictions as initialRealKnockoutPredictions } from "@/data/realKnockoutPredictions";
 
 import { calculateMatchPredictionScore } from "@/lib/scoring";
@@ -29,13 +27,13 @@ import { getBestThirdPlacedTeams } from "@/lib/thirdPlace";
 import { Locale, messages } from "@/lib/i18n";
 import { KnockoutPredictionMap, Match } from "@/types";
 import { TIMEZONE_OPTIONS, TimezoneValue } from "@/lib/timezone";
+import { createClient } from "@/utils/supabase/client";
 
 type PredictionMap = Record<
   string,
   { homeGoals: number | null; awayGoals: number | null }
 >;
 
-const STORAGE_KEY = "porra-mundial-local";
 const LOCALE_KEY = "porra-mundial-locale";
 const TIMEZONE_KEY = "porra-mundial-timezone";
 
@@ -53,77 +51,31 @@ function getTeamsInRound(
 }
 
 export default function PredictionsPage() {
-  const [predictions, setPredictions] = useState<PredictionMap>(userPredictions);
+  const supabase = createClient();
+
+  const [predictions, setPredictions] = useState<PredictionMap>({});
   const [knockoutPredictions, setKnockoutPredictions] =
-    useState<KnockoutPredictionMap>(userKnockoutPredictions);
-  const [realKnockoutPredictions, setRealKnockoutPredictions] =
-    useState<KnockoutPredictionMap>(initialRealKnockoutPredictions);
-  const [officialMatches, setOfficialMatches] = useState<Match[]>(initialMatches);
+    useState<KnockoutPredictionMap>({});
+  const [realKnockoutPredictions] = useState<KnockoutPredictionMap>(
+    initialRealKnockoutPredictions
+  );
+  const [officialMatches] = useState<Match[]>(initialMatches);
+
   const [locale, setLocale] = useState<Locale>("es");
   const [timeZone, setTimeZone] = useState<TimezoneValue>("local");
 
-  const [participantName, setParticipantName] = useState("");
-  const [participantEmail, setParticipantEmail] = useState("");
-  const [participantCompany, setParticipantCompany] = useState("");
-  const [participantCountry, setParticipantCountry] = useState("");
+  const [authUserEmail, setAuthUserEmail] = useState("");
+  const [authUserName, setAuthUserName] = useState("");
 
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
-  const [activePoolSlug, setActivePoolSlug] = useState<string | null>(null);
-
   const [entryStatus, setEntryStatus] = useState("draft");
+
+  const [loadingEntry, setLoadingEntry] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
 
-  const [authUserEmail, setAuthUserEmail] = useState("");
-
-  function persistToStorage(next?: {
-    predictions?: PredictionMap;
-    knockoutPredictions?: KnockoutPredictionMap;
-    realKnockoutPredictions?: KnockoutPredictionMap;
-    officialMatches?: Match[];
-    name?: string;
-    email?: string;
-    company?: string;
-    country?: string;
-  }) {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        predictions: next?.predictions ?? predictions,
-        knockoutPredictions: next?.knockoutPredictions ?? knockoutPredictions,
-        realKnockoutPredictions:
-          next?.realKnockoutPredictions ?? realKnockoutPredictions,
-        officialMatches: next?.officialMatches ?? officialMatches,
-        name: next?.name ?? participantName,
-        email: next?.email ?? participantEmail,
-        company: next?.company ?? participantCompany,
-        country: next?.country ?? participantCountry,
-      })
-    );
-  }
-
-  function loadFromStorage() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
-
-    const parsed = JSON.parse(saved);
-
-    setPredictions(parsed.predictions || userPredictions);
-    setKnockoutPredictions(parsed.knockoutPredictions || userKnockoutPredictions);
-    setRealKnockoutPredictions(
-      parsed.realKnockoutPredictions || initialRealKnockoutPredictions
-    );
-    setOfficialMatches(parsed.officialMatches || initialMatches);
-    setParticipantName(parsed.name || "");
-    setParticipantEmail(parsed.email || "");
-    setParticipantCompany(parsed.company || "");
-    setParticipantCountry(parsed.country || "");
-  }
-
   useEffect(() => {
-    loadFromStorage();
-
     const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
     if (savedLocale === "es" || savedLocale === "en" || savedLocale === "pt") {
       setLocale(savedLocale);
@@ -133,68 +85,6 @@ export default function PredictionsPage() {
     if (savedTimeZone) {
       setTimeZone(savedTimeZone);
     }
-
-    const savedEntryId = localStorage.getItem("active_entry_id");
-    const savedPoolSlug = localStorage.getItem("active_pool_slug");
-
-    setActiveEntryId(savedEntryId);
-    setActivePoolSlug(savedPoolSlug);
-
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) loadFromStorage();
-
-      if (event.key === LOCALE_KEY) {
-        const nextLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
-        if (nextLocale === "es" || nextLocale === "en" || nextLocale === "pt") {
-          setLocale(nextLocale);
-        }
-      }
-
-      if (event.key === TIMEZONE_KEY) {
-        const nextTimeZone = localStorage.getItem(TIMEZONE_KEY) as TimezoneValue | null;
-        if (nextTimeZone) {
-          setTimeZone(nextTimeZone);
-        }
-      }
-
-      if (event.key === "active_entry_id") {
-        setActiveEntryId(localStorage.getItem("active_entry_id"));
-      }
-
-      if (event.key === "active_pool_slug") {
-        setActivePoolSlug(localStorage.getItem("active_pool_slug"));
-      }
-    };
-
-    const handleFocus = () => loadFromStorage();
-
-    window.addEventListener("storage", handleStorage);
-    window.addEventListener("focus", handleFocus);
-
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, []);
-
-  useEffect(() => {
-    async function loadEntryStatus() {
-      const entryId = localStorage.getItem("active_entry_id");
-      if (!entryId) return;
-
-      try {
-        const res = await fetch(`/api/entry-status?entryId=${entryId}`);
-        const data = await res.json();
-
-        if (res.ok && data.status) {
-          setEntryStatus(data.status);
-        }
-      } catch {
-        // silencio
-      }
-    }
-
-    loadEntryStatus();
   }, []);
 
   useEffect(() => {
@@ -206,38 +96,110 @@ export default function PredictionsPage() {
   }, [timeZone]);
 
   useEffect(() => {
-    persistToStorage();
-  }, [
-    predictions,
-    knockoutPredictions,
-    realKnockoutPredictions,
-    officialMatches,
-    participantName,
-    participantEmail,
-    participantCompany,
-    participantCountry,
-  ]);
+    async function loadFromSupabase() {
+      setLoadingEntry(true);
 
-  useEffect(() => {
-  async function loadAuthUser() {
-    try {
-      const { createClient } = await import("@/utils/supabase/client");
-      const supabase = createClient();
+      try {
+        const {
+          data: { user },
+          error: authError,
+        } = await supabase.auth.getUser();
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        if (authError) {
+          console.error(authError);
+        }
 
-      if (user?.email) {
-        setAuthUserEmail(user.email);
+        if (!user) {
+          window.location.href = "/";
+          return;
+        }
+
+        setAuthUserEmail(user.email ?? "");
+
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error(profileError);
+        }
+
+        setAuthUserName(
+          profile?.full_name ||
+            user.user_metadata?.name ||
+            user.user_metadata?.full_name ||
+            ""
+        );
+
+        const { data: entry, error: entryError } = await supabase
+          .from("entries")
+          .select("id, status, created_at")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (entryError) {
+          console.error(entryError);
+        }
+
+        if (!entry) {
+          setActiveEntryId(null);
+          setEntryStatus("draft");
+          setPredictions({});
+          setKnockoutPredictions({});
+          setSubmitMessage("No se ha encontrado una porra activa para este usuario.");
+          setLoadingEntry(false);
+          return;
+        }
+
+        setActiveEntryId(entry.id);
+        setEntryStatus(entry.status ?? "draft");
+
+        const { data: groupRows, error: groupError } = await supabase
+          .from("entry_group_predictions")
+          .select("entry_id, match_id, home_goals, away_goals")
+          .eq("entry_id", entry.id);
+
+        if (groupError) {
+          console.error(groupError);
+        }
+
+        const nextPredictions: PredictionMap = {};
+        (groupRows ?? []).forEach((row) => {
+          nextPredictions[row.match_id] = {
+            homeGoals: row.home_goals,
+            awayGoals: row.away_goals,
+          };
+        });
+        setPredictions(nextPredictions);
+
+        const { data: koRows, error: koError } = await supabase
+          .from("entry_knockout_predictions")
+          .select("entry_id, match_id, picked_team_id")
+          .eq("entry_id", entry.id);
+
+        if (koError) {
+          console.error(koError);
+        }
+
+        const nextKo: KnockoutPredictionMap = {};
+        (koRows ?? []).forEach((row) => {
+          nextKo[row.match_id] = row.picked_team_id;
+        });
+        setKnockoutPredictions(nextKo);
+      } catch (err) {
+        console.error(err);
+        setSubmitMessage("Error cargando la porra.");
+      } finally {
+        setLoadingEntry(false);
       }
-    } catch {
-      // silencio
     }
-  }
 
-  loadAuthUser();
-}, []);
+    loadFromSupabase();
+  }, [supabase]);
 
   function updatePrediction(
     matchId: string,
@@ -265,92 +227,72 @@ export default function PredictionsPage() {
     }));
   }
 
-  async function handleSaveDraft() {
-    if (entryStatus === "submitted") return;
+  async function handleSaveEntry() {
+    if (!activeEntryId) {
+      setSubmitMessage("No hay entry activa.");
+      return;
+    }
 
     setSaveLoading(true);
     setSubmitMessage("");
 
     try {
-      persistToStorage();
+      const { error: deleteGroupError } = await supabase
+        .from("entry_group_predictions")
+        .delete()
+        .eq("entry_id", activeEntryId);
+
+      if (deleteGroupError) throw deleteGroupError;
+
+      const { error: deleteKoError } = await supabase
+        .from("entry_knockout_predictions")
+        .delete()
+        .eq("entry_id", activeEntryId);
+
+      if (deleteKoError) throw deleteKoError;
+
+      const groupRows = Object.entries(predictions).map(([matchId, value]) => ({
+        entry_id: activeEntryId,
+        match_id: matchId,
+        home_goals: value.homeGoals,
+        away_goals: value.awayGoals,
+      }));
+
+      if (groupRows.length > 0) {
+        const { error: insertGroupError } = await supabase
+          .from("entry_group_predictions")
+          .insert(groupRows);
+
+        if (insertGroupError) throw insertGroupError;
+      }
+
+      const knockoutRows = Object.entries(knockoutPredictions)
+        .filter(([, teamId]) => !!teamId)
+        .map(([matchId, teamId]) => ({
+          entry_id: activeEntryId,
+          match_id: matchId,
+          picked_team_id: teamId,
+        }));
+
+      if (knockoutRows.length > 0) {
+        const { error: insertKoError } = await supabase
+          .from("entry_knockout_predictions")
+          .insert(knockoutRows);
+
+        if (insertKoError) throw insertKoError;
+      }
+
       setSubmitMessage("Porra guardada correctamente.");
-    } catch {
-      setSubmitMessage("Error al guardar la porra.");
+    } catch (err) {
+      console.error(err);
+      setSubmitMessage("Error guardando la porra.");
     } finally {
       setSaveLoading(false);
     }
   }
 
-  async function handleLogout() {
-  const { createClient } = await import("@/utils/supabase/client");
-  const supabase = createClient();
-
-  await supabase.auth.signOut();
-  window.location.href = "/join";
-}
-
-async function handleSaveEntry() {
-  const entryId = localStorage.getItem("active_entry_id");
-
-  if (!entryId) {
-    alert("No hay entry activa");
-    return;
-  }
-
-  try {
-    const { createClient } = await import("@/utils/supabase/client");
-    const supabase = createClient();
-
-    // 🧹 BORRAMOS lo anterior (simple y fiable)
-    await supabase
-      .from("entry_group_predictions")
-      .delete()
-      .eq("entry_id", entryId);
-
-    await supabase
-      .from("entry_knockout_predictions")
-      .delete()
-      .eq("entry_id", entryId);
-
-    // 🟢 INSERT GRUPOS
-    const groupRows = Object.entries(predictions).map(
-      ([matchId, value]) => ({
-        entry_id: entryId,
-        match_id: matchId,
-        home_goals: value.homeGoals,
-        away_goals: value.awayGoals,
-      })
-    );
-
-    if (groupRows.length > 0) {
-      await supabase.from("entry_group_predictions").insert(groupRows);
-    }
-
-    // 🟢 INSERT KNOCKOUT
-    const knockoutRows = Object.entries(knockoutPredictions).map(
-      ([matchId, teamId]) => ({
-        entry_id: entryId,
-        match_id: matchId,
-        picked_team_id: teamId,
-      })
-    );
-
-    if (knockoutRows.length > 0) {
-      await supabase
-        .from("entry_knockout_predictions")
-        .insert(knockoutRows);
-    }
-
-    alert("Porra guardada correctamente 💾");
-  } catch (err) {
-    console.error(err);
-    alert("Error guardando la porra");
-  }
-}
   async function handleSubmitEntry() {
-    const entryId = localStorage.getItem("active_entry_id");
-
-    if (!entryId) {
+    if (!activeEntryId) {
       setSubmitMessage("No se ha encontrado la entry activa.");
       return;
     }
@@ -365,31 +307,36 @@ async function handleSaveEntry() {
     setSubmitMessage("");
 
     try {
-      persistToStorage();
+      await handleSaveEntry();
 
       const res = await fetch("/api/submit-entry", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ entryId }),
+        body: JSON.stringify({ entryId: activeEntryId }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         setSubmitMessage(data.error || "No se pudo enviar la porra.");
-        setSubmitLoading(false);
         return;
       }
 
       setEntryStatus("submitted");
       setSubmitMessage("Porra enviada correctamente.");
-    } catch {
+    } catch (err) {
+      console.error(err);
       setSubmitMessage("Error de conexión al enviar.");
     } finally {
       setSubmitLoading(false);
     }
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    window.location.href = "/";
   }
 
   const t = messages[locale];
@@ -487,18 +434,32 @@ async function handleSaveEntry() {
   );
 
   const totalPoints = groupPointsTotal + knockoutScore.total;
-  const greetingName = authUserEmail?.trim() || "Jugador";
+
+  const greetingName =
+    authUserName?.trim() ||
+    authUserEmail?.trim() ||
+    "Jugador";
 
   const rankingPosition = 0;
   const rankingTotalPlayers = 0;
   const rankingMovement = 0;
+
+  if (loadingEntry) {
+    return (
+      <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-6">
+        <div className="mx-auto max-w-7xl rounded-3xl border border-[var(--iberdrola-green)] bg-white p-6">
+          Cargando porra...
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-3">
       <div className="mx-auto max-w-7xl">
         <div className="mb-4 rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <img
                 src="/logo.png"
                 alt="Ibe World Cup"
@@ -510,8 +471,8 @@ async function handleSaveEntry() {
                   {t.appTitle}
                 </h1>
 
-                <p className="text-sm font-medium text-[var(--iberdrola-green)]">
-                  Hola, {greetingName}
+                <p className="text-sm font-medium text-[var(--iberdrola-green)] md:text-base">
+                  Bienvenido “{greetingName}”
                 </p>
 
                 <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -570,7 +531,7 @@ async function handleSaveEntry() {
               </div>
             </div>
 
-            <div className="flex flex-col items-start gap-2 xl:items-end">
+            <div className="flex flex-col items-start gap-3 xl:items-end">
               <div className="text-sm text-[var(--iberdrola-forest)]">
                 <strong>Estado:</strong>{" "}
                 {entryStatus === "submitted" ? "Enviada" : "Borrador"}
@@ -598,14 +559,15 @@ async function handleSaveEntry() {
                     ? "Enviando..."
                     : "Enviar porra"}
                 </button>
-                <button
-  type="button"
-  onClick={handleLogout}
-  className="text-sm text-gray-500 underline"
->
-  Cerrar sesión
-</button>
               </div>
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="text-sm text-gray-500 underline"
+              >
+                Cerrar sesión
+              </button>
 
               {submitMessage ? (
                 <p className="text-sm text-[var(--iberdrola-forest)]">
