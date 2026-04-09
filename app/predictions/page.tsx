@@ -281,6 +281,14 @@ export default function PredictionsPage() {
     }
   }
 
+  async function handleLogout() {
+  const { createClient } = await import("@/utils/supabase/client");
+  const supabase = createClient();
+
+  await supabase.auth.signOut();
+  window.location.href = "/join";
+}
+
   async function handleSubmitEntry() {
     const entryId = localStorage.getItem("active_entry_id");
 
@@ -536,6 +544,13 @@ export default function PredictionsPage() {
                     ? "Enviando..."
                     : "Enviar porra"}
                 </button>
+                <button
+  type="button"
+  onClick={handleLogout}
+  className="text-sm text-gray-500 underline"
+>
+  Cerrar sesión
+</button>
               </div>
 
               {submitMessage ? (
