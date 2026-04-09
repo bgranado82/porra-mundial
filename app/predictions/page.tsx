@@ -289,6 +289,64 @@ export default function PredictionsPage() {
   window.location.href = "/join";
 }
 
+async function handleSaveEntry() {
+  const entryId = localStorage.getItem("active_entry_id");
+
+  if (!entryId) {
+    alert("No hay entry activa");
+    return;
+  }
+
+  try {
+    const { createClient } = await import("@/utils/supabase/client");
+    const supabase = createClient();
+
+    // 🧹 BORRAMOS lo anterior (simple y fiable)
+    await supabase
+      .from("entry_group_predictions")
+      .delete()
+      .eq("entry_id", entryId);
+
+    await supabase
+      .from("entry_knockout_predictions")
+      .delete()
+      .eq("entry_id", entryId);
+
+    // 🟢 INSERT GRUPOS
+    const groupRows = Object.entries(predictions).map(
+      ([matchId, value]) => ({
+        entry_id: entryId,
+        match_id: matchId,
+        home_goals: value.homeGoals,
+        away_goals: value.awayGoals,
+      })
+    );
+
+    if (groupRows.length > 0) {
+      await supabase.from("entry_group_predictions").insert(groupRows);
+    }
+
+    // 🟢 INSERT KNOCKOUT
+    const knockoutRows = Object.entries(knockoutPredictions).map(
+      ([matchId, teamId]) => ({
+        entry_id: entryId,
+        match_id: matchId,
+        picked_team_id: teamId,
+      })
+    );
+
+    if (knockoutRows.length > 0) {
+      await supabase
+        .from("entry_knockout_predictions")
+        .insert(knockoutRows);
+    }
+
+    alert("Porra guardada correctamente 💾");
+  } catch (err) {
+    console.error(err);
+    alert("Error guardando la porra");
+  }
+}
   async function handleSubmitEntry() {
     const entryId = localStorage.getItem("active_entry_id");
 
@@ -521,7 +579,7 @@ export default function PredictionsPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={handleSaveDraft}
+                  onClick={handleSaveEntry}
                   disabled={entryStatus === "submitted" || saveLoading}
                   className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-5 py-2 font-semibold text-[var(--iberdrola-forest)] disabled:opacity-50"
                 >
