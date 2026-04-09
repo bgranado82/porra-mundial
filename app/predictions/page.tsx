@@ -75,6 +75,8 @@ export default function PredictionsPage() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
 
+  const [authUserEmail, setAuthUserEmail] = useState("");
+
   function persistToStorage(next?: {
     predictions?: PredictionMap;
     knockoutPredictions?: KnockoutPredictionMap;
@@ -215,6 +217,27 @@ export default function PredictionsPage() {
     participantCompany,
     participantCountry,
   ]);
+
+  useEffect(() => {
+  async function loadAuthUser() {
+    try {
+      const { createClient } = await import("@/utils/supabase/client");
+      const supabase = createClient();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user?.email) {
+        setAuthUserEmail(user.email);
+      }
+    } catch {
+      // silencio
+    }
+  }
+
+  loadAuthUser();
+}, []);
 
   function updatePrediction(
     matchId: string,
@@ -399,10 +422,10 @@ export default function PredictionsPage() {
 
   const totalPoints = groupPointsTotal + knockoutScore.total;
   const greetingName =
-    participantName?.trim() ||
-    participantEmail?.trim() ||
-    activePoolSlug ||
-    "Jugador";
+  participantName?.trim() ||
+  authUserEmail?.trim() ||
+  participantEmail?.trim() ||
+  "Jugador";
 
   const rankingPosition = 0;
   const rankingTotalPlayers = 0;
