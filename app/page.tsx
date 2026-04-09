@@ -28,24 +28,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  async function handleLogin() {
-    setLoading(true);
-    setMessage("");
+  const [authUserEmail, setAuthUserEmail] = useState("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
-
-    if (error) {
-      setMessage(error.message);
-      setLoading(false);
-      return;
-    }
-
-    router.push("/predictions");
-  }
-
+  
   async function handleRegister() {
     setLoading(true);
     setMessage("");
@@ -116,24 +101,49 @@ export default function Home() {
       return;
     }
 
-    const { error: entryError } = await supabase.from("entries").insert({
-      user_id: user.id,
-      pool_id: pool.id,
-      entry_number: entryNumber,
-      status: "draft",
-      email: normalizedEmail,
-      name: name.trim(),
-      company: company.trim(),
-      country: country.trim(),
-    });
+    const { data: createdEntry, error: entryError } = await supabase
+      .from("entries")
+      .insert({
+        user_id: user.id,
+        pool_id: pool.id,
+        entry_number: entryNumber,
+        status: "draft",
+        email: normalizedEmail,
+        name: name.trim(),
+        company: company.trim(),
+        country: country.trim(),
+      })
+      .select("id")
+      .single();
 
-    if (entryError) {
-      setMessage(entryError.message);
+    if (entryError || !createdEntry) {
+      setMessage(entryError?.message || t.entryCreationError);
       setLoading(false);
       return;
     }
 
+    localStorage.setItem("active_entry_id", createdEntry.id);
+    localStorage.setItem("active_pool_slug", pool.slug);
+
     router.push("/predictions");
+  }
+
+   async function handleLogin() {
+    setLoading(true);
+    setMessage("");
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    if (error) {
+      setMessage(error.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/post-login");
   }
 
   return (
@@ -159,9 +169,7 @@ export default function Home() {
               {t.appTitle}
             </h1>
 
-            <p className="mt-3 text-sm text-gray-600">
-              {t.authWelcome}
-            </p>
+            <p className="mt-3 text-sm text-gray-600">{t.authWelcome}</p>
           </div>
 
           <div className="mb-4 grid grid-cols-2 gap-2">
@@ -286,11 +294,7 @@ export default function Home() {
               className="w-full rounded-xl bg-[var(--iberdrola-green)] py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
               disabled={loading}
             >
-              {loading
-                ? t.loading
-                : mode === "login"
-                ? t.login
-                : t.register}
+              {loading ? t.loading : mode === "login" ? t.login : t.register}
             </button>
 
             {message && (
