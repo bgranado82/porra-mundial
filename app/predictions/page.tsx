@@ -429,11 +429,7 @@ export default function PredictionsPage() {
   );
 
   const totalPoints = groupPointsTotal + knockoutScore.total;
-  const greetingName =
-  participantName?.trim() ||
-  authUserEmail?.trim() ||
-  participantEmail?.trim() ||
-  "Jugador";
+  const greetingName = authUserEmail?.trim() || "Jugador";
 
   const rankingPosition = 0;
   const rankingTotalPlayers = 0;
