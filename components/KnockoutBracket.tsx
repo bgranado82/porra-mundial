@@ -71,14 +71,6 @@ function getDisplayText(team: Team | null, label?: string) {
   return label ?? "Por definir";
 }
 
-function orderMatches(
-  matches: KnockoutBracketMatch[],
-  ids: string[]
-): KnockoutBracketMatch[] {
-  const map = new Map(matches.map((m) => [m.id, m]));
-  return ids.map((id) => map.get(id)).filter(Boolean) as KnockoutBracketMatch[];
-}
-
 function getPointsForStage(stage: string) {
   if (stage === "round32") return 15;
   if (stage === "round16") return 20;
@@ -96,79 +88,25 @@ function getRoundKey(stage: string) {
   return "finals";
 }
 
-function TeamOption({
-  team,
-  label,
-  selected,
-  onClick,
-  interactive,
-  points,
-}: {
-  team: Team | null;
-  label?: string;
-  selected: boolean;
-  onClick?: () => void;
-  interactive: boolean;
-  points?: number;
-}) {
-  const clickable = interactive && !!team;
-  const hasPoints = !!points && points > 0;
-
-  return (
-    <button
-      type="button"
-      disabled={!clickable}
-      onClick={onClick}
-      className={`flex w-full items-center justify-between rounded-md border px-2 py-1.5 text-left text-[12px] ${
-        selected
-          ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]"
-          : hasPoints
-          ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/60"
-          : "border-gray-200 bg-white"
-      } ${clickable ? "cursor-pointer" : "cursor-default opacity-95"}`}
-    >
-      <span className="truncate">{getDisplayText(team, label)}</span>
-
-      <div className="ml-2 flex items-center gap-1">
-        {hasPoints ? (
-          <span className="rounded-full bg-[var(--iberdrola-green)] px-1.5 py-0.5 text-[10px] font-bold text-white">
-            +{points}
-          </span>
-        ) : null}
-
-        {selected ? (
-          <span className="font-bold text-[var(--iberdrola-green)]">X</span>
-        ) : null}
-      </div>
-    </button>
-  );
-}
-
-function MatchCard({
+function MatchRow({
   match,
   teams,
   picks,
   onPick,
-  hitMap,
   realTeamsByRound,
-  compact = false,
 }: {
   match: KnockoutBracketMatch;
   teams: Team[];
   picks: KnockoutPredictionMap;
   onPick?: (matchId: string, teamId: string | null) => void;
-  hitMap?: Record<string, number>;
   realTeamsByRound?: Props["realTeamsByRound"];
-  compact?: boolean;
 }) {
   const homeTeam = teams.find((t) => t.id === match.homeTeamId) ?? null;
   const awayTeam = teams.find((t) => t.id === match.awayTeamId) ?? null;
   const selected = picks[match.id] ?? null;
-  const interactive = Boolean(onPick);
   const officialNumber = getOfficialMatchNumber(match.id);
-
-  const roundKey = getRoundKey(match.stage);
   const pointsPerTeam = getPointsForStage(match.stage);
+  const roundKey = getRoundKey(match.stage);
 
   const homeHit =
     !!homeTeam &&
@@ -180,65 +118,120 @@ function MatchCard({
     !!realTeamsByRound &&
     realTeamsByRound[roundKey].has(awayTeam.id);
 
+  function TeamButton({
+    team,
+    label,
+    isSelected,
+    hasPoints,
+  }: {
+    team: Team | null;
+    label?: string;
+    isSelected: boolean;
+    hasPoints: boolean;
+  }) {
+    const clickable = !!onPick && !!team;
+
+    return (
+      <button
+        type="button"
+        disabled={!clickable}
+        onClick={() =>
+          onPick?.(match.id, isSelected ? null : team?.id ?? null)
+        }
+        className={`flex w-full items-center justify-between rounded-xl border px-3 py-3 text-left transition ${
+          isSelected
+            ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]"
+            : hasPoints
+            ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/60"
+            : "border-gray-200 bg-white"
+        } ${clickable ? "cursor-pointer hover:border-[var(--iberdrola-green)]" : "cursor-default opacity-95"}`}
+      >
+        <span className="font-medium text-[var(--iberdrola-forest)]">
+          {getDisplayText(team, label)}
+        </span>
+
+        <div className="ml-3 flex items-center gap-2">
+          {hasPoints ? (
+            <span className="rounded-full bg-[var(--iberdrola-green)] px-2 py-0.5 text-[11px] font-bold text-white">
+              +{pointsPerTeam}
+            </span>
+          ) : null}
+
+          {isSelected ? (
+            <span className="font-bold text-[var(--iberdrola-green)]">✓</span>
+          ) : null}
+        </div>
+      </button>
+    );
+  }
+
   return (
-    <div
-      className={`rounded-lg border border-[var(--iberdrola-green)] bg-white p-2 shadow-sm ${
-        compact ? "w-[165px]" : "w-[185px]"
-      }`}
-    >
-      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]">
-        {officialNumber ? `Partido ${officialNumber}` : match.id.toUpperCase()}
+    <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="text-sm font-semibold text-[var(--iberdrola-forest)]">
+          {officialNumber ? `Partido ${officialNumber}` : match.id.toUpperCase()}
+        </div>
+
+        <div className="rounded-full bg-[var(--iberdrola-green-light)] px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]">
+          {match.stage}
+        </div>
       </div>
 
-      <div className="space-y-1.5">
-        <TeamOption
+      <div className="grid gap-2 md:grid-cols-[1fr_auto_1fr] md:items-center">
+        <TeamButton
           team={homeTeam}
           label={match.homeLabel}
-          selected={selected === homeTeam?.id}
-          interactive={interactive}
-          onClick={() =>
-            onPick?.(match.id, selected === homeTeam?.id ? null : homeTeam?.id ?? null)
-          }
-          points={homeHit ? pointsPerTeam : 0}
+          isSelected={selected === homeTeam?.id}
+          hasPoints={homeHit}
         />
 
-        <TeamOption
+        <div className="text-center text-sm font-bold text-gray-400">vs</div>
+
+        <TeamButton
           team={awayTeam}
           label={match.awayLabel}
-          selected={selected === awayTeam?.id}
-          interactive={interactive}
-          onClick={() =>
-            onPick?.(match.id, selected === awayTeam?.id ? null : awayTeam?.id ?? null)
-          }
-          points={awayHit ? pointsPerTeam : 0}
+          isSelected={selected === awayTeam?.id}
+          hasPoints={awayHit}
         />
       </div>
     </div>
   );
 }
 
-function SimpleCard({
+function SectionBlock({
   title,
-  line1,
-  line2,
+  matches,
+  teams,
+  picks,
+  onPick,
+  realTeamsByRound,
 }: {
   title: string;
-  line1: string;
-  line2: string;
+  matches: KnockoutBracketMatch[];
+  teams: Team[];
+  picks: KnockoutPredictionMap;
+  onPick?: (matchId: string, teamId: string | null) => void;
+  realTeamsByRound?: Props["realTeamsByRound"];
 }) {
-  return (
-    <div className="w-[165px] rounded-lg border border-[var(--iberdrola-green)] bg-white p-2 shadow-sm">
-      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]">
-        {title}
-      </div>
+  if (!matches.length) return null;
 
-      <div className="space-y-1.5">
-        <div className="rounded-md border border-gray-200 bg-white px-2 py-1.5 text-[12px] text-[var(--iberdrola-forest)]">
-          {line1}
-        </div>
-        <div className="rounded-md border border-gray-200 bg-white px-2 py-1.5 text-[12px] text-[var(--iberdrola-forest)]">
-          {line2}
-        </div>
+  return (
+    <div className="space-y-3">
+      <h3 className="text-lg font-semibold text-[var(--iberdrola-forest)]">
+        {title}
+      </h3>
+
+      <div className="grid gap-3">
+        {matches.map((match) => (
+          <MatchRow
+            key={match.id}
+            match={match}
+            teams={teams}
+            picks={picks}
+            onPick={onPick}
+            realTeamsByRound={realTeamsByRound}
+          />
+        ))}
       </div>
     </div>
   );
@@ -252,16 +245,18 @@ function ChampionCard({
   points?: number;
 }) {
   return (
-    <div className="w-[165px] rounded-lg border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/35 p-2 shadow-sm">
-      <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]">
+    <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/35 p-4 shadow-sm">
+      <div className="mb-2 text-sm font-semibold text-[var(--iberdrola-forest)]">
         Campeón
       </div>
 
-      <div className="flex items-center justify-between text-[12px] font-semibold text-[var(--iberdrola-forest)]">
-        <span>{champion ? `${champion.flag} ${champion.name}` : "Por definir"}</span>
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-base font-semibold text-[var(--iberdrola-forest)]">
+          {champion ? `${champion.flag} ${champion.name}` : "Por definir"}
+        </div>
 
         {points && points > 0 ? (
-          <span className="rounded-full bg-[var(--iberdrola-green)] px-1.5 py-0.5 text-[10px] font-bold text-white">
+          <span className="rounded-full bg-[var(--iberdrola-green)] px-2 py-1 text-xs font-bold text-white">
             +{points}
           </span>
         ) : null}
@@ -270,10 +265,30 @@ function ChampionCard({
   );
 }
 
-function ColumnTitle({ children }: { children: React.ReactNode }) {
+function PlaceholderCard({
+  title,
+  line1,
+  line2,
+}: {
+  title: string;
+  line1: string;
+  line2: string;
+}) {
   return (
-    <div className="mb-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]">
-      {children}
+    <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm">
+      <div className="mb-2 text-sm font-semibold text-[var(--iberdrola-forest)]">
+        {title}
+      </div>
+
+      <div className="grid gap-2 md:grid-cols-[1fr_auto_1fr] md:items-center">
+        <div className="rounded-xl border border-gray-200 px-3 py-3 text-sm text-[var(--iberdrola-forest)]">
+          {line1}
+        </div>
+        <div className="text-center text-sm font-bold text-gray-400">vs</div>
+        <div className="rounded-xl border border-gray-200 px-3 py-3 text-sm text-[var(--iberdrola-forest)]">
+          {line2}
+        </div>
+      </div>
     </div>
   );
 }
@@ -290,42 +305,9 @@ export default function KnockoutBracket({
   teams,
   picks,
   onPick,
-  hitMap,
   realTeamsByRound,
 }: Props) {
   const champion = teams.find((team) => team.id === championId) ?? null;
-
-  const leftR32 = orderMatches(round32, [
-    "r32-2",
-    "r32-5",
-    "r32-1",
-    "r32-3",
-    "r32-11",
-    "r32-12",
-    "r32-9",
-    "r32-10",
-  ]);
-
-  const rightR32 = orderMatches(round32, [
-    "r32-4",
-    "r32-6",
-    "r32-7",
-    "r32-8",
-    "r32-14",
-    "r32-16",
-    "r32-13",
-    "r32-15",
-  ]);
-
-  const leftR16 = orderMatches(round16, ["r16-1", "r16-2", "r16-5", "r16-6"]);
-  const rightR16 = orderMatches(round16, ["r16-3", "r16-4", "r16-7", "r16-8"]);
-
-  const leftQF = orderMatches(quarterfinals, ["qf-1", "qf-2"]);
-  const rightQF = orderMatches(quarterfinals, ["qf-3", "qf-4"]);
-
-  const leftSF = orderMatches(semifinals, ["sf-1"]);
-  const rightSF = orderMatches(semifinals, ["sf-2"]);
-
   const finalMatch = finals.find((m) => m.id === "final-1") ?? null;
 
   return (
@@ -336,179 +318,76 @@ export default function KnockoutBracket({
 
       {subtitle ? <p className="mt-1 text-sm text-gray-500">{subtitle}</p> : null}
 
-      <div className="mt-4 overflow-x-auto">
-        <div className="min-w-[1500px]">
-          <div className="grid grid-cols-[1fr_180px_1fr] gap-x-8">
-            <div className="grid grid-cols-4 gap-x-4">
-              <div className="flex flex-col gap-6">
-                <ColumnTitle>R32</ColumnTitle>
-                {leftR32.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    teams={teams}
-                    picks={picks}
-                    onPick={onPick}
-                    hitMap={hitMap}
-                    realTeamsByRound={realTeamsByRound}
-                  />
-                ))}
-              </div>
+      <div className="mt-4 space-y-5">
+        <SectionBlock
+          title="Round of 32"
+          matches={round32}
+          teams={teams}
+          picks={picks}
+          onPick={onPick}
+          realTeamsByRound={realTeamsByRound}
+        />
 
-              <div className="flex flex-col gap-[68px] pt-[64px]">
-                <ColumnTitle>R16</ColumnTitle>
-                {leftR16.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    teams={teams}
-                    picks={picks}
-                    onPick={onPick}
-                    hitMap={hitMap}
-                    realTeamsByRound={realTeamsByRound}
-                    compact
-                  />
-                ))}
-              </div>
+        <SectionBlock
+          title="Round of 16"
+          matches={round16}
+          teams={teams}
+          picks={picks}
+          onPick={onPick}
+          realTeamsByRound={realTeamsByRound}
+        />
 
-              <div className="flex flex-col gap-[180px] pt-[135px]">
-                <ColumnTitle>QF</ColumnTitle>
-                {leftQF.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    teams={teams}
-                    picks={picks}
-                    onPick={onPick}
-                    hitMap={hitMap}
-                    realTeamsByRound={realTeamsByRound}
-                    compact
-                  />
-                ))}
-              </div>
+        <SectionBlock
+          title="Quarter-finals"
+          matches={quarterfinals}
+          teams={teams}
+          picks={picks}
+          onPick={onPick}
+          realTeamsByRound={realTeamsByRound}
+        />
 
-              <div className="flex flex-col pt-[255px]">
-                <ColumnTitle>SF</ColumnTitle>
-                {leftSF.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    teams={teams}
-                    picks={picks}
-                    onPick={onPick}
-                    hitMap={hitMap}
-                    realTeamsByRound={realTeamsByRound}
-                    compact
-                  />
-                ))}
-              </div>
-            </div>
+        <SectionBlock
+          title="Semi-finals"
+          matches={semifinals}
+          teams={teams}
+          picks={picks}
+          onPick={onPick}
+          realTeamsByRound={realTeamsByRound}
+        />
 
-            <div className="flex flex-col items-center pt-[255px] gap-6">
-              <ColumnTitle>Final</ColumnTitle>
+        {finalMatch ? (
+          <SectionBlock
+            title="Final"
+            matches={[finalMatch]}
+            teams={teams}
+            picks={picks}
+            onPick={onPick}
+            realTeamsByRound={realTeamsByRound}
+          />
+        ) : (
+          <PlaceholderCard
+            title="Final"
+            line1="Ganador partido 101"
+            line2="Ganador partido 102"
+          />
+        )}
 
-              {finalMatch ? (
-                <MatchCard
-                  match={finalMatch}
-                  teams={teams}
-                  picks={picks}
-                  onPick={onPick}
-                  hitMap={hitMap}
-                  realTeamsByRound={realTeamsByRound}
-                  compact
-                />
-              ) : (
-                <SimpleCard
-                  title="Partido 104"
-                  line1="Ganador partido 101"
-                  line2="Ganador partido 102"
-                />
-              )}
+        <PlaceholderCard
+          title="Tercer y cuarto puesto · Partido 103"
+          line1="Perdedor partido 101"
+          line2="Perdedor partido 102"
+        />
 
-              <SimpleCard
-                title="Partido 103"
-                line1="Perdedor partido 101"
-                line2="Perdedor partido 102"
-              />
-
-              <ChampionCard
-                champion={champion}
-                points={
-                  champion &&
-                  realTeamsByRound?.champion &&
-                  champion.id === realTeamsByRound.champion
-                    ? 100
-                    : 0
-                }
-              />
-            </div>
-
-            <div className="grid grid-cols-4 gap-x-4">
-              <div className="flex flex-col pt-[255px]">
-                <ColumnTitle>SF</ColumnTitle>
-                {rightSF.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    teams={teams}
-                    picks={picks}
-                    onPick={onPick}
-                    hitMap={hitMap}
-                    realTeamsByRound={realTeamsByRound}
-                    compact
-                  />
-                ))}
-              </div>
-
-              <div className="flex flex-col gap-[180px] pt-[135px]">
-                <ColumnTitle>QF</ColumnTitle>
-                {rightQF.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    teams={teams}
-                    picks={picks}
-                    onPick={onPick}
-                    hitMap={hitMap}
-                    realTeamsByRound={realTeamsByRound}
-                    compact
-                  />
-                ))}
-              </div>
-
-              <div className="flex flex-col gap-[68px] pt-[64px]">
-                <ColumnTitle>R16</ColumnTitle>
-                {rightR16.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    teams={teams}
-                    picks={picks}
-                    onPick={onPick}
-                    hitMap={hitMap}
-                    realTeamsByRound={realTeamsByRound}
-                    compact
-                  />
-                ))}
-              </div>
-
-              <div className="flex flex-col gap-6">
-                <ColumnTitle>R32</ColumnTitle>
-                {rightR32.map((match) => (
-                  <MatchCard
-                    key={match.id}
-                    match={match}
-                    teams={teams}
-                    picks={picks}
-                    onPick={onPick}
-                    hitMap={hitMap}
-                    realTeamsByRound={realTeamsByRound}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        <ChampionCard
+          champion={champion}
+          points={
+            champion &&
+            realTeamsByRound?.champion &&
+            champion.id === realTeamsByRound.champion
+              ? 100
+              : 0
+          }
+        />
       </div>
     </section>
   );

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import GroupMatchRow from "@/components/GroupMatchRow";
 import GroupStandingsTable from "@/components/GroupStandingsTable";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import ParticipantInfoCard from "@/components/ParticipantInfoCard";
 import ScoringRulesCard from "@/components/ScoringRulesCard";
 import TotalPointsCard from "@/components/TotalPointsCard";
 import KnockoutBracket from "@/components/KnockoutBracket";
@@ -29,10 +28,7 @@ import {
 import { getBestThirdPlacedTeams } from "@/lib/thirdPlace";
 import { Locale, messages } from "@/lib/i18n";
 import { KnockoutPredictionMap, Match } from "@/types";
-import {
-  TIMEZONE_OPTIONS,
-  TimezoneValue,
-} from "@/lib/timezone";
+import { TIMEZONE_OPTIONS, TimezoneValue } from "@/lib/timezone";
 
 type PredictionMap = Record<
   string,
@@ -75,8 +71,35 @@ export default function PredictionsPage() {
   const [activePoolSlug, setActivePoolSlug] = useState<string | null>(null);
 
   const [entryStatus, setEntryStatus] = useState("draft");
+  const [saveLoading, setSaveLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
+
+  function persistToStorage(next?: {
+    predictions?: PredictionMap;
+    knockoutPredictions?: KnockoutPredictionMap;
+    realKnockoutPredictions?: KnockoutPredictionMap;
+    officialMatches?: Match[];
+    name?: string;
+    email?: string;
+    company?: string;
+    country?: string;
+  }) {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        predictions: next?.predictions ?? predictions,
+        knockoutPredictions: next?.knockoutPredictions ?? knockoutPredictions,
+        realKnockoutPredictions:
+          next?.realKnockoutPredictions ?? realKnockoutPredictions,
+        officialMatches: next?.officialMatches ?? officialMatches,
+        name: next?.name ?? participantName,
+        email: next?.email ?? participantEmail,
+        company: next?.company ?? participantCompany,
+        country: next?.country ?? participantCountry,
+      })
+    );
+  }
 
   function loadFromStorage() {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -181,19 +204,7 @@ export default function PredictionsPage() {
   }, [timeZone]);
 
   useEffect(() => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        predictions,
-        knockoutPredictions,
-        realKnockoutPredictions,
-        officialMatches,
-        name: participantName,
-        email: participantEmail,
-        company: participantCompany,
-        country: participantCountry,
-      })
-    );
+    persistToStorage();
   }, [
     predictions,
     knockoutPredictions,
@@ -231,6 +242,22 @@ export default function PredictionsPage() {
     }));
   }
 
+  async function handleSaveDraft() {
+    if (entryStatus === "submitted") return;
+
+    setSaveLoading(true);
+    setSubmitMessage("");
+
+    try {
+      persistToStorage();
+      setSubmitMessage("Porra guardada correctamente.");
+    } catch {
+      setSubmitMessage("Error al guardar la porra.");
+    } finally {
+      setSaveLoading(false);
+    }
+  }
+
   async function handleSubmitEntry() {
     const entryId = localStorage.getItem("active_entry_id");
 
@@ -249,6 +276,8 @@ export default function PredictionsPage() {
     setSubmitMessage("");
 
     try {
+      persistToStorage();
+
       const res = await fetch("/api/submit-entry", {
         method: "POST",
         headers: {
@@ -369,12 +398,21 @@ export default function PredictionsPage() {
   );
 
   const totalPoints = groupPointsTotal + knockoutScore.total;
+  const greetingName =
+    participantName?.trim() ||
+    participantEmail?.trim() ||
+    activePoolSlug ||
+    "Jugador";
+
+  const rankingPosition = 0;
+  const rankingTotalPlayers = 0;
+  const rankingMovement = 0;
 
   return (
     <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-3">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-3 rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="mb-4 rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex items-center gap-3">
               <img
                 src="/logo.png"
@@ -387,8 +425,8 @@ export default function PredictionsPage() {
                   {t.appTitle}
                 </h1>
 
-                <p className="text-sm text-[var(--iberdrola-green)]">
-                  {t.groupStage}
+                <p className="text-sm font-medium text-[var(--iberdrola-green)]">
+                  Hola, {greetingName}
                 </p>
 
                 <div className="mt-2 flex flex-wrap items-center gap-3">
@@ -418,56 +456,71 @@ export default function PredictionsPage() {
               </div>
             </div>
 
-            <div className="w-full xl:w-[720px]">
-              <ParticipantInfoCard
-                title={t.participantData}
-                nameLabel={t.name}
-                emailLabel={t.email}
-                companyLabel={t.company}
-                countryLabel={t.country}
-                name={participantName}
-                email={participantEmail}
-                company={participantCompany}
-                country={participantCountry}
-                onChangeName={entryStatus === "submitted" ? () => {} : setParticipantName}
-                onChangeEmail={entryStatus === "submitted" ? () => {} : setParticipantEmail}
-                onChangeCompany={entryStatus === "submitted" ? () => {} : setParticipantCompany}
-                onChangeCountry={entryStatus === "submitted" ? () => {} : setParticipantCountry}
-              />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:min-w-[430px]">
+              <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/35 p-4 text-center">
+                <div className="text-sm font-medium text-[var(--iberdrola-forest)]">
+                  Puntos totales
+                </div>
+                <div className="mt-1 text-3xl font-bold text-[var(--iberdrola-green)]">
+                  {totalPoints}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/35 p-4 text-center">
+                <div className="text-sm font-medium text-[var(--iberdrola-forest)]">
+                  Clasificación
+                </div>
+                <div className="mt-1 text-3xl font-bold text-[var(--iberdrola-green)]">
+                  {rankingTotalPlayers > 0
+                    ? `${rankingPosition}/${rankingTotalPlayers}`
+                    : "-"}
+                </div>
+                <div className="mt-1 text-xs text-gray-500">
+                  {rankingMovement > 0
+                    ? `▲ +${rankingMovement}`
+                    : rankingMovement < 0
+                    ? `▼ ${rankingMovement}`
+                    : "="}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="mb-4 rounded-2xl border border-[var(--iberdrola-green)] bg-white p-4">
-          <div className="text-sm text-[var(--iberdrola-forest)]">
-            <strong>Porra activa:</strong> {activePoolSlug ?? "-"}
-          </div>
-          <div className="text-sm text-[var(--iberdrola-forest)]">
-            <strong>Entry activa:</strong> {activeEntryId ?? "-"}
-          </div>
-          <div className="mt-2 text-sm text-[var(--iberdrola-forest)]">
-            <strong>Estado:</strong> {entryStatus === "submitted" ? "Enviada" : "Borrador"}
-          </div>
+            <div className="flex flex-col items-start gap-2 xl:items-end">
+              <div className="text-sm text-[var(--iberdrola-forest)]">
+                <strong>Estado:</strong>{" "}
+                {entryStatus === "submitted" ? "Enviada" : "Borrador"}
+              </div>
 
-          <div className="mt-3">
-            <button
-              type="button"
-              onClick={handleSubmitEntry}
-              disabled={entryStatus === "submitted" || submitLoading}
-              className="rounded-xl bg-[var(--iberdrola-green)] px-5 py-2 font-semibold text-white disabled:opacity-50"
-            >
-              {entryStatus === "submitted"
-                ? "Porra enviada"
-                : submitLoading
-                ? "Enviando..."
-                : "Enviar porra"}
-            </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={handleSaveDraft}
+                  disabled={entryStatus === "submitted" || saveLoading}
+                  className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-5 py-2 font-semibold text-[var(--iberdrola-forest)] disabled:opacity-50"
+                >
+                  {saveLoading ? "Guardando..." : "Guardar porra"}
+                </button>
 
-            {submitMessage ? (
-              <p className="mt-2 text-sm text-[var(--iberdrola-forest)]">
-                {submitMessage}
-              </p>
-            ) : null}
+                <button
+                  type="button"
+                  onClick={handleSubmitEntry}
+                  disabled={entryStatus === "submitted" || submitLoading}
+                  className="rounded-xl bg-[var(--iberdrola-green)] px-5 py-2 font-semibold text-white disabled:opacity-50"
+                >
+                  {entryStatus === "submitted"
+                    ? "Porra enviada"
+                    : submitLoading
+                    ? "Enviando..."
+                    : "Enviar porra"}
+                </button>
+              </div>
+
+              {submitMessage ? (
+                <p className="text-sm text-[var(--iberdrola-forest)]">
+                  {submitMessage}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
 
@@ -678,7 +731,7 @@ export default function PredictionsPage() {
 
           <KnockoutBracket
             title={t.yourKnockoutBracket}
-            subtitle="Marca con una X quién pasa en cada cruce. Los puntos se comparan contra el cuadro real marcado en admin."
+            subtitle="Selecciona quién pasa en cada cruce. El equipo elegido queda resaltado y, si aciertas, se muestran los puntos."
             round32={userBracket.round32}
             round16={userBracket.round16}
             quarterfinals={userBracket.quarterfinals}
