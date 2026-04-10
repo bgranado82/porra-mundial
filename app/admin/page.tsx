@@ -1,239 +1,351 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 import { matches as initialMatches } from "@/data/matches";
 import { teams } from "@/data/teams";
 import { Match } from "@/types";
-import { Locale, messages } from "@/lib/i18n";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { TIMEZONE_OPTIONS, TimezoneValue, formatKickoff } from "@/lib/timezone";
 
-const STORAGE_KEY = "porra-mundial-local";
-const LOCALE_KEY = "porra-mundial-locale";
-const TIMEZONE_KEY = "porra-mundial-timezone";
+type GroupResultMap = Record<
+  string,
+  { homeGoals: string; awayGoals: string }
+>;
+
+type KnockoutResultMap = Record<string, string>;
+
+type OfficialGroupRow = {
+  match_id: string;
+  home_goals: number | null;
+  away_goals: number | null;
+};
+
+type OfficialKnockoutRow = {
+  match_id: string;
+  picked_team_id: string | null;
+};
 
 export default function AdminPage() {
-  const [matches, setMatches] = useState<Match[]>(initialMatches);
-  const [locale, setLocale] = useState<Locale>("es");
-  const [timeZone, setTimeZone] = useState<TimezoneValue>("local");
+  const supabase = createClient();
+
+  const [groupResults, setGroupResults] = useState<GroupResultMap>({});
+  const [knockoutResults, setKnockoutResults] = useState<KnockoutResultMap>({});
+  const [loading, setLoading] = useState(true);
+  const [savingGroups, setSavingGroups] = useState(false);
+  const [savingKnockout, setSavingKnockout] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const teamMap = useMemo(
+    () => new Map(teams.map((team) => [team.id, team])),
+    []
+  );
+
+  const groupMatches = useMemo(
+    () => initialMatches.filter((match) => match.stage === "group"),
+    []
+  );
+
+  const knockoutMatches = useMemo(
+    () => initialMatches.filter((match) => match.stage !== "group"),
+    []
+  );
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.officialMatches) {
-        setMatches(parsed.officialMatches);
+    async function loadOfficialResults() {
+      setLoading(true);
+      setMessage("");
+
+      try {
+        const { data: officialGroupRows, error: groupError } = await supabase
+          .from("official_group_results")
+          .select("match_id, home_goals, away_goals");
+
+        if (groupError) {
+          throw groupError;
+        }
+
+        const nextGroupResults: GroupResultMap = {};
+        (officialGroupRows as OfficialGroupRow[] | null)?.forEach((row) => {
+          nextGroupResults[row.match_id] = {
+            homeGoals:
+              row.home_goals === null || row.home_goals === undefined
+                ? ""
+                : String(row.home_goals),
+            awayGoals:
+              row.away_goals === null || row.away_goals === undefined
+                ? ""
+                : String(row.away_goals),
+          };
+        });
+        setGroupResults(nextGroupResults);
+
+        const { data: officialKnockoutRows, error: knockoutError } =
+          await supabase
+            .from("official_knockout_results")
+            .select("match_id, picked_team_id");
+
+        if (knockoutError) {
+          throw knockoutError;
+        }
+
+        const nextKnockoutResults: KnockoutResultMap = {};
+        (officialKnockoutRows as OfficialKnockoutRow[] | null)?.forEach((row) => {
+          nextKnockoutResults[row.match_id] = row.picked_team_id ?? "";
+        });
+        setKnockoutResults(nextKnockoutResults);
+      } catch (err) {
+        console.error(err);
+        setMessage("Error cargando resultados oficiales.");
+      } finally {
+        setLoading(false);
       }
     }
 
-    const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
-    if (savedLocale === "es" || savedLocale === "en" || savedLocale === "pt") {
-      setLocale(savedLocale);
-    }
+    loadOfficialResults();
+  }, [supabase]);
 
-    const savedTimeZone = localStorage.getItem(TIMEZONE_KEY) as TimezoneValue | null;
-    if (savedTimeZone) {
-      setTimeZone(savedTimeZone);
-    }
-  }, []);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    const parsed = saved ? JSON.parse(saved) : {};
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        ...parsed,
-        officialMatches: matches,
-      })
-    );
-  }, [matches]);
-
-  useEffect(() => {
-    localStorage.setItem(LOCALE_KEY, locale);
-  }, [locale]);
-
-  useEffect(() => {
-    localStorage.setItem(TIMEZONE_KEY, timeZone);
-  }, [timeZone]);
-
-  function updateOfficialResult(
+  function updateGroupResult(
     matchId: string,
-    field: "homeGoals" | "awayGoals",
-    value: number | null
+    side: "homeGoals" | "awayGoals",
+    value: string
   ) {
-    setMatches((prev) =>
-      prev.map((match) =>
-        match.id === matchId ? { ...match, [field]: value } : match
-      )
-    );
+    if (!/^\d*$/.test(value)) return;
+
+    setGroupResults((current) => ({
+      ...current,
+      [matchId]: {
+        homeGoals: current[matchId]?.homeGoals ?? "",
+        awayGoals: current[matchId]?.awayGoals ?? "",
+        [side]: value,
+      },
+    }));
   }
 
-  const t = messages[locale];
-  const teamMap = new Map(teams.map((team) => [team.id, team]));
-  const groups = [...new Set(teams.map((team) => team.group).filter(Boolean))] as string[];
-
-  const groupedMatches = useMemo(() => {
-    return groups.map((groupCode) => ({
-      groupCode,
-      matches: matches.filter(
-        (match) => match.stage === "group" && match.group === groupCode
-      ),
+  function updateKnockoutResult(matchId: string, teamId: string) {
+    setKnockoutResults((current) => ({
+      ...current,
+      [matchId]: teamId,
     }));
-  }, [groups, matches]);
+  }
+
+  async function handleSaveGroupResults() {
+    setSavingGroups(true);
+    setMessage("");
+
+    try {
+      const rows = Object.entries(groupResults)
+        .filter(([, value]) => value.homeGoals !== "" && value.awayGoals !== "")
+        .map(([matchId, value]) => ({
+          match_id: matchId,
+          home_goals: Number(value.homeGoals),
+          away_goals: Number(value.awayGoals),
+        }));
+
+      if (rows.length === 0) {
+        setMessage("No hay resultados de grupos para guardar.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("official_group_results")
+        .upsert(rows, { onConflict: "match_id" });
+
+      if (error) {
+        throw error;
+      }
+
+      setMessage("Resultados de grupos guardados correctamente.");
+    } catch (err) {
+      console.error(err);
+      setMessage("Error guardando resultados de grupos.");
+    } finally {
+      setSavingGroups(false);
+    }
+  }
+
+  async function handleSaveKnockoutResults() {
+    setSavingKnockout(true);
+    setMessage("");
+
+    try {
+      const rows = Object.entries(knockoutResults)
+        .filter(([, teamId]) => !!teamId)
+        .map(([matchId, pickedTeamId]) => ({
+          match_id: matchId,
+          picked_team_id: pickedTeamId,
+        }));
+
+      if (rows.length === 0) {
+        setMessage("No hay resultados de eliminatorias para guardar.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("official_knockout_results")
+        .upsert(rows, { onConflict: "match_id" });
+
+      if (error) {
+        throw error;
+      }
+
+      setMessage("Resultados de eliminatorias guardados correctamente.");
+    } catch (err) {
+      console.error(err);
+      setMessage("Error guardando resultados de eliminatorias.");
+    } finally {
+      setSavingKnockout(false);
+    }
+  }
 
   return (
-    <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-3">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-4 rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3">
-              <img
-                src="/logo.png"
-                alt="Ibe World Cup"
-                className="h-16 w-16 rounded-2xl shadow-md"
-              />
+    <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-4 md:p-6">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-5 shadow-sm">
+          <h1 className="text-3xl font-bold text-[var(--iberdrola-forest)]">
+            Admin · Resultados oficiales
+          </h1>
 
-              <div>
-                <h1 className="text-2xl font-bold text-[var(--iberdrola-forest)] md:text-3xl">
-                  Admin · Resultados oficiales
-                </h1>
-                <p className="text-sm text-[var(--iberdrola-green)]">
-                  Edita aquí los marcadores reales de la fase de grupos.
-                </p>
-              </div>
-            </div>
+          <p className="mt-2 text-sm text-gray-600">
+            Aquí puedes guardar los resultados reales de grupos y los equipos clasificados de eliminatorias en Supabase.
+          </p>
 
-            <div className="flex flex-wrap items-center gap-3">
-              <LanguageSwitcher
-                locale={locale}
-                onChange={setLocale}
-                label={t.language}
-              />
+          {message ? (
+            <p className="mt-3 text-sm text-[var(--iberdrola-forest)]">
+              {message}
+            </p>
+          ) : null}
+        </section>
 
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-[var(--iberdrola-forest)]">
-                  Huso horario
-                </span>
+        <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <h2 className="text-2xl font-semibold text-[var(--iberdrola-forest)]">
+              Resultados de grupos
+            </h2>
 
-                <select
-                  value={timeZone}
-                  onChange={(e) => setTimeZone(e.target.value as TimezoneValue)}
-                  className="rounded-full border border-[var(--iberdrola-green)] bg-white px-3 py-1 text-sm text-[var(--iberdrola-forest)]"
-                >
-                  {TIMEZONE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-5">
-          {groupedMatches.map(({ groupCode, matches: groupMatches }) => (
-            <section
-              key={groupCode}
-              className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm"
+            <button
+              type="button"
+              onClick={handleSaveGroupResults}
+              disabled={loading || savingGroups}
+              className="rounded-xl bg-[var(--iberdrola-green)] px-5 py-3 font-semibold text-white disabled:opacity-50"
             >
-              <h2 className="mb-4 text-2xl font-semibold text-[var(--iberdrola-forest)]">
-                {t.group} {groupCode}
-              </h2>
+              {savingGroups ? "Guardando..." : "Guardar grupos"}
+            </button>
+          </div>
 
-              <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 md:px-4">
-                <div className="grid grid-cols-[minmax(0,1fr)_96px_minmax(0,1fr)] gap-2 border-b border-[var(--iberdrola-sky)] px-1 py-3 text-xs text-[var(--iberdrola-forest)] md:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)] md:gap-3 md:text-sm">
-                  <div>{t.home}</div>
-                  <div className="text-center">{t.officialLabel}</div>
-                  <div className="text-right">{t.away}</div>
+          <div className="mt-5 space-y-3">
+            {groupMatches.map((match: Match) => {
+              const homeTeam = teamMap.get(match.homeTeamId ?? "");
+              const awayTeam = teamMap.get(match.awayTeamId ?? "");
+
+              if (!homeTeam || !awayTeam) return null;
+
+              return (
+                <div
+                  key={match.id}
+                  className="grid items-center gap-3 rounded-2xl border border-[var(--iberdrola-sky)] p-3 md:grid-cols-[1fr_auto_1fr_auto]"
+                >
+                  <div className="font-medium text-[var(--iberdrola-forest)]">
+                    {homeTeam.flag} {homeTeam.name}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      inputMode="numeric"
+                      value={groupResults[match.id]?.homeGoals ?? ""}
+                      onChange={(e) =>
+                        updateGroupResult(match.id, "homeGoals", e.target.value)
+                      }
+                      className="w-16 rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2 text-center"
+                    />
+                    <span className="font-bold text-[var(--iberdrola-forest)]">-</span>
+                    <input
+                      inputMode="numeric"
+                      value={groupResults[match.id]?.awayGoals ?? ""}
+                      onChange={(e) =>
+                        updateGroupResult(match.id, "awayGoals", e.target.value)
+                      }
+                      className="w-16 rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2 text-center"
+                    />
+                  </div>
+
+                  <div className="text-right font-medium text-[var(--iberdrola-forest)]">
+                    {awayTeam.name} {awayTeam.flag}
+                  </div>
+
+                  <div className="text-xs text-gray-500">
+                    {match.group ? `Grupo ${match.group}` : ""}
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+        </section>
 
-                <div className="divide-y divide-gray-100">
-                  {groupMatches.map((match) => {
-                    const homeTeam = teamMap.get(match.homeTeamId ?? "");
-                    const awayTeam = teamMap.get(match.awayTeamId ?? "");
+        <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-5 shadow-sm">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <h2 className="text-2xl font-semibold text-[var(--iberdrola-forest)]">
+              Eliminatorias
+            </h2>
 
-                    if (!homeTeam || !awayTeam) return null;
+            <button
+              type="button"
+              onClick={handleSaveKnockoutResults}
+              disabled={loading || savingKnockout}
+              className="rounded-xl bg-[var(--iberdrola-green)] px-5 py-3 font-semibold text-white disabled:opacity-50"
+            >
+              {savingKnockout ? "Guardando..." : "Guardar eliminatorias"}
+            </button>
+          </div>
 
-                    const kickoffInfo = formatKickoff(
-                      (match as any).kickoff ?? null,
-                      timeZone
-                    );
+          <div className="mt-5 space-y-3">
+            {knockoutMatches.map((match: Match) => {
+              const homeTeam = match.homeTeamId
+                ? teamMap.get(match.homeTeamId)
+                : null;
+              const awayTeam = match.awayTeamId
+                ? teamMap.get(match.awayTeamId)
+                : null;
 
-                    return (
-                      <div key={match.id} className="py-3 md:py-4">
-                        <div className="mb-2 flex items-center justify-between text-[11px] text-gray-500 md:text-xs">
-                          <span>
-                            Partido {(match as any).matchNumber ?? "-"}
-                          </span>
-                          <span>{kickoffInfo.full}</span>
-                        </div>
+              return (
+                <div
+                  key={match.id}
+                  className="rounded-2xl border border-[var(--iberdrola-sky)] p-3"
+                >
+                  <div className="mb-2 text-sm font-semibold text-[var(--iberdrola-forest)]">
+                    {match.stage} · {match.id}
+                  </div>
 
-                        <div className="grid grid-cols-[minmax(0,1fr)_96px_minmax(0,1fr)] items-center gap-2 md:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)] md:gap-3">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span className="text-lg">{homeTeam.flag}</span>
-                            <span className="truncate text-sm font-medium text-[var(--iberdrola-forest)] md:text-base">
-                              {homeTeam.name}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center justify-center gap-1">
-                            <input
-                              type="number"
-                              min="0"
-                              value={match.homeGoals ?? ""}
-                              onChange={(e) =>
-                                updateOfficialResult(
-                                  match.id,
-                                  "homeGoals",
-                                  e.target.value === ""
-                                    ? null
-                                    : Number(e.target.value)
-                                )
-                              }
-                              className="h-10 w-10 rounded-md border border-[var(--iberdrola-sky)] bg-white p-1 text-center text-base text-[var(--iberdrola-forest)] md:h-11 md:w-11"
-                            />
-                            <span className="text-base font-bold text-[var(--iberdrola-forest)] md:text-lg">
-                              -
-                            </span>
-                            <input
-                              type="number"
-                              min="0"
-                              value={match.awayGoals ?? ""}
-                              onChange={(e) =>
-                                updateOfficialResult(
-                                  match.id,
-                                  "awayGoals",
-                                  e.target.value === ""
-                                    ? null
-                                    : Number(e.target.value)
-                                )
-                              }
-                              className="h-10 w-10 rounded-md border border-[var(--iberdrola-sky)] bg-white p-1 text-center text-base text-[var(--iberdrola-forest)] md:h-11 md:w-11"
-                            />
-                          </div>
-
-                          <div className="flex min-w-0 items-center justify-end gap-2">
-                            <span className="truncate text-right text-sm font-medium text-[var(--iberdrola-forest)] md:text-base">
-                              {awayTeam.name}
-                            </span>
-                            <span className="text-lg">{awayTeam.flag}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {homeTeam && awayTeam ? (
+                    <select
+                      value={knockoutResults[match.id] ?? ""}
+                      onChange={(e) =>
+                        updateKnockoutResult(match.id, e.target.value)
+                      }
+                      className="w-full rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2"
+                    >
+                      <option value="">Selecciona ganador</option>
+                      <option value={homeTeam.id}>
+                        {homeTeam.flag} {homeTeam.name}
+                      </option>
+                      <option value={awayTeam.id}>
+                        {awayTeam.flag} {awayTeam.name}
+                      </option>
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={knockoutResults[match.id] ?? ""}
+                      onChange={(e) =>
+                        updateKnockoutResult(match.id, e.target.value)
+                      }
+                      placeholder="picked_team_id"
+                      className="w-full rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2"
+                    />
+                  )}
                 </div>
-              </div>
-            </section>
-          ))}
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-[var(--iberdrola-green)] bg-white p-4 text-sm text-gray-500">
-          Los resultados oficiales se guardan en este navegador. Luego lo conectamos a base de datos.
-        </div>
+              );
+            })}
+          </div>
+        </section>
       </div>
     </main>
   );

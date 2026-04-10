@@ -31,6 +31,17 @@ type PredictionMap = Record<
   { homeGoals: number | null; awayGoals: number | null }
 >;
 
+type OfficialGroupRow = {
+  match_id: string;
+  home_goals: number | null;
+  away_goals: number | null;
+};
+
+type OfficialKnockoutRow = {
+  match_id: string;
+  picked_team_id: string | null;
+};
+
 const LOCALE_KEY = "porra-mundial-locale";
 const TIMEZONE_KEY = "porra-mundial-timezone";
 
@@ -70,10 +81,10 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [predictions, setPredictions] = useState<PredictionMap>({});
   const [knockoutPredictions, setKnockoutPredictions] =
     useState<KnockoutPredictionMap>({});
-  const [realKnockoutPredictions] = useState<KnockoutPredictionMap>(
-    initialRealKnockoutPredictions
-  );
-  const [officialMatches] = useState<Match[]>(initialMatches);
+  const [realKnockoutPredictions, setRealKnockoutPredictions] =
+    useState<KnockoutPredictionMap>(initialRealKnockoutPredictions);
+  const [officialMatches, setOfficialMatches] =
+    useState<Match[]>(initialMatches);
 
   const [locale, setLocale] = useState<Locale>("es");
   const [timeZone, setTimeZone] = useState<TimezoneValue>("local");
@@ -85,13 +96,10 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [entryStatus, setEntryStatus] = useState("draft");
   const [entryNumber, setEntryNumber] = useState<number | null>(null);
   const [poolName, setPoolName] = useState("");
-  const [poolSlug, setPoolSlug] = useState("");
-  const [canCreateSecondEntry, setCanCreateSecondEntry] = useState(false);
 
   const [loadingEntry, setLoadingEntry] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [createSecondLoading, setCreateSecondLoading] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
 
   useEffect(() => {
@@ -100,7 +108,9 @@ export default function PredictionsPageClient({ entryId }: Props) {
       setLocale(savedLocale);
     }
 
-    const savedTimeZone = localStorage.getItem(TIMEZONE_KEY) as TimezoneValue | null;
+    const savedTimeZone = localStorage.getItem(
+      TIMEZONE_KEY
+    ) as TimezoneValue | null;
     if (savedTimeZone) {
       setTimeZone(savedTimeZone);
     }
@@ -192,19 +202,6 @@ export default function PredictionsPageClient({ entryId }: Props) {
         setEntryStatus(entry.status ?? "draft");
         setEntryNumber(entry.entry_number ?? null);
         setPoolName(pool?.name ?? "");
-        setPoolSlug(pool?.slug ?? "");
-
-        const { count, error: countError } = await supabase
-          .from("entries")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("pool_id", entry.pool_id);
-
-        if (countError) {
-          console.error(countError);
-        }
-
-        setCanCreateSecondEntry((count ?? 0) < 2);
 
         const { data: groupRows, error: groupError } = await supabase
           .from("entry_group_predictions")
@@ -238,6 +235,52 @@ export default function PredictionsPageClient({ entryId }: Props) {
           nextKo[row.match_id] = row.picked_team_id;
         });
         setKnockoutPredictions(nextKo);
+
+        const { data: officialGroupRows, error: officialGroupError } =
+          await supabase
+            .from("official_group_results")
+            .select("match_id, home_goals, away_goals");
+
+        if (officialGroupError) {
+          console.error(officialGroupError);
+        }
+
+        const mergedMatches = initialMatches.map((match) => {
+          if (match.stage !== "group") return match;
+
+          const officialRow = (officialGroupRows as OfficialGroupRow[] | null)?.find(
+            (row) => row.match_id === match.id
+          );
+
+          return {
+            ...match,
+            homeGoals: officialRow?.home_goals ?? null,
+            awayGoals: officialRow?.away_goals ?? null,
+          };
+        });
+
+        setOfficialMatches(mergedMatches);
+
+        const { data: officialKnockoutRows, error: officialKnockoutError } =
+          await supabase
+            .from("official_knockout_results")
+            .select("match_id, picked_team_id");
+
+        if (officialKnockoutError) {
+          console.error(officialKnockoutError);
+        }
+
+        const nextRealKo: KnockoutPredictionMap = {
+          ...initialRealKnockoutPredictions,
+        };
+
+        (officialKnockoutRows as OfficialKnockoutRow[] | null)?.forEach((row) => {
+          if (row.picked_team_id) {
+            nextRealKo[row.match_id] = row.picked_team_id;
+          }
+        });
+
+        setRealKnockoutPredictions(nextRealKo);
       } catch (err) {
         console.error(err);
         setSubmitMessage("Error cargando la porra.");
@@ -382,49 +425,6 @@ export default function PredictionsPageClient({ entryId }: Props) {
     }
   }
 
-  async function handleCreateSecondEntry() {
-    if (!activeEntryId) {
-      setSubmitMessage("No se ha encontrado la porra activa.");
-      return;
-    }
-
-    setCreateSecondLoading(true);
-    setSubmitMessage("");
-
-    try {
-      console.log("activeEntryId", activeEntryId);
-      console.log("poolSlug", poolSlug);
-      console.log("entryNumber", entryNumber);
-      
-      const res = await fetch("/api/create-second-entry", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ entryId: activeEntryId }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setSubmitMessage(data.error || "No se pudo crear la Porra 2.");
-        return;
-      }
-
-      if (!poolSlug || !data.entryId) {
-        setSubmitMessage("Se creó la Porra 2, pero no se pudo abrir automáticamente.");
-        return;
-      }
-
-      window.location.href = `/pool/${poolSlug}/entry/${data.entryId}`;
-    } catch (err) {
-      console.error(err);
-      setSubmitMessage("Error creando la Porra 2.");
-    } finally {
-      setCreateSecondLoading(false);
-    }
-  }
-
   async function handleLogout() {
     await supabase.auth.signOut();
     window.location.href = "/";
@@ -519,10 +519,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
   const totalPoints = groupPointsTotal + knockoutScore.total;
 
-  const greetingName =
-    authUserName?.trim() ||
-    authUserEmail?.trim() ||
-    "Jugador";
+  const greetingName = authUserName?.trim() || authUserEmail?.trim() || "Jugador";
 
   if (loadingEntry) {
     return (
@@ -538,7 +535,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
     <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-3 md:p-4">
       <div className="mx-auto max-w-7xl space-y-4">
         <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm md:p-5">
-          <div className="grid gap-4 xl:grid-cols-[1.25fr_220px_220px_auto] xl:items-stretch">
+          <div className="grid gap-4 xl:grid-cols-[1.4fr_220px_220px_220px] xl:items-stretch">
             <div className="flex items-start gap-4">
               <img
                 src="/logo.png"
@@ -564,6 +561,10 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
                   <span className="rounded-full border border-[var(--iberdrola-green)] px-3 py-1 font-medium text-[var(--iberdrola-forest)]">
                     Porra {entryNumber ?? "-"}
+                  </span>
+
+                  <span className="rounded-full border border-[var(--iberdrola-green)] px-3 py-1 font-medium text-[var(--iberdrola-forest)]">
+                    Estado: {entryStatus === "submitted" ? "Enviada" : "Borrador"}
                   </span>
                 </div>
 
@@ -613,51 +614,33 @@ export default function PredictionsPageClient({ entryId }: Props) {
               <div className="mt-2 text-xs text-gray-500">=</div>
             </div>
 
-            <div className="flex flex-col items-start gap-3 xl:items-end xl:justify-between">
-              <div className="text-sm text-[var(--iberdrola-forest)]">
-                <strong>Estado:</strong>{" "}
-                {entryStatus === "submitted" ? "Enviada" : "Borrador"}
-              </div>
+            <div className="flex min-h-[132px] flex-col justify-center gap-2">
+              <button
+                type="button"
+                onClick={handleSaveEntry}
+                disabled={entryStatus === "submitted" || saveLoading}
+                className="w-full rounded-xl border border-[var(--iberdrola-green)] bg-white px-5 py-3 font-semibold text-[var(--iberdrola-forest)] disabled:opacity-50"
+              >
+                {saveLoading ? "Guardando..." : "Guardar porra"}
+              </button>
 
-              <div className="flex flex-wrap gap-2 xl:justify-end">
-                {entryNumber === 1 && canCreateSecondEntry ? (
-                  <button
-                    type="button"
-                    onClick={handleCreateSecondEntry}
-                    disabled={createSecondLoading}
-                    className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-5 py-2 font-semibold text-[var(--iberdrola-forest)] disabled:opacity-50"
-                  >
-                    {createSecondLoading ? "Creando..." : "Crear Porra 2"}
-                  </button>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={handleSaveEntry}
-                  disabled={entryStatus === "submitted" || saveLoading}
-                  className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-5 py-2 font-semibold text-[var(--iberdrola-forest)] disabled:opacity-50"
-                >
-                  {saveLoading ? "Guardando..." : "Guardar porra"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSubmitEntry}
-                  disabled={entryStatus === "submitted" || submitLoading}
-                  className="rounded-xl bg-[var(--iberdrola-green)] px-5 py-2 font-semibold text-white disabled:opacity-50"
-                >
-                  {entryStatus === "submitted"
-                    ? "Porra enviada"
-                    : submitLoading
-                    ? "Enviando..."
-                    : "Enviar porra"}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleSubmitEntry}
+                disabled={entryStatus === "submitted" || submitLoading}
+                className="w-full rounded-xl bg-[var(--iberdrola-green)] px-5 py-3 font-semibold text-white disabled:opacity-50"
+              >
+                {entryStatus === "submitted"
+                  ? "Porra enviada"
+                  : submitLoading
+                  ? "Enviando..."
+                  : "Enviar porra"}
+              </button>
 
               <button
                 type="button"
                 onClick={handleLogout}
-                className="text-sm text-gray-500 underline"
+                className="w-full rounded-xl border border-gray-300 bg-white px-5 py-3 font-medium text-gray-600"
               >
                 Cerrar sesión
               </button>
@@ -681,12 +664,10 @@ export default function PredictionsPageClient({ entryId }: Props) {
             <Chip label="Ganador / empate" value={`${scoreSettings.outcome} pts`} />
             <Chip label="Goles local" value={`${scoreSettings.homeGoals} pt`} />
             <Chip label="Goles visitante" value={`${scoreSettings.awayGoals} pt`} />
-
             <Chip label="Round of 32" value={`${scoreSettings.round32QualifiedPoints} pts`} />
             <Chip label="Octavos" value={`${scoreSettings.round16QualifiedPoints} pts`} />
             <Chip label="Cuartos" value={`${scoreSettings.quarterfinalQualifiedPoints} pts`} />
             <Chip label="Semis" value={`${scoreSettings.semifinalQualifiedPoints} pts`} />
-
             <Chip label="Final" value={`${scoreSettings.finalQualifiedPoints} pts`} />
             <Chip label="Campeón" value={`${scoreSettings.championPoints} pts`} />
           </div>
