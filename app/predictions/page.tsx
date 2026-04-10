@@ -484,110 +484,128 @@ export default function PredictionsPage() {
   return (
     <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-3 md:p-4">
       <div className="mx-auto max-w-7xl space-y-4">
-        <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm md:p-5">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="flex items-start gap-4">
-              <img
-                src="/logo.png"
-                alt="Ibe World Cup"
-                className="h-16 w-16 rounded-2xl shadow-md"
-              />
+       <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm md:p-5">
+  <div className="grid gap-4 xl:grid-cols-[1.25fr_220px_220px_auto] xl:items-stretch">
+    <div className="flex items-start gap-4">
+      <img
+        src="/logo.png"
+        alt="Ibe World Cup"
+        className="h-16 w-16 rounded-2xl shadow-md"
+      />
 
-              <div className="min-w-0">
-                <h1 className="text-2xl font-bold leading-tight text-[var(--iberdrola-forest)] md:text-3xl">
-                  {t.appTitle}
-                </h1>
+      <div className="min-w-0">
+        <h1 className="text-2xl font-bold leading-tight text-[var(--iberdrola-forest)] md:text-3xl">
+          {t.appTitle}
+        </h1>
 
-                <p className="mt-1 text-sm font-medium text-[var(--iberdrola-green)] md:text-base">
-                  Bienvenido “{greetingName}”
-                </p>
+        <p className="mt-1 text-sm font-medium text-[var(--iberdrola-green)] md:text-base">
+          Bienvenido “{greetingName}”
+        </p>
 
-                <div className="mt-2 flex flex-wrap gap-2 text-xs md:text-sm">
-                  {poolName ? (
-                    <span className="rounded-full border border-[var(--iberdrola-green)] px-3 py-1 font-medium text-[var(--iberdrola-forest)]">
-                      {poolName}
-                    </span>
-                  ) : null}
-
-                  <span className="rounded-full border border-[var(--iberdrola-green)] px-3 py-1 font-medium text-[var(--iberdrola-forest)]">
-                    Porra {entryNumber ?? "-"}
-                  </span>
-
-                  <span className="rounded-full border border-[var(--iberdrola-green)] px-3 py-1 font-medium text-[var(--iberdrola-forest)]">
-                    Estado: {entryStatus === "submitted" ? "Enviada" : "Borrador"}
-                  </span>
-
-                  <span className="rounded-full border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/30 px-3 py-1 font-semibold text-[var(--iberdrola-forest)]">
-                    {totalPoints} pts
-                  </span>
-                </div>
-
-                <div className="mt-3 flex flex-wrap items-center gap-3">
-                  <LanguageSwitcher
-                    locale={locale}
-                    onChange={setLocale}
-                    label={t.language}
-                  />
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-[var(--iberdrola-forest)]">
-                      Huso horario
-                    </span>
-                    <select
-                      value={timeZone}
-                      onChange={(e) => setTimeZone(e.target.value as TimezoneValue)}
-                      className="rounded-full border border-[var(--iberdrola-green)] bg-white px-3 py-1 text-sm text-[var(--iberdrola-forest)]"
-                    >
-                      {TIMEZONE_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2 xl:justify-end">
-              <button
-                type="button"
-                onClick={handleSaveEntry}
-                disabled={entryStatus === "submitted" || saveLoading}
-                className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-5 py-2 font-semibold text-[var(--iberdrola-forest)] disabled:opacity-50"
-              >
-                {saveLoading ? "Guardando..." : "Guardar porra"}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSubmitEntry}
-                disabled={entryStatus === "submitted" || submitLoading}
-                className="rounded-xl bg-[var(--iberdrola-green)] px-5 py-2 font-semibold text-white disabled:opacity-50"
-              >
-                {entryStatus === "submitted"
-                  ? "Porra enviada"
-                  : submitLoading
-                  ? "Enviando..."
-                  : "Enviar porra"}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="rounded-xl border border-gray-300 bg-white px-5 py-2 font-medium text-gray-600"
-              >
-                Cerrar sesión
-              </button>
-            </div>
-          </div>
-
-          {submitMessage ? (
-            <p className="mt-3 text-sm text-[var(--iberdrola-forest)]">
-              {submitMessage}
-            </p>
+        <div className="mt-2 flex flex-wrap gap-2 text-xs md:text-sm">
+          {poolName ? (
+            <span className="rounded-full border border-[var(--iberdrola-green)] px-3 py-1 font-medium text-[var(--iberdrola-forest)]">
+              {poolName}
+            </span>
           ) : null}
-        </section>
+
+          <span className="rounded-full border border-[var(--iberdrola-green)] px-3 py-1 font-medium text-[var(--iberdrola-forest)]">
+            Porra {entryNumber ?? "-"}
+          </span>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <LanguageSwitcher
+            locale={locale}
+            onChange={setLocale}
+            label={t.language}
+          />
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-[var(--iberdrola-forest)]">
+              Huso horario
+            </span>
+            <select
+              value={timeZone}
+              onChange={(e) => setTimeZone(e.target.value as TimezoneValue)}
+              className="rounded-full border border-[var(--iberdrola-green)] bg-white px-3 py-1 text-sm text-[var(--iberdrola-forest)]"
+            >
+              {TIMEZONE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div className="flex min-h-[132px] flex-col items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/35 px-4 py-4 text-center">
+      <div className="text-sm font-medium text-[var(--iberdrola-forest)] md:text-base">
+        Puntos totales
+      </div>
+      <div className="mt-2 text-5xl font-bold leading-none text-[var(--iberdrola-green)] md:text-6xl">
+        {totalPoints}
+      </div>
+    </div>
+
+    <div className="flex min-h-[132px] flex-col items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/35 px-4 py-4 text-center">
+      <div className="text-sm font-medium text-[var(--iberdrola-forest)] md:text-base">
+        Clasificación
+      </div>
+      <div className="mt-2 text-5xl font-bold leading-none text-[var(--iberdrola-green)] md:text-6xl">
+        -
+      </div>
+      <div className="mt-2 text-xs text-gray-500">=</div>
+    </div>
+
+    <div className="flex flex-col items-start gap-3 xl:items-end xl:justify-between">
+      <div className="text-sm text-[var(--iberdrola-forest)]">
+        <strong>Estado:</strong>{" "}
+        {entryStatus === "submitted" ? "Enviada" : "Borrador"}
+      </div>
+
+      <div className="flex flex-wrap gap-2 xl:justify-end">
+        <button
+          type="button"
+          onClick={handleSaveEntry}
+          disabled={entryStatus === "submitted" || saveLoading}
+          className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-5 py-2 font-semibold text-[var(--iberdrola-forest)] disabled:opacity-50"
+        >
+          {saveLoading ? "Guardando..." : "Guardar porra"}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSubmitEntry}
+          disabled={entryStatus === "submitted" || submitLoading}
+          className="rounded-xl bg-[var(--iberdrola-green)] px-5 py-2 font-semibold text-white disabled:opacity-50"
+        >
+          {entryStatus === "submitted"
+            ? "Porra enviada"
+            : submitLoading
+            ? "Enviando..."
+            : "Enviar porra"}
+        </button>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="text-sm text-gray-500 underline"
+      >
+        Cerrar sesión
+      </button>
+    </div>
+  </div>
+
+  {submitMessage ? (
+    <p className="mt-3 text-sm text-[var(--iberdrola-forest)]">
+      {submitMessage}
+    </p>
+  ) : null}
+</section>
 
         <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm md:p-5">
           <h2 className="text-xl font-semibold text-[var(--iberdrola-forest)]">
