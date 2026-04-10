@@ -2,15 +2,15 @@
 import { ScoreSettings } from "@/types";
 
 export const scoreSettings: ScoreSettings = {
-  exactScore: 5,
-  outcome: 2,
-  homeGoals: 1,
-  awayGoals: 1,
+  exactScore: 34,
+  outcome: 12,
+  homeGoals: 7,
+  awayGoals: 7,
 
   round32QualifiedPoints: 15,
-  round16QualifiedPoints: 20,
-  quarterfinalQualifiedPoints: 30,
-  semifinalQualifiedPoints: 50,
-  finalQualifiedPoints: 75,
-  championPoints: 100,
+  round16QualifiedPoints: 30,
+  quarterfinalQualifiedPoints: 45,
+  semifinalQualifiedPoints: 60,
+  finalQualifiedPoints: 80,
+  championPoints: 120,
 };
