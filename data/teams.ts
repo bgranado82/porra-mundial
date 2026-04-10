@@ -17,7 +17,7 @@ export const teams: Team[] = [
   { id: "bra", name: "Brasil", flag: "🇧🇷", group: "C" },
   { id: "mar", name: "Marruecos", flag: "🇲🇦", group: "C" },
   { id: "hai", name: "Haití", flag: "🇭🇹", group: "C" },
-  { id: "sco", name: "Escocia", flag: "🏴", group: "C" },
+  { id: "sco", name: "Escocia", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿", group: "C" },
 
   // Grupo D
   { id: "usa", name: "Estados Unidos", flag: "🇺🇸", group: "D" },
@@ -68,7 +68,7 @@ export const teams: Team[] = [
   { id: "col", name: "Colombia", flag: "🇨🇴", group: "K" },
 
   // Grupo L
-  { id: "eng", name: "Inglaterra", flag: "🏴", group: "L" },
+  { id: "eng", name: "Inglaterra", flag: "🇬🇧", group: "L" },
   { id: "cro", name: "Croacia", flag: "🇭🇷", group: "L" },
   { id: "gha", name: "Ghana", flag: "🇬🇭", group: "L" },
   { id: "pan", name: "Panamá", flag: "🇵🇦", group: "L" },

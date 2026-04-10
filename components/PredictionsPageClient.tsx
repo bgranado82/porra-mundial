@@ -14,10 +14,7 @@ import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { calculatePredictedStandings } from "@/lib/standings";
 import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
-import {
-  calculateKnockoutHitMap,
-  calculateKnockoutScore,
-} from "@/lib/knockoutScoring";
+import { calculateKnockoutScore } from "@/lib/knockoutScoring";
 import { getBestThirdPlacedTeams } from "@/lib/thirdPlace";
 import { Locale, messages } from "@/lib/i18n";
 import { KnockoutPredictionMap, Match } from "@/types";
@@ -57,28 +54,22 @@ function getTeamsInRound(
 function HeaderPill({
   label,
   value,
-  accent = false,
+  big = false,
 }: {
   label: string;
   value: string | number;
-  accent?: boolean;
+  big?: boolean;
 }) {
   return (
-    <div
-      className={`rounded-2xl border px-4 py-3 shadow-sm ${
-        accent
-          ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green)] text-white"
-          : "border-[var(--iberdrola-sky)] bg-white text-[var(--iberdrola-forest)]"
-      }`}
-    >
-      <div
-        className={`text-[11px] font-bold uppercase tracking-wide ${
-          accent ? "text-white/85" : "text-[var(--iberdrola-forest)]/65"
-        }`}
-      >
+    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4 shadow-sm">
+      <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
         {label}
       </div>
-      <div className={`mt-1 ${accent ? "text-4xl sm:text-5xl" : "text-2xl"} font-black`}>
+      <div
+        className={`flex items-center justify-center text-center font-black text-[var(--iberdrola-green)] ${
+          big ? "min-h-[110px] text-5xl sm:text-6xl" : "min-h-[110px] text-3xl"
+        }`}
+      >
         {value}
       </div>
     </div>
@@ -163,9 +154,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
           error: authError,
         } = await supabase.auth.getUser();
 
-        if (authError) {
-          console.error(authError);
-        }
+        if (authError) console.error(authError);
 
         if (!user) {
           window.location.href = "/";
@@ -180,9 +169,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
           .eq("id", user.id)
           .maybeSingle();
 
-        if (profileError) {
-          console.error(profileError);
-        }
+        if (profileError) console.error(profileError);
 
         setAuthUserName(
           profile?.full_name ||
@@ -206,9 +193,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
           .eq("user_id", user.id)
           .maybeSingle();
 
-        if (entryError) {
-          console.error(entryError);
-        }
+        if (entryError) console.error(entryError);
 
         const entry = rawEntry;
 
@@ -234,9 +219,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
           .select("entry_id, match_id, home_goals, away_goals")
           .eq("entry_id", entry.id);
 
-        if (groupError) {
-          console.error(groupError);
-        }
+        if (groupError) console.error(groupError);
 
         const nextPredictions: PredictionMap = {};
         (groupRows ?? []).forEach((row) => {
@@ -252,9 +235,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
           .select("entry_id, match_id, picked_team_id")
           .eq("entry_id", entry.id);
 
-        if (koError) {
-          console.error(koError);
-        }
+        if (koError) console.error(koError);
 
         const nextKo: KnockoutPredictionMap = {};
         (koRows ?? []).forEach((row) => {
@@ -267,9 +248,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
             .from("official_group_results")
             .select("match_id, home_goals, away_goals");
 
-        if (officialGroupError) {
-          console.error(officialGroupError);
-        }
+        if (officialGroupError) console.error(officialGroupError);
 
         const mergedMatches = initialMatches.map((match) => {
           if (match.stage !== "group") return match;
@@ -292,9 +271,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
             .from("official_knockout_results")
             .select("match_id, picked_team_id");
 
-        if (officialKnockoutError) {
-          console.error(officialKnockoutError);
-        }
+        if (officialKnockoutError) console.error(officialKnockoutError);
 
         const nextRealKo: KnockoutPredictionMap = {
           ...initialRealKnockoutPredictions,
@@ -519,11 +496,6 @@ export default function PredictionsPageClient({ entryId }: Props) {
     [userBracket, realBracket]
   );
 
-  const knockoutHitMap = useMemo(
-    () => calculateKnockoutHitMap(scoreSettings, userBracket, realBracket),
-    [userBracket, realBracket]
-  );
-
   const realTeamsByRound = useMemo(
     () => ({
       round32: getTeamsInRound(realBracket.round32),
@@ -562,7 +534,6 @@ export default function PredictionsPageClient({ entryId }: Props) {
                     alt="Porra Mundial"
                     className="h-12 w-12 rounded-xl object-contain sm:h-14 sm:w-14"
                   />
-
                   <div className="min-w-0">
                     <h1 className="truncate text-xl font-black text-[var(--iberdrola-forest)] sm:text-2xl">
                       {t.appTitle}
@@ -612,16 +583,8 @@ export default function PredictionsPageClient({ entryId }: Props) {
             </div>
 
             <div className="mt-5 grid gap-3 lg:grid-cols-[1.3fr_0.8fr_auto]">
-              <HeaderPill
-                label={t.totalPoints}
-                value={totalPoints}
-                accent
-              />
-
-              <HeaderPill
-                label="Clasificación"
-                value="-"
-              />
+              <HeaderPill label={t.totalPoints} value={totalPoints} big />
+              <HeaderPill label="Clasificación" value="-" />
 
               <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
                 <button
@@ -690,16 +653,12 @@ export default function PredictionsPageClient({ entryId }: Props) {
                 value={`${scoreSettings.awayGoals} ${t.points}`}
               />
               <RulePill
-                label={t.champion}
-                value={`${scoreSettings.championPoints} ${t.points}`}
+                label={t.round32}
+                value={`${scoreSettings.round32QualifiedPoints} ${t.points}`}
               />
             </div>
 
             <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-              <RulePill
-                label={t.round32}
-                value={`${scoreSettings.round32QualifiedPoints} ${t.points}`}
-              />
               <RulePill
                 label={t.round16}
                 value={`${scoreSettings.round16QualifiedPoints} ${t.points}`}
@@ -715,6 +674,10 @@ export default function PredictionsPageClient({ entryId }: Props) {
               <RulePill
                 label={t.finalLabel}
                 value={`${scoreSettings.finalQualifiedPoints} ${t.points}`}
+              />
+              <RulePill
+                label={t.champion}
+                value={`${scoreSettings.championPoints} ${t.points}`}
               />
             </div>
 
@@ -748,70 +711,72 @@ export default function PredictionsPageClient({ entryId }: Props) {
                   </h2>
                 </div>
 
-                <div className="grid gap-4 p-4 xl:grid-cols-[1.45fr_1fr]">
-                  <div className="space-y-2">
-                    {groupMatches.map((match) => {
-                      const homeTeam = teamMap.get(match.homeTeamId ?? "");
-                      const awayTeam = teamMap.get(match.awayTeamId ?? "");
+                <div className="p-4">
+                  <div className="grid gap-4 2xl:grid-cols-[1.2fr_0.8fr]">
+                    <div className="space-y-2">
+                      {groupMatches.map((match) => {
+                        const homeTeam = teamMap.get(match.homeTeamId ?? "");
+                        const awayTeam = teamMap.get(match.awayTeamId ?? "");
 
-                      if (!homeTeam || !awayTeam) return null;
+                        if (!homeTeam || !awayTeam) return null;
 
-                      const prediction = predictions[match.id] ?? {
-                        homeGoals: null,
-                        awayGoals: null,
-                      };
+                        const prediction = predictions[match.id] ?? {
+                          homeGoals: null,
+                          awayGoals: null,
+                        };
 
-                      const score = calculateMatchPredictionScore(
-                        match.homeGoals,
-                        match.awayGoals,
-                        prediction.homeGoals,
-                        prediction.awayGoals,
-                        scoreSettings
-                      );
+                        const score = calculateMatchPredictionScore(
+                          match.homeGoals,
+                          match.awayGoals,
+                          prediction.homeGoals,
+                          prediction.awayGoals,
+                          scoreSettings
+                        );
 
-                      return (
-                        <GroupMatchRow
-                          key={match.id}
-                          matchNumber={match.matchNumber}
-                          kickoff={match.kickoff ?? null}
-                          timeZone={timeZone}
-                          homeTeam={homeTeam}
-                          awayTeam={awayTeam}
-                          homePrediction={prediction.homeGoals}
-                          awayPrediction={prediction.awayGoals}
-                          officialHomeGoals={match.homeGoals}
-                          officialAwayGoals={match.awayGoals}
-                          points={score.points}
-                          pointsShortLabel={t.pointsShort}
-                          officialLabel={t.officialLabel}
-                          officialPendingLabel={t.officialPending}
-                          onChangeHome={(value) =>
-                            updatePrediction(match.id, "homeGoals", value)
-                          }
-                          onChangeAway={(value) =>
-                            updatePrediction(match.id, "awayGoals", value)
-                          }
-                        />
-                      );
-                    })}
-                  </div>
+                        return (
+                          <GroupMatchRow
+                            key={match.id}
+                            matchNumber={match.matchNumber}
+                            kickoff={match.kickoff ?? null}
+                            timeZone={timeZone}
+                            homeTeam={homeTeam}
+                            awayTeam={awayTeam}
+                            homePrediction={prediction.homeGoals}
+                            awayPrediction={prediction.awayGoals}
+                            officialHomeGoals={match.homeGoals}
+                            officialAwayGoals={match.awayGoals}
+                            points={score.points}
+                            pointsShortLabel={t.pointsShort}
+                            officialLabel={t.officialLabel}
+                            officialPendingLabel={t.officialPending}
+                            onChangeHome={(value) =>
+                              updatePrediction(match.id, "homeGoals", value)
+                            }
+                            onChangeAway={(value) =>
+                              updatePrediction(match.id, "awayGoals", value)
+                            }
+                          />
+                        );
+                      })}
+                    </div>
 
-                  <div className="min-w-0">
-                    <GroupStandingsTable
-                      title={t.predictedStandings}
-                      rows={predictedStandings}
-                      labels={{
-                        team: t.team,
-                        played: t.played,
-                        won: t.won,
-                        drawn: t.drawn,
-                        lost: t.lost,
-                        goalsFor: t.goalsFor,
-                        goalsAgainst: t.goalsAgainst,
-                        goalDifference: t.goalDifference,
-                        pointsShort: t.pointsShort,
-                      }}
-                    />
+                    <div className="min-w-0">
+                      <GroupStandingsTable
+                        title={t.predictedStandings}
+                        rows={predictedStandings}
+                        labels={{
+                          team: t.team,
+                          played: t.played,
+                          won: t.won,
+                          drawn: t.drawn,
+                          lost: t.lost,
+                          goalsFor: t.goalsFor,
+                          goalsAgainst: t.goalsAgainst,
+                          goalDifference: t.goalDifference,
+                          pointsShort: t.pointsShort,
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </section>
@@ -820,26 +785,26 @@ export default function PredictionsPageClient({ entryId }: Props) {
         </div>
 
         <ThirdPlaceTable
-          title={`${t.group} I · ${t.bestThirdPlaced}`}
-          subtitle={t.bestThirdPlacedSubtitle}
-          rows={predictedThirdPlaced}
-          labels={{
-            position: t.position,
-            group: t.group,
-            team: t.team,
-            played: t.played,
-            won: t.won,
-            drawn: t.drawn,
-            lost: t.lost,
-            goalsFor: t.goalsFor,
-            goalsAgainst: t.goalsAgainst,
-            goalDifference: t.goalDifference,
-            pointsShort: t.pointsShort,
-            status: t.status,
-            qualified: t.qualified,
-            eliminated: t.eliminated,
-          }}
-        />
+  title={`${t.bestThirdPlaced}`}
+  subtitle={t.bestThirdPlacedSubtitle}
+  rows={predictedThirdPlaced}
+  labels={{
+    position: t.position,
+    group: t.group,
+    team: t.team,
+    played: t.played,
+    won: t.won,
+    drawn: t.drawn,
+    lost: t.lost,
+    goalsFor: t.goalsFor,
+    goalsAgainst: t.goalsAgainst,
+    goalDifference: t.goalDifference,
+    pointsShort: t.pointsShort,
+    status: t.status,
+    qualified: t.qualified,
+    eliminated: t.eliminated,
+  }}
+/>
 
         <KnockoutBracket
           title={t.knockoutBracket}

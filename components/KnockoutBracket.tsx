@@ -1,8 +1,4 @@
-import {
-  KnockoutBracketMatch,
-  KnockoutPredictionMap,
-  Team,
-} from "@/types";
+import { KnockoutBracketMatch, KnockoutPredictionMap, Team } from "@/types";
 
 type Props = {
   title: string;
@@ -16,7 +12,6 @@ type Props = {
   teams: Team[];
   picks: KnockoutPredictionMap;
   onPick?: (matchId: string, teamId: string | null) => void;
-  hitMap?: Record<string, number>;
   realTeamsByRound?: {
     round32: Set<string>;
     round16: Set<string>;
@@ -73,10 +68,10 @@ function getDisplayText(team: Team | null, label?: string) {
 
 function getPointsForStage(stage: string) {
   if (stage === "round32") return 15;
-  if (stage === "round16") return 20;
-  if (stage === "quarterfinal") return 30;
-  if (stage === "semifinal") return 50;
-  if (stage === "final") return 75;
+  if (stage === "round16") return 30;
+  if (stage === "quarterfinal") return 45;
+  if (stage === "semifinal") return 60;
+  if (stage === "final") return 80;
   return 0;
 }
 
@@ -109,30 +104,28 @@ function TeamButton({
   return (
     <button
       type="button"
-      disabled={!clickable}
       onClick={onClick}
-      className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition ${
+      disabled={!clickable}
+      className={`w-full rounded-xl border px-3 py-3 text-left text-sm font-bold transition ${
         selected
-          ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)] text-[var(--iberdrola-forest)]"
-          : hasPoints
-          ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/50 text-[var(--iberdrola-forest)]"
-          : "border-gray-200 bg-white text-[var(--iberdrola-forest)]"
-      } ${clickable ? "cursor-pointer" : "cursor-default opacity-95"}`}
+          ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green)]/10 text-[var(--iberdrola-forest)]"
+          : "border-[var(--iberdrola-sky)] bg-white text-[var(--iberdrola-forest)]"
+      } ${clickable ? "hover:bg-[var(--iberdrola-sand)]" : "cursor-default opacity-85"}`}
     >
-      <span className="truncate pr-2">{getDisplayText(team, label)}</span>
-
-      <div className="flex items-center gap-2">
-        {hasPoints ? (
-          <span className="rounded-full bg-[var(--iberdrola-green)] px-2 py-0.5 text-[11px] font-bold text-white">
-            +{points}
-          </span>
-        ) : null}
-
-        {selected ? (
-          <span className="text-xs font-bold text-[var(--iberdrola-green)]">
-            ✓
-          </span>
-        ) : null}
+      <div className="flex items-center justify-between gap-3">
+        <span className="min-w-0 break-words">{getDisplayText(team, label)}</span>
+        <span className="shrink-0">
+          {hasPoints ? (
+            <span className="rounded-full bg-[var(--iberdrola-green)] px-2 py-1 text-[10px] font-black text-white">
+              +{points}
+            </span>
+          ) : null}
+          {selected ? (
+            <span className="ml-2 rounded-full bg-[var(--iberdrola-forest)] px-2 py-1 text-[10px] font-black text-white">
+              ✓
+            </span>
+          ) : null}
+        </span>
       </div>
     </button>
   );
@@ -156,7 +149,6 @@ function MatchCard({
   const selected = picks[match.id] ?? null;
   const interactive = Boolean(onPick);
   const officialNumber = getOfficialMatchNumber(match.id);
-
   const roundKey = getRoundKey(match.stage);
   const pointsPerTeam = getPointsForStage(match.stage);
 
@@ -171,8 +163,8 @@ function MatchCard({
     realTeamsByRound[roundKey].has(awayTeam.id);
 
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white p-3 shadow-sm">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3 shadow-sm">
+      <div className="mb-3 text-xs font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
         {officialNumber ? `Partido ${officialNumber}` : match.id.toUpperCase()}
       </div>
 
@@ -181,21 +173,20 @@ function MatchCard({
           team={homeTeam}
           label={match.homeLabel}
           selected={selected === homeTeam?.id}
-          interactive={interactive}
           onClick={() =>
             onPick?.(match.id, selected === homeTeam?.id ? null : homeTeam?.id ?? null)
           }
+          interactive={interactive}
           points={homeHit ? pointsPerTeam : 0}
         />
-
         <TeamButton
           team={awayTeam}
           label={match.awayLabel}
           selected={selected === awayTeam?.id}
-          interactive={interactive}
           onClick={() =>
             onPick?.(match.id, selected === awayTeam?.id ? null : awayTeam?.id ?? null)
           }
+          interactive={interactive}
           points={awayHit ? pointsPerTeam : 0}
         />
       </div>
@@ -203,50 +194,10 @@ function MatchCard({
   );
 }
 
-function InfoCard({
-  title,
-  line1,
-  line2,
-}: {
-  title: string;
-  line1: string;
-  line2: string;
-}) {
+function StageTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white p-3 shadow-sm">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-        {title}
-      </div>
-      <div className="space-y-2 text-sm text-[var(--iberdrola-forest)]">
-        <div className="rounded-xl border border-gray-200 px-3 py-2">{line1}</div>
-        <div className="rounded-xl border border-gray-200 px-3 py-2">{line2}</div>
-      </div>
-    </div>
-  );
-}
-
-function ChampionCard({
-  champion,
-  points,
-}: {
-  champion: Team | null;
-  points?: number;
-}) {
-  return (
-    <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/35 p-3 shadow-sm">
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-        Campeón
-      </div>
-
-      <div className="flex items-center justify-between gap-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
-        <span>{champion ? `${champion.flag} ${champion.name}` : "Por definir"}</span>
-
-        {points && points > 0 ? (
-          <span className="rounded-full bg-[var(--iberdrola-green)] px-2 py-0.5 text-[11px] font-bold text-white">
-            +{points}
-          </span>
-        ) : null}
-      </div>
+    <div className="rounded-xl bg-[var(--iberdrola-sand)] px-3 py-2 text-sm font-black text-[var(--iberdrola-forest)]">
+      {children}
     </div>
   );
 }
@@ -268,10 +219,7 @@ function StageColumn({
 }) {
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl bg-[var(--iberdrola-green-light)]/35 px-3 py-2 text-center text-sm font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]">
-        {title}
-      </div>
-
+      <StageTitle>{title}</StageTitle>
       {matches.map((match) => (
         <MatchCard
           key={match.id}
@@ -282,6 +230,30 @@ function StageColumn({
           realTeamsByRound={realTeamsByRound}
         />
       ))}
+    </div>
+  );
+}
+
+function ChampionCard({
+  champion,
+  points,
+}: {
+  champion: Team | null;
+  points?: number;
+}) {
+  return (
+    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] p-4 text-center shadow-sm">
+      <div className="text-xs font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+        Campeón
+      </div>
+      <div className="mt-2 text-lg font-black text-[var(--iberdrola-forest)]">
+        {champion ? `${champion.flag} ${champion.name}` : "Por definir"}
+      </div>
+      {points && points > 0 ? (
+        <div className="mt-2 inline-flex rounded-full bg-[var(--iberdrola-green)] px-3 py-1 text-xs font-black text-white">
+          +{points}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -302,89 +274,203 @@ export default function KnockoutBracket({
 }: Props) {
   const champion = teams.find((team) => team.id === championId) ?? null;
 
-  const finalMatch = finals.find((m) => m.id === "final-1") ?? null;
+  const orderedRound32Left = [
+    "r32-2",
+    "r32-5",
+    "r32-1",
+    "r32-3",
+    "r32-4",
+    "r32-6",
+    "r32-7",
+    "r32-8",
+  ]
+    .map((id) => round32.find((m) => m.id === id))
+    .filter(Boolean) as KnockoutBracketMatch[];
+
+  const orderedRound32Right = [
+    "r32-11",
+    "r32-12",
+    "r32-9",
+    "r32-10",
+    "r32-14",
+    "r32-16",
+    "r32-13",
+    "r32-15",
+  ]
+    .map((id) => round32.find((m) => m.id === id))
+    .filter(Boolean) as KnockoutBracketMatch[];
+
+  const orderedRound16Left = ["r16-1", "r16-2", "r16-3", "r16-4"]
+    .map((id) => round16.find((m) => m.id === id))
+    .filter(Boolean) as KnockoutBracketMatch[];
+
+  const orderedRound16Right = ["r16-5", "r16-6", "r16-7", "r16-8"]
+    .map((id) => round16.find((m) => m.id === id))
+    .filter(Boolean) as KnockoutBracketMatch[];
+
+  const orderedQuarterLeft = ["qf-1", "qf-3"]
+    .map((id) => quarterfinals.find((m) => m.id === id))
+    .filter(Boolean) as KnockoutBracketMatch[];
+
+  const orderedQuarterRight = ["qf-2", "qf-4"]
+    .map((id) => quarterfinals.find((m) => m.id === id))
+    .filter(Boolean) as KnockoutBracketMatch[];
 
   return (
-    <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm md:p-5">
-      <h2 className="text-xl font-semibold text-[var(--iberdrola-forest)] md:text-2xl">
-        {title}
-      </h2>
+    <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+        <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+          {title}
+        </h2>
+        {subtitle ? (
+          <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+            {subtitle}
+          </p>
+        ) : null}
+      </div>
 
-      {subtitle ? <p className="mt-1 text-sm text-gray-500">{subtitle}</p> : null}
-
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <StageColumn
-          title="R32"
-          matches={round32}
-          teams={teams}
-          picks={picks}
-          onPick={onPick}
-          realTeamsByRound={realTeamsByRound}
-        />
-
-        <StageColumn
-          title="R16"
-          matches={round16}
-          teams={teams}
-          picks={picks}
-          onPick={onPick}
-          realTeamsByRound={realTeamsByRound}
-        />
-
-        <StageColumn
-          title="QF"
-          matches={quarterfinals}
-          teams={teams}
-          picks={picks}
-          onPick={onPick}
-          realTeamsByRound={realTeamsByRound}
-        />
-
-        <StageColumn
-          title="SF"
-          matches={semifinals}
-          teams={teams}
-          picks={picks}
-          onPick={onPick}
-          realTeamsByRound={realTeamsByRound}
-        />
-
-        <div className="space-y-3">
-          <div className="rounded-2xl bg-[var(--iberdrola-green-light)]/35 px-3 py-2 text-center text-sm font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]">
-            Final
-          </div>
-
-          {finalMatch ? (
-            <MatchCard
-              match={finalMatch}
+      <div className="space-y-6 p-4">
+        <div className="xl:hidden space-y-6">
+          <div className="space-y-3">
+            <StageTitle>Lado izquierdo</StageTitle>
+            <StageColumn
+              title="Round of 32"
+              matches={orderedRound32Left}
               teams={teams}
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
             />
-          ) : (
-            <InfoCard
-              title="Partido 104"
-              line1="Ganador partido 101"
-              line2="Ganador partido 102"
+            <StageColumn
+              title="Octavos"
+              matches={orderedRound16Left}
+              teams={teams}
+              picks={picks}
+              onPick={onPick}
+              realTeamsByRound={realTeamsByRound}
             />
-          )}
+            <StageColumn
+              title="Cuartos"
+              matches={orderedQuarterLeft}
+              teams={teams}
+              picks={picks}
+              onPick={onPick}
+              realTeamsByRound={realTeamsByRound}
+            />
+          </div>
 
-          <InfoCard
-            title="Partido 103"
-            line1="Perdedor partido 101"
-            line2="Perdedor partido 102"
+          <div className="space-y-3">
+            <StageTitle>Lado derecho</StageTitle>
+            <StageColumn
+              title="Round of 32"
+              matches={orderedRound32Right}
+              teams={teams}
+              picks={picks}
+              onPick={onPick}
+              realTeamsByRound={realTeamsByRound}
+            />
+            <StageColumn
+              title="Octavos"
+              matches={orderedRound16Right}
+              teams={teams}
+              picks={picks}
+              onPick={onPick}
+              realTeamsByRound={realTeamsByRound}
+            />
+            <StageColumn
+              title="Cuartos"
+              matches={orderedQuarterRight}
+              teams={teams}
+              picks={picks}
+              onPick={onPick}
+              realTeamsByRound={realTeamsByRound}
+            />
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-[1fr_1fr_0.8fr]">
+            <StageColumn
+              title="Semis"
+              matches={semifinals}
+              teams={teams}
+              picks={picks}
+              onPick={onPick}
+              realTeamsByRound={realTeamsByRound}
+            />
+            <StageColumn
+              title="Final"
+              matches={finals}
+              teams={teams}
+              picks={picks}
+              onPick={onPick}
+              realTeamsByRound={realTeamsByRound}
+            />
+            <ChampionCard champion={champion} points={champion ? 120 : 0} />
+          </div>
+        </div>
+
+        <div className="hidden xl:grid xl:grid-cols-[1fr_1fr_0.8fr_1fr_1fr] xl:gap-4">
+          <StageColumn
+            title="Round of 32"
+            matches={orderedRound32Left}
+            teams={teams}
+            picks={picks}
+            onPick={onPick}
+            realTeamsByRound={realTeamsByRound}
           />
 
-          <ChampionCard
-            champion={champion}
-            points={
-              champion &&
-              realTeamsByRound?.champion &&
-              champion.id === realTeamsByRound.champion
-                ? 100
-                : 0
-            }
+          <StageColumn
+            title="Octavos"
+            matches={orderedRound16Left}
+            teams={teams}
+            picks={picks}
+            onPick={onPick}
+            realTeamsByRound={realTeamsByRound}
+          />
+
+          <div className="space-y-4">
+            <StageColumn
+              title="Cuartos"
+              matches={[...orderedQuarterLeft, ...orderedQuarterRight]}
+              teams={teams}
+              picks={picks}
+              onPick={onPick}
+              realTeamsByRound={realTeamsByRound}
+            />
+            <StageColumn
+              title="Semis"
+              matches={semifinals}
+              teams={teams}
+              picks={picks}
+              onPick={onPick}
+              realTeamsByRound={realTeamsByRound}
+            />
+            <StageColumn
+              title="Final"
+              matches={finals}
+              teams={teams}
+              picks={picks}
+              onPick={onPick}
+              realTeamsByRound={realTeamsByRound}
+            />
+            <ChampionCard champion={champion} points={champion ? 120 : 0} />
+          </div>
+
+          <StageColumn
+            title="Octavos"
+            matches={orderedRound16Right}
+            teams={teams}
+            picks={picks}
+            onPick={onPick}
+            realTeamsByRound={realTeamsByRound}
+          />
+
+          <StageColumn
+            title="Round of 32"
+            matches={orderedRound32Right}
+            teams={teams}
+            picks={picks}
+            onPick={onPick}
+            realTeamsByRound={realTeamsByRound}
           />
         </div>
       </div>
