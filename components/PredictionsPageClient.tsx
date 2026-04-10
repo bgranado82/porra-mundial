@@ -392,6 +392,10 @@ export default function PredictionsPageClient({ entryId }: Props) {
     setSubmitMessage("");
 
     try {
+      console.log("activeEntryId", activeEntryId);
+      console.log("poolSlug", poolSlug);
+      console.log("entryNumber", entryNumber);
+      
       const res = await fetch("/api/create-second-entry", {
         method: "POST",
         headers: {
