@@ -27,6 +27,7 @@ import { KnockoutPredictionMap, Match } from "@/types";
 import { TIMEZONE_OPTIONS, TimezoneValue } from "@/lib/timezone";
 import { createClient } from "@/utils/supabase/client";
 
+
 type PredictionMap = Record<
   string,
   { homeGoals: number | null; awayGoals: number | null }
@@ -231,7 +232,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
     }
 
     loadFromSupabase();
-  }, [entryId, supabase]);
+  }, [entryId]);
 
   function updatePrediction(
     matchId: string,

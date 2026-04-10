@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import PredictionsPageClient from "@/components/PredictionsPageClient";
 
 type Props = {
   params: Promise<{
@@ -9,5 +9,5 @@ type Props = {
 
 export default async function EntryPage({ params }: Props) {
   const { entryId } = await params;
-  redirect(`/predictions?entryId=${entryId}`);
+  return <PredictionsPageClient entryId={entryId} />;
 }
