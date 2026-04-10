@@ -44,20 +44,20 @@ export default function GroupMatchRow({
 
   const officialText =
     officialHomeGoals !== null && officialAwayGoals !== null
-      ? `${officialLabel}: ${officialHomeGoals}-${officialAwayGoals}`
-      : `${officialLabel}: ${officialPendingLabel}`;
+      ? `${officialHomeGoals}-${officialAwayGoals}`
+      : officialPendingLabel;
 
   return (
-    <div className="py-2">
-      <div className="mb-1 flex items-center justify-between text-[10px] leading-none text-gray-500 md:text-[11px]">
-        <span>#{matchNumber ?? "-"}</span>
-        <span>{kickoffInfo.short || "-"}</span>
+    <div className="py-1.5">
+      <div className="mb-1 flex items-center justify-between text-[10px] leading-none text-gray-500">
+        <span>{matchNumber ? `#${matchNumber}` : ""}</span>
+        <span>{kickoffInfo.short || ""}</span>
       </div>
 
-      <div className="grid grid-cols-[minmax(0,1fr)_74px_minmax(0,1fr)_30px] items-center gap-2 md:grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)_34px] md:gap-2.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_74px_minmax(0,1fr)_24px] items-center gap-2 md:grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)_28px] md:gap-2">
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="shrink-0 text-sm md:text-base">{homeTeam.flag}</span>
-          <span className="truncate text-sm text-[var(--iberdrola-forest)] md:text-[15px]">
+          <span className="shrink-0 text-sm">{homeTeam.flag}</span>
+          <span className="truncate text-sm text-[var(--iberdrola-forest)]">
             {homeTeam.name}
           </span>
         </div>
@@ -70,7 +70,7 @@ export default function GroupMatchRow({
             onChange={(e) =>
               onChangeHome(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-8 w-8 rounded-md border border-[var(--iberdrola-sky)] bg-white p-0 text-center text-sm text-[var(--iberdrola-forest)] md:h-9 md:w-9"
+            className="h-8 w-8 rounded-md border border-[var(--iberdrola-sky)] bg-white p-0 text-center text-sm text-[var(--iberdrola-forest)]"
           />
           <span className="text-sm font-semibold text-[var(--iberdrola-forest)]">
             -
@@ -82,29 +82,26 @@ export default function GroupMatchRow({
             onChange={(e) =>
               onChangeAway(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-8 w-8 rounded-md border border-[var(--iberdrola-sky)] bg-white p-0 text-center text-sm text-[var(--iberdrola-forest)] md:h-9 md:w-9"
+            className="h-8 w-8 rounded-md border border-[var(--iberdrola-sky)] bg-white p-0 text-center text-sm text-[var(--iberdrola-forest)]"
           />
         </div>
 
         <div className="flex min-w-0 items-center justify-end gap-1.5">
-          <span className="truncate text-right text-sm text-[var(--iberdrola-forest)] md:text-[15px]">
+          <span className="truncate text-right text-sm text-[var(--iberdrola-forest)]">
             {awayTeam.name}
           </span>
-          <span className="shrink-0 text-sm md:text-base">{awayTeam.flag}</span>
+          <span className="shrink-0 text-sm">{awayTeam.flag}</span>
         </div>
 
         <div className="text-right">
-          <div className="text-[9px] leading-none text-gray-500 md:text-[10px]">
-            {pointsShortLabel}
-          </div>
-          <div className="text-sm font-semibold leading-tight text-[var(--iberdrola-green)] md:text-base">
+          <div className="text-sm font-semibold leading-tight text-[var(--iberdrola-green)]">
             {points}
           </div>
         </div>
       </div>
 
-      <div className="mt-1 text-center text-[10px] leading-none text-gray-500 md:text-[11px]">
-        {officialText}
+      <div className="mt-1 text-center text-[10px] leading-none text-gray-500">
+        {officialLabel}: {officialText}
       </div>
     </div>
   );
