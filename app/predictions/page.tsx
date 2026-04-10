@@ -1,11 +1,10 @@
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import GroupMatchRow from "@/components/GroupMatchRow";
 import GroupStandingsTable from "@/components/GroupStandingsTable";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import ScoringRulesCard from "@/components/ScoringRulesCard";
-import TotalPointsCard from "@/components/TotalPointsCard";
 import KnockoutBracket from "@/components/KnockoutBracket";
 import ThirdPlaceTable from "@/components/ThirdPlaceTable";
 
@@ -16,7 +15,6 @@ import { realKnockoutPredictions as initialRealKnockoutPredictions } from "@/dat
 
 import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { calculatePredictedStandings } from "@/lib/standings";
-import { calculateDailyPoints } from "@/lib/dailyPoints";
 import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
 import {
@@ -50,6 +48,19 @@ function getTeamsInRound(
   return set;
 }
 
+function Chip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3">
+      <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+        {label}
+      </div>
+      <div className="mt-1 text-base font-bold text-[var(--iberdrola-forest)]">
+        {value}
+      </div>
+    </div>
+  );
+}
+
 export default function PredictionsPage() {
   const supabase = createClient();
 
@@ -69,6 +80,8 @@ export default function PredictionsPage() {
 
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [entryStatus, setEntryStatus] = useState("draft");
+  const [entryNumber, setEntryNumber] = useState<number | null>(null);
+  const [poolName, setPoolName] = useState("");
 
   const [loadingEntry, setLoadingEntry] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
@@ -135,26 +148,34 @@ export default function PredictionsPage() {
 
         const storedEntryId = localStorage.getItem("active_entry_id");
 
-        if (!storedEntryId) {
-          setActiveEntryId(null);
-          setEntryStatus("draft");
-          setPredictions({});
-          setKnockoutPredictions({});
-          setSubmitMessage("No hay porra activa.");
-          setLoadingEntry(false);
-          return;
+        let entryQuery = supabase
+          .from("entries")
+          .select(`
+            id,
+            status,
+            user_id,
+            entry_number,
+            created_at,
+            pools (
+              name,
+              slug
+            )
+          `)
+          .eq("user_id", user.id);
+
+        if (storedEntryId) {
+          entryQuery = entryQuery.eq("id", storedEntryId);
+        } else {
+          entryQuery = entryQuery.order("entry_number", { ascending: true }).limit(1);
         }
 
-        const { data: entry, error: entryError } = await supabase
-          .from("entries")
-          .select("id, status, user_id, entry_number, created_at")
-          .eq("id", storedEntryId)
-          .eq("user_id", user.id)
-          .maybeSingle();
+        const { data: rawEntry, error: entryError } = await entryQuery.maybeSingle();
 
         if (entryError) {
           console.error(entryError);
         }
+
+        const entry = rawEntry;
 
         if (!entry) {
           setActiveEntryId(null);
@@ -166,8 +187,12 @@ export default function PredictionsPage() {
           return;
         }
 
+        const pool = Array.isArray(entry.pools) ? entry.pools[0] : entry.pools;
+
         setActiveEntryId(entry.id);
         setEntryStatus(entry.status ?? "draft");
+        setEntryNumber(entry.entry_number ?? null);
+        setPoolName(pool?.name ?? "");
 
         const { data: groupRows, error: groupError } = await supabase
           .from("entry_group_predictions")
@@ -347,19 +372,14 @@ export default function PredictionsPage() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
+    localStorage.removeItem("active_entry_id");
+    localStorage.removeItem("active_pool_slug");
     window.location.href = "/";
   }
 
   const t = messages[locale];
   const teamMap = new Map(teams.map((team) => [team.id, team]));
   const groups = [...new Set(teams.map((team) => team.group).filter(Boolean))] as string[];
-
-  const dailyPointsRows = calculateDailyPoints(
-    officialMatches,
-    predictions,
-    scoreSettings,
-    timeZone
-  );
 
   const groupPointsTotal = officialMatches
     .filter((match) => match.stage === "group")
@@ -451,10 +471,6 @@ export default function PredictionsPage() {
     authUserEmail?.trim() ||
     "Jugador";
 
-  const rankingPosition = 0;
-  const rankingTotalPlayers = 0;
-  const rankingMovement = 0;
-
   if (loadingEntry) {
     return (
       <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-6">
@@ -466,27 +482,47 @@ export default function PredictionsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-3">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-4 rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex items-center gap-4">
+    <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-3 md:p-4">
+      <div className="mx-auto max-w-7xl space-y-4">
+        <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm md:p-5">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="flex items-start gap-4">
               <img
                 src="/logo.png"
                 alt="Ibe World Cup"
                 className="h-16 w-16 rounded-2xl shadow-md"
               />
 
-              <div className="flex flex-col justify-center">
-                <h1 className="m-0 text-2xl font-bold leading-tight text-[var(--iberdrola-forest)] md:text-3xl">
+              <div className="min-w-0">
+                <h1 className="text-2xl font-bold leading-tight text-[var(--iberdrola-forest)] md:text-3xl">
                   {t.appTitle}
                 </h1>
 
-                <p className="text-sm font-medium text-[var(--iberdrola-green)] md:text-base">
+                <p className="mt-1 text-sm font-medium text-[var(--iberdrola-green)] md:text-base">
                   Bienvenido “{greetingName}”
                 </p>
 
-                <div className="mt-2 flex flex-wrap items-center gap-3">
+                <div className="mt-2 flex flex-wrap gap-2 text-xs md:text-sm">
+                  {poolName ? (
+                    <span className="rounded-full border border-[var(--iberdrola-green)] px-3 py-1 font-medium text-[var(--iberdrola-forest)]">
+                      {poolName}
+                    </span>
+                  ) : null}
+
+                  <span className="rounded-full border border-[var(--iberdrola-green)] px-3 py-1 font-medium text-[var(--iberdrola-forest)]">
+                    Porra {entryNumber ?? "-"}
+                  </span>
+
+                  <span className="rounded-full border border-[var(--iberdrola-green)] px-3 py-1 font-medium text-[var(--iberdrola-forest)]">
+                    Estado: {entryStatus === "submitted" ? "Enviada" : "Borrador"}
+                  </span>
+
+                  <span className="rounded-full border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/30 px-3 py-1 font-semibold text-[var(--iberdrola-forest)]">
+                    {totalPoints} pts
+                  </span>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-3">
                   <LanguageSwitcher
                     locale={locale}
                     onChange={setLocale}
@@ -513,159 +549,70 @@ export default function PredictionsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:min-w-[430px]">
-              <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/35 p-4 text-center">
-                <div className="text-sm font-medium text-[var(--iberdrola-forest)]">
-                  Puntos totales
-                </div>
-                <div className="mt-1 text-3xl font-bold text-[var(--iberdrola-green)]">
-                  {totalPoints}
-                </div>
-              </div>
+            <div className="flex flex-wrap gap-2 xl:justify-end">
+              <button
+                type="button"
+                onClick={handleSaveEntry}
+                disabled={entryStatus === "submitted" || saveLoading}
+                className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-5 py-2 font-semibold text-[var(--iberdrola-forest)] disabled:opacity-50"
+              >
+                {saveLoading ? "Guardando..." : "Guardar porra"}
+              </button>
 
-              <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/35 p-4 text-center">
-                <div className="text-sm font-medium text-[var(--iberdrola-forest)]">
-                  Clasificación
-                </div>
-                <div className="mt-1 text-3xl font-bold text-[var(--iberdrola-green)]">
-                  {rankingTotalPlayers > 0
-                    ? `${rankingPosition}/${rankingTotalPlayers}`
-                    : "-"}
-                </div>
-                <div className="mt-1 text-xs text-gray-500">
-                  {rankingMovement > 0
-                    ? `▲ +${rankingMovement}`
-                    : rankingMovement < 0
-                    ? `▼ ${rankingMovement}`
-                    : "="}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-start gap-3 xl:items-end">
-              <div className="text-sm text-[var(--iberdrola-forest)]">
-                <strong>Estado:</strong>{" "}
-                {entryStatus === "submitted" ? "Enviada" : "Borrador"}
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={handleSaveEntry}
-                  disabled={entryStatus === "submitted" || saveLoading}
-                  className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-5 py-2 font-semibold text-[var(--iberdrola-forest)] disabled:opacity-50"
-                >
-                  {saveLoading ? "Guardando..." : "Guardar porra"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSubmitEntry}
-                  disabled={entryStatus === "submitted" || submitLoading}
-                  className="rounded-xl bg-[var(--iberdrola-green)] px-5 py-2 font-semibold text-white disabled:opacity-50"
-                >
-                  {entryStatus === "submitted"
-                    ? "Porra enviada"
-                    : submitLoading
-                    ? "Enviando..."
-                    : "Enviar porra"}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleSubmitEntry}
+                disabled={entryStatus === "submitted" || submitLoading}
+                className="rounded-xl bg-[var(--iberdrola-green)] px-5 py-2 font-semibold text-white disabled:opacity-50"
+              >
+                {entryStatus === "submitted"
+                  ? "Porra enviada"
+                  : submitLoading
+                  ? "Enviando..."
+                  : "Enviar porra"}
+              </button>
 
               <button
                 type="button"
                 onClick={handleLogout}
-                className="text-sm text-gray-500 underline"
+                className="rounded-xl border border-gray-300 bg-white px-5 py-2 font-medium text-gray-600"
               >
                 Cerrar sesión
               </button>
-
-              {submitMessage ? (
-                <p className="text-sm text-[var(--iberdrola-forest)]">
-                  {submitMessage}
-                </p>
-              ) : null}
             </div>
           </div>
-        </div>
 
-        <div className="mb-5 grid gap-3 lg:grid-cols-[1fr_1fr]">
-          <ScoringRulesCard
-            settings={scoreSettings}
-            title={t.scoringRules}
-            exactScoreLabel={t.exactScoreRule}
-            outcomeLabel={t.outcomeRule}
-            homeGoalsLabel={t.homeGoalsRule}
-            awayGoalsLabel={t.awayGoalsRule}
-            round32Label={t.round32}
-            round16Label={t.round16}
-            quarterfinalLabel={t.quarterfinals}
-            semifinalLabel={t.semifinals}
-            finalLabel={t.finalLabel}
-            championLabel={t.champion}
-            noteLabel={t.scoringNote}
-            pointsLabel={t.points}
-          />
+          {submitMessage ? (
+            <p className="mt-3 text-sm text-[var(--iberdrola-forest)]">
+              {submitMessage}
+            </p>
+          ) : null}
+        </section>
 
-          <div className="flex flex-col gap-3">
-            <TotalPointsCard title={t.totalPoints} points={totalPoints} />
+        <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm md:p-5">
+          <h2 className="text-xl font-semibold text-[var(--iberdrola-forest)]">
+            Sistema de puntuación
+          </h2>
 
-            <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white p-4">
-              <h3 className="mb-3 text-xl font-semibold text-[var(--iberdrola-forest)]">
-                {t.dailyEvolution}
-              </h3>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Chip label="Resultado exacto" value={`${scoreSettings.exactScore} pts`} />
+            <Chip label="Ganador / empate" value={`${scoreSettings.outcome} pts`} />
+            <Chip label="Goles local" value={`${scoreSettings.homeGoals} pt`} />
+            <Chip label="Goles visitante" value={`${scoreSettings.awayGoals} pt`} />
 
-              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                {dailyPointsRows.map((row) => (
-                  <div
-                    key={row.dateKey}
-                    className="rounded-xl bg-[var(--iberdrola-green-light)]/45 px-3 py-2"
-                  >
-                    <div className="text-sm text-[var(--iberdrola-forest)]">
-                      {row.label}
-                    </div>
-                    <div className="text-lg font-semibold text-[var(--iberdrola-green)]">
-                      {row.points} pts
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Chip label="Round of 32" value={`${scoreSettings.round32QualifiedPoints} pts`} />
+            <Chip label="Octavos" value={`${scoreSettings.round16QualifiedPoints} pts`} />
+            <Chip label="Cuartos" value={`${scoreSettings.quarterfinalQualifiedPoints} pts`} />
+            <Chip label="Semis" value={`${scoreSettings.semifinalQualifiedPoints} pts`} />
 
-            <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white p-4">
-              <h3 className="mb-3 text-xl font-semibold text-[var(--iberdrola-forest)]">
-                Eliminatorias
-              </h3>
-
-              <div className="grid gap-2 text-sm text-[var(--iberdrola-forest)] sm:grid-cols-2">
-                <div className="flex items-center justify-between rounded-xl bg-[var(--iberdrola-green-light)]/35 px-3 py-2">
-                  <span>{t.round32}</span>
-                  <strong>{knockoutScore.round32}</strong>
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-[var(--iberdrola-green-light)]/35 px-3 py-2">
-                  <span>{t.round16}</span>
-                  <strong>{knockoutScore.round16}</strong>
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-[var(--iberdrola-green-light)]/35 px-3 py-2">
-                  <span>{t.quarterfinals}</span>
-                  <strong>{knockoutScore.quarterfinals}</strong>
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-[var(--iberdrola-green-light)]/35 px-3 py-2">
-                  <span>{t.semifinals}</span>
-                  <strong>{knockoutScore.semifinals}</strong>
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-[var(--iberdrola-green-light)]/35 px-3 py-2">
-                  <span>{t.finalLabel}</span>
-                  <strong>{knockoutScore.final}</strong>
-                </div>
-                <div className="flex items-center justify-between rounded-xl bg-[var(--iberdrola-green-light)]/35 px-3 py-2">
-                  <span>{t.champion}</span>
-                  <strong>{knockoutScore.champion}</strong>
-                </div>
-              </div>
-            </div>
+            <Chip label="Final" value={`${scoreSettings.finalQualifiedPoints} pts`} />
+            <Chip label="Campeón" value={`${scoreSettings.championPoints} pts`} />
           </div>
-        </div>
+
+          <p className="mt-4 text-sm text-gray-500">
+            Los puntos de grupos se suman por partido. En eliminatorias se puntúa por acertar qué equipo avanza.
+          </p>
+        </section>
 
         <div className="space-y-5">
           {groups.map((groupCode) => {
@@ -683,15 +630,15 @@ export default function PredictionsPage() {
             return (
               <section
                 key={groupCode}
-                className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm"
+                className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm md:p-5"
               >
                 <h2 className="mb-4 text-2xl font-semibold text-[var(--iberdrola-forest)]">
                   {t.group} {groupCode}
                 </h2>
 
-                <div className="grid gap-4 xl:grid-cols-[3.2fr_1fr]">
+                <div className="grid gap-4 xl:grid-cols-[1.65fr_1fr]">
                   <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 md:px-4">
-                    <div className="grid grid-cols-[minmax(0,1fr)_74px_minmax(0,1fr)_24px] gap-2 border-b border-[var(--iberdrola-sky)] px-1 py-2 text-[11px] text-[var(--iberdrola-forest)] md:grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)_28px] md:gap-2">
+                    <div className="grid grid-cols-[minmax(110px,1fr)_88px_minmax(110px,1fr)_34px] gap-2 border-b border-[var(--iberdrola-sky)] px-1 py-3 text-[11px] font-medium text-[var(--iberdrola-forest)] md:grid-cols-[minmax(140px,1fr)_96px_minmax(140px,1fr)_40px]">
                       <div>{t.home}</div>
                       <div className="text-center">{t.yourPrediction}</div>
                       <div className="text-right">{t.away}</div>
@@ -752,21 +699,23 @@ export default function PredictionsPage() {
                     </div>
                   </div>
 
-                  <GroupStandingsTable
-                    title={t.predictedStandings}
-                    rows={predictedStandings}
-                    labels={{
-                      team: t.team,
-                      played: t.played,
-                      won: t.won,
-                      drawn: t.drawn,
-                      lost: t.lost,
-                      goalsFor: t.goalsFor,
-                      goalsAgainst: t.goalsAgainst,
-                      goalDifference: t.goalDifference,
-                      pointsShort: t.pointsShort,
-                    }}
-                  />
+                  <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white p-3 md:p-4">
+                    <GroupStandingsTable
+                      title={t.predictedStandings}
+                      rows={predictedStandings}
+                      labels={{
+                        team: t.team,
+                        played: t.played,
+                        won: t.won,
+                        drawn: t.drawn,
+                        lost: t.lost,
+                        goalsFor: t.goalsFor,
+                        goalsAgainst: t.goalsAgainst,
+                        goalDifference: t.goalDifference,
+                        pointsShort: t.pointsShort,
+                      }}
+                    />
+                  </div>
                 </div>
               </section>
             );
@@ -796,7 +745,7 @@ export default function PredictionsPage() {
 
           <KnockoutBracket
             title={t.yourKnockoutBracket}
-            subtitle="Selecciona quién pasa en cada cruce. El equipo elegido queda resaltado y, si aciertas, se muestran los puntos."
+            subtitle="Selecciona qué equipo pasa en cada cruce."
             round32={userBracket.round32}
             round16={userBracket.round16}
             quarterfinals={userBracket.quarterfinals}
