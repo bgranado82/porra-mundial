@@ -117,15 +117,12 @@ export default function Home() {
       .single();
 
     if (entryError || !createdEntry) {
-      setMessage(entryError?.message || t.entryCreationError);
-      setLoading(false);
-      return;
-    }
+  setMessage(entryError?.message || t.entryCreationError);
+  setLoading(false);
+  return;
+}
 
-    localStorage.setItem("active_entry_id", createdEntry.id);
-    localStorage.setItem("active_pool_slug", pool.slug);
-
-    router.push("/predictions");
+router.push(`/pool/${pool.slug}/entry/${createdEntry.id}`);
   }
 
    async function handleLogin() {
