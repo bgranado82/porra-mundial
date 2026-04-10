@@ -48,59 +48,83 @@ export default function GroupMatchRow({
       : officialPendingLabel;
 
   return (
-    <div className="py-1.5">
-      <div className="mb-1 flex items-center justify-between text-[10px] leading-none text-gray-500">
-        <span>{matchNumber ? `#${matchNumber}` : ""}</span>
-        <span>{kickoffInfo.short || ""}</span>
-      </div>
-
-      <div className="grid grid-cols-[minmax(0,1fr)_74px_minmax(0,1fr)_24px] items-center gap-2 md:grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)_28px] md:gap-2">
-        <div className="flex min-w-0 items-center gap-1.5">
-          <span className="shrink-0 text-sm">{homeTeam.flag}</span>
-          <span className="truncate text-sm text-[var(--iberdrola-forest)]">
-            {homeTeam.name}
-          </span>
+    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3 shadow-sm">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="min-w-0 text-xs font-semibold text-[var(--iberdrola-forest)]/65">
+          {matchNumber ? `Partido ${matchNumber}` : ""}
+          {kickoffInfo.short ? ` · ${kickoffInfo.short}` : ""}
         </div>
 
-        <div className="flex items-center justify-center gap-1">
+        <div className="rounded-full bg-[var(--iberdrola-green)] px-3 py-1 text-sm font-black text-white">
+          {points} {pointsShortLabel}
+        </div>
+      </div>
+
+      <div className="hidden items-center gap-3 sm:grid sm:grid-cols-[1fr_auto_auto_auto_1fr]">
+        <div className="truncate text-right text-sm font-bold text-[var(--iberdrola-forest)]">
+          {homeTeam.flag} {homeTeam.name}
+        </div>
+
+        <input
+          type="number"
+          min={0}
+          value={homePrediction ?? ""}
+          onChange={(e) =>
+            onChangeHome(e.target.value === "" ? null : Number(e.target.value))
+          }
+          className="h-10 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
+        />
+
+        <div className="text-sm font-black text-[var(--iberdrola-forest)]">-</div>
+
+        <input
+          type="number"
+          min={0}
+          value={awayPrediction ?? ""}
+          onChange={(e) =>
+            onChangeAway(e.target.value === "" ? null : Number(e.target.value))
+          }
+          className="h-10 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
+        />
+
+        <div className="truncate text-left text-sm font-bold text-[var(--iberdrola-forest)]">
+          {awayTeam.name} {awayTeam.flag}
+        </div>
+      </div>
+
+      <div className="space-y-3 sm:hidden">
+        <div className="grid grid-cols-[1fr_auto] items-center gap-3">
+          <div className="min-w-0 truncate text-sm font-bold text-[var(--iberdrola-forest)]">
+            {homeTeam.flag} {homeTeam.name}
+          </div>
           <input
             type="number"
-            min="0"
+            min={0}
             value={homePrediction ?? ""}
             onChange={(e) =>
               onChangeHome(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-8 w-8 rounded-md border border-[var(--iberdrola-sky)] bg-white p-0 text-center text-sm text-[var(--iberdrola-forest)]"
+            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
           />
-          <span className="text-sm font-semibold text-[var(--iberdrola-forest)]">
-            -
-          </span>
+        </div>
+
+        <div className="grid grid-cols-[1fr_auto] items-center gap-3">
+          <div className="min-w-0 truncate text-sm font-bold text-[var(--iberdrola-forest)]">
+            {awayTeam.flag} {awayTeam.name}
+          </div>
           <input
             type="number"
-            min="0"
+            min={0}
             value={awayPrediction ?? ""}
             onChange={(e) =>
               onChangeAway(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-8 w-8 rounded-md border border-[var(--iberdrola-sky)] bg-white p-0 text-center text-sm text-[var(--iberdrola-forest)]"
+            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
           />
-        </div>
-
-        <div className="flex min-w-0 items-center justify-end gap-1.5">
-          <span className="truncate text-right text-sm text-[var(--iberdrola-forest)]">
-            {awayTeam.name}
-          </span>
-          <span className="shrink-0 text-sm">{awayTeam.flag}</span>
-        </div>
-
-        <div className="text-right">
-          <div className="text-sm font-semibold leading-tight text-[var(--iberdrola-green)]">
-            {points}
-          </div>
         </div>
       </div>
 
-      <div className="mt-1 text-center text-[10px] leading-none text-gray-500">
+      <div className="mt-2 border-t border-dashed border-[var(--iberdrola-sky)] pt-2 text-xs font-semibold text-[var(--iberdrola-forest)]/75">
         {officialLabel}: {officialText}
       </div>
     </div>
