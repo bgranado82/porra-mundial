@@ -22,15 +22,11 @@ export default function Home() {
   const [company, setCompany] = useState("");
   const [country, setCountry] = useState("");
   const [accessCode, setAccessCode] = useState("");
-  const [entryNumber, setEntryNumber] = useState<1 | 2>(1);
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const [authUserEmail, setAuthUserEmail] = useState("");
-
-  
   async function handleRegister() {
     setLoading(true);
     setMessage("");
@@ -106,7 +102,7 @@ export default function Home() {
       .insert({
         user_id: user.id,
         pool_id: pool.id,
-        entry_number: entryNumber,
+        entry_number: 1,
         status: "draft",
         email: normalizedEmail,
         name: name.trim(),
@@ -117,15 +113,15 @@ export default function Home() {
       .single();
 
     if (entryError || !createdEntry) {
-  setMessage(entryError?.message || t.entryCreationError);
-  setLoading(false);
-  return;
-}
+      setMessage(entryError?.message || t.entryCreationError);
+      setLoading(false);
+      return;
+    }
 
-router.push(`/pool/${pool.slug}/entry/${createdEntry.id}`);
+    router.push(`/pool/${pool.slug}/entry/${createdEntry.id}`);
   }
 
-   async function handleLogin() {
+  async function handleLogin() {
     setLoading(true);
     setMessage("");
 
@@ -231,32 +227,6 @@ router.push(`/pool/${pool.slug}/entry/${createdEntry.id}`);
                   value={accessCode}
                   onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
                 />
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-[var(--iberdrola-forest)]">
-                    {t.entryNumber}
-                  </label>
-
-                  <div className="flex gap-2">
-                    <label className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--iberdrola-sky)] py-2 text-sm cursor-pointer">
-                      <input
-                        type="radio"
-                        checked={entryNumber === 1}
-                        onChange={() => setEntryNumber(1)}
-                      />
-                      {t.entryOne}
-                    </label>
-
-                    <label className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[var(--iberdrola-sky)] py-2 text-sm cursor-pointer">
-                      <input
-                        type="radio"
-                        checked={entryNumber === 2}
-                        onChange={() => setEntryNumber(2)}
-                      />
-                      {t.entryTwo}
-                    </label>
-                  </div>
-                </div>
               </>
             )}
 
