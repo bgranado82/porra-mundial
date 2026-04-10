@@ -22,7 +22,8 @@ export default async function Page() {
         name
       )
     `)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .order("entry_number", { ascending: true });
 
   if (!entries || entries.length === 0) {
     redirect("/");
@@ -31,6 +32,10 @@ export default async function Page() {
   if (entries.length === 1) {
     const entry = entries[0];
     const pool = Array.isArray(entry.pools) ? entry.pools[0] : entry.pools;
+
+    if (!pool?.slug) {
+      redirect("/");
+    }
 
     redirect(`/pool/${pool.slug}/entry/${entry.id}`);
   }

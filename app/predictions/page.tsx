@@ -133,12 +133,23 @@ export default function PredictionsPage() {
             ""
         );
 
+        const storedEntryId = localStorage.getItem("active_entry_id");
+
+        if (!storedEntryId) {
+          setActiveEntryId(null);
+          setEntryStatus("draft");
+          setPredictions({});
+          setKnockoutPredictions({});
+          setSubmitMessage("No hay porra activa.");
+          setLoadingEntry(false);
+          return;
+        }
+
         const { data: entry, error: entryError } = await supabase
           .from("entries")
-          .select("id, status, created_at")
+          .select("id, status, user_id, entry_number, created_at")
+          .eq("id", storedEntryId)
           .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(1)
           .maybeSingle();
 
         if (entryError) {
@@ -150,7 +161,7 @@ export default function PredictionsPage() {
           setEntryStatus("draft");
           setPredictions({});
           setKnockoutPredictions({});
-          setSubmitMessage("No se ha encontrado una porra activa para este usuario.");
+          setSubmitMessage("No se ha encontrado la porra seleccionada.");
           setLoadingEntry(false);
           return;
         }
@@ -199,7 +210,7 @@ export default function PredictionsPage() {
     }
 
     loadFromSupabase();
-  }, [supabase]);
+  }, []);
 
   function updatePrediction(
     matchId: string,

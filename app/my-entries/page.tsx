@@ -25,7 +25,7 @@ export default async function MyEntriesPage() {
       )
     `)
     .eq("user_id", user.id)
-    .order("created_at", { ascending: true });
+    .order("entry_number", { ascending: true });
 
   if (error || !entries || entries.length === 0) {
     redirect("/");
@@ -49,11 +49,11 @@ export default async function MyEntriesPage() {
             return (
               <Link
                 key={entry.id}
-                href={`/pool/${pool.slug}/entry/${entry.id}`}
+                href={`/predictions?entryId=${entry.id}`}
                 className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4 transition hover:bg-[var(--iberdrola-green-light)]/30"
               >
                 <div className="text-lg font-semibold text-[var(--iberdrola-forest)]">
-                  {pool.name}
+                  {pool?.name ?? "Porra"}
                 </div>
                 <div className="mt-1 text-sm text-gray-600">
                   Porra {entry.entry_number}

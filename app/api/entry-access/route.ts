@@ -5,13 +5,8 @@ export async function POST(req: Request) {
   const supabase = getSupabase();
   const body = await req.json();
 
-  const email = String(body.email || "").trim().toLowerCase();
   const accessCode = String(body.accessCode || "").trim().toUpperCase();
   const entryNumber = Number(body.entryNumber);
-
-  if (!email) {
-    return NextResponse.json({ error: "Email requerido" }, { status: 400 });
-  }
 
   if (!accessCode) {
     return NextResponse.json({ error: "Código requerido" }, { status: 400 });
@@ -19,6 +14,22 @@ export async function POST(req: Request) {
 
   if (entryNumber !== 1 && entryNumber !== 2) {
     return NextResponse.json({ error: "Número de porra inválido" }, { status: 400 });
+  }
+
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
+  }
+
+  const token = authHeader.replace("Bearer ", "");
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(token);
+
+  if (userError || !user) {
+    return NextResponse.json({ error: "Usuario no autenticado" }, { status: 401 });
   }
 
   const { data: pool, error: poolError } = await supabase
@@ -37,9 +48,9 @@ export async function POST(req: Request) {
 
   const { data: existingEntry, error: existingError } = await supabase
     .from("entries")
-    .select("id, pool_id, email, entry_number, status")
+    .select("id, pool_id, user_id, entry_number, status")
     .eq("pool_id", pool.id)
-    .eq("email", email)
+    .eq("user_id", user.id)
     .eq("entry_number", entryNumber)
     .maybeSingle();
 
@@ -55,12 +66,23 @@ export async function POST(req: Request) {
     });
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const { data: createdEntry, error: createError } = await supabase
     .from("entries")
     .insert({
       pool_id: pool.id,
-      name: "",
-      email,
+      user_id: user.id,
+      name:
+        profile?.full_name ||
+        user.user_metadata?.name ||
+        user.user_metadata?.full_name ||
+        "",
+      email: user.email || "",
       company: "",
       country: "",
       entry_number: entryNumber,
