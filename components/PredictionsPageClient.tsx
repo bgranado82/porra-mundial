@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -26,7 +25,6 @@ import { Locale, messages } from "@/lib/i18n";
 import { KnockoutPredictionMap, Match } from "@/types";
 import { TIMEZONE_OPTIONS, TimezoneValue } from "@/lib/timezone";
 import { createClient } from "@/utils/supabase/client";
-
 
 type PredictionMap = Record<
   string,
@@ -87,10 +85,13 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [entryStatus, setEntryStatus] = useState("draft");
   const [entryNumber, setEntryNumber] = useState<number | null>(null);
   const [poolName, setPoolName] = useState("");
+  const [poolSlug, setPoolSlug] = useState("");
+  const [canCreateSecondEntry, setCanCreateSecondEntry] = useState(false);
 
   const [loadingEntry, setLoadingEntry] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [createSecondLoading, setCreateSecondLoading] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
 
   useEffect(() => {
@@ -157,6 +158,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
             id,
             status,
             user_id,
+            pool_id,
             entry_number,
             created_at,
             pools (
@@ -190,6 +192,19 @@ export default function PredictionsPageClient({ entryId }: Props) {
         setEntryStatus(entry.status ?? "draft");
         setEntryNumber(entry.entry_number ?? null);
         setPoolName(pool?.name ?? "");
+        setPoolSlug(pool?.slug ?? "");
+
+        const { count, error: countError } = await supabase
+          .from("entries")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("pool_id", entry.pool_id);
+
+        if (countError) {
+          console.error(countError);
+        }
+
+        setCanCreateSecondEntry((count ?? 0) < 2);
 
         const { data: groupRows, error: groupError } = await supabase
           .from("entry_group_predictions")
@@ -364,6 +379,45 @@ export default function PredictionsPageClient({ entryId }: Props) {
       setSubmitMessage("Error de conexión al enviar.");
     } finally {
       setSubmitLoading(false);
+    }
+  }
+
+  async function handleCreateSecondEntry() {
+    if (!activeEntryId) {
+      setSubmitMessage("No se ha encontrado la porra activa.");
+      return;
+    }
+
+    setCreateSecondLoading(true);
+    setSubmitMessage("");
+
+    try {
+      const res = await fetch("/api/create-second-entry", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ entryId: activeEntryId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setSubmitMessage(data.error || "No se pudo crear la Porra 2.");
+        return;
+      }
+
+      if (!poolSlug || !data.entryId) {
+        setSubmitMessage("Se creó la Porra 2, pero no se pudo abrir automáticamente.");
+        return;
+      }
+
+      window.location.href = `/pool/${poolSlug}/entry/${data.entryId}`;
+    } catch (err) {
+      console.error(err);
+      setSubmitMessage("Error creando la Porra 2.");
+    } finally {
+      setCreateSecondLoading(false);
     }
   }
 
@@ -562,6 +616,17 @@ export default function PredictionsPageClient({ entryId }: Props) {
               </div>
 
               <div className="flex flex-wrap gap-2 xl:justify-end">
+                {entryNumber === 1 && canCreateSecondEntry ? (
+                  <button
+                    type="button"
+                    onClick={handleCreateSecondEntry}
+                    disabled={createSecondLoading}
+                    className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-5 py-2 font-semibold text-[var(--iberdrola-forest)] disabled:opacity-50"
+                  >
+                    {createSecondLoading ? "Creando..." : "Crear Porra 2"}
+                  </button>
+                ) : null}
+
                 <button
                   type="button"
                   onClick={handleSaveEntry}

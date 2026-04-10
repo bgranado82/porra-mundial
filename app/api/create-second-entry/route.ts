@@ -2,77 +2,93 @@ import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 
 export async function POST(req: Request) {
-  const supabase = getSupabase();
+  try {
+    const body = await req.json();
+    const { entryId } = body;
 
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-  }
+    if (!entryId) {
+      return NextResponse.json(
+        { error: "entryId requerido" },
+        { status: 400 }
+      );
+    }
 
-  const token = authHeader.replace("Bearer ", "");
+    const supabase = getSupabase();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser(token);
+    const { data: sourceEntry, error: sourceError } = await supabase
+      .from("entries")
+      .select("id, user_id, pool_id, email, name, company, country")
+      .eq("id", entryId)
+      .maybeSingle();
 
-  if (userError || !user) {
-    return NextResponse.json({ error: "Usuario no autenticado" }, { status: 401 });
-  }
+    if (sourceError) {
+      return NextResponse.json(
+        { error: sourceError.message },
+        { status: 500 }
+      );
+    }
 
-  const { data: firstEntry, error: firstEntryError } = await supabase
-    .from("entries")
-    .select("id, pool_id, email, name, company, country")
-    .eq("user_id", user.id)
-    .eq("entry_number", 1)
-    .maybeSingle();
+    if (!sourceEntry) {
+      return NextResponse.json(
+        { error: "No se ha encontrado la porra origen" },
+        { status: 404 }
+      );
+    }
 
-  if (firstEntryError || !firstEntry) {
-    return NextResponse.json(
-      { error: "No se ha encontrado la Porra 1" },
-      { status: 404 }
-    );
-  }
+    const { data: existingSecond, error: existingError } = await supabase
+      .from("entries")
+      .select("id")
+      .eq("user_id", sourceEntry.user_id)
+      .eq("pool_id", sourceEntry.pool_id)
+      .eq("entry_number", 2)
+      .maybeSingle();
 
-  const { data: secondEntry } = await supabase
-    .from("entries")
-    .select("id, pool_id, entry_number")
-    .eq("user_id", user.id)
-    .eq("pool_id", firstEntry.pool_id)
-    .eq("entry_number", 2)
-    .maybeSingle();
+    if (existingError) {
+      return NextResponse.json(
+        { error: existingError.message },
+        { status: 500 }
+      );
+    }
 
-  if (secondEntry) {
+    if (existingSecond) {
+      return NextResponse.json({
+        success: true,
+        entryId: existingSecond.id,
+        created: false,
+      });
+    }
+
+    const { data: createdEntry, error: createError } = await supabase
+      .from("entries")
+      .insert({
+        user_id: sourceEntry.user_id,
+        pool_id: sourceEntry.pool_id,
+        entry_number: 2,
+        status: "draft",
+        email: sourceEntry.email,
+        name: sourceEntry.name,
+        company: sourceEntry.company,
+        country: sourceEntry.country,
+      })
+      .select("id")
+      .single();
+
+    if (createError || !createdEntry) {
+      return NextResponse.json(
+        { error: createError?.message || "No se pudo crear la Porra 2" },
+        { status: 500 }
+      );
+    }
+
     return NextResponse.json({
-      entryId: secondEntry.id,
-      created: false,
+      success: true,
+      entryId: createdEntry.id,
+      created: true,
     });
-  }
-
-  const { data: createdEntry, error: createError } = await supabase
-    .from("entries")
-    .insert({
-      user_id: user.id,
-      pool_id: firstEntry.pool_id,
-      entry_number: 2,
-      status: "draft",
-      email: firstEntry.email || user.email || "",
-      name: firstEntry.name || "",
-      company: firstEntry.company || "",
-      country: firstEntry.country || "",
-    })
-    .select("id")
-    .single();
-
-  if (createError || !createdEntry) {
+  } catch {
     return NextResponse.json(
-      { error: createError?.message || "No se pudo crear la Porra 2" },
-      { status: 500 }
+      { error: "Invalid request body" },
+      { status: 400 }
     );
   }
-
-  return NextResponse.json({
-    entryId: createdEntry.id,
-    created: true,
-  });
 }
