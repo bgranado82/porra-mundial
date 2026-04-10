@@ -44,22 +44,26 @@ export default async function MyEntriesPage() {
 
         <div className="mt-6 grid gap-3">
           {entries.map((entry) => {
-            const pool = Array.isArray(entry.pools) ? entry.pools[0] : entry.pools;
+            const pool = Array.isArray(entry.pools)
+              ? entry.pools[0]
+              : entry.pools;
 
             return (
               <Link
                 key={entry.id}
-                href={`/predictions?entryId=${entry.id}`}
+                href={`/pool/${pool?.slug}/entry/${entry.id}`}
                 className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4 transition hover:bg-[var(--iberdrola-green-light)]/30"
               >
                 <div className="text-lg font-semibold text-[var(--iberdrola-forest)]">
-                  {pool?.name ?? "Porra"}
+                  {pool?.name}
                 </div>
+
                 <div className="mt-1 text-sm text-gray-600">
                   Porra {entry.entry_number}
                 </div>
+
                 <div className="mt-1 text-sm text-gray-600">
-                  Estado: {entry.status}
+                  Estado: {entry.status === "submitted" ? "Enviada" : "Borrador"}
                 </div>
               </Link>
             );
