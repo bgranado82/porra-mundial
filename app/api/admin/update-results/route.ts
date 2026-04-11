@@ -62,13 +62,17 @@ export async function POST(req: Request) {
     const debug = await recalculateScoresAll();
 
 return NextResponse.json({ success: true, debug });
- } catch (error) {
+ } catch (error: any) {
   console.error("ERROR API ADMIN:", error);
 
   return NextResponse.json(
     {
       error: "Error actualizando resultados",
-      details: String(error),
+      details:
+        error?.message ||
+        error?.details ||
+        error?.hint ||
+        JSON.stringify(error, null, 2),
     },
     { status: 500 }
   );
