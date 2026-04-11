@@ -59,9 +59,9 @@ export async function POST(req: Request) {
       }
     }
 
-    await recalculateScoresAll();
+    const debug = await recalculateScoresAll();
 
-    return NextResponse.json({ success: true });
+return NextResponse.json({ success: true, debug });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

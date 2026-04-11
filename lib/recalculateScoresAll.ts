@@ -20,21 +20,10 @@ type EntryRow = {
   pool_id: string;
 };
 
-type GroupPredictionRow = {
-  entry_id: string;
-  match_id: string;
-  home_goals: number | null;
-  away_goals: number | null;
-};
-
-type KnockoutPredictionRow = {
-  entry_id: string;
-  match_id: string;
-  picked_team_id: string | null;
-};
-
 export async function recalculateScoresAll() {
   const supabase = await createClient();
+
+  console.log("RECALCULANDO SCORES ALL");
 
   // 1. Borrar puntuaciones anteriores
   const { error: deleteScoresError } = await supabase
@@ -43,6 +32,7 @@ export async function recalculateScoresAll() {
     .not("id", "is", null);
 
   if (deleteScoresError) {
+    console.error("DELETE entry_scores ERROR:", deleteScoresError);
     throw deleteScoresError;
   }
 
@@ -52,11 +42,20 @@ export async function recalculateScoresAll() {
     .select("id, pool_id");
 
   if (entriesError) {
+    console.error("ENTRIES ERROR:", entriesError);
     throw entriesError;
   }
 
   if (!entries || entries.length === 0) {
-    return;
+    console.log("No hay entries");
+    return {
+      entries: 0,
+      officialGroupResults: 0,
+      officialKnockoutResults: 0,
+      groupPredictions: 0,
+      knockoutPredictions: 0,
+      scoresToInsert: 0,
+    };
   }
 
   // 3. Cargar resultados oficiales de grupos
@@ -65,6 +64,7 @@ export async function recalculateScoresAll() {
     .select("match_id, home_goals, away_goals");
 
   if (officialGroupError) {
+    console.error("OFFICIAL GROUP ERROR:", officialGroupError);
     throw officialGroupError;
   }
 
@@ -74,6 +74,7 @@ export async function recalculateScoresAll() {
     .select("match_id, picked_team_id");
 
   if (officialKnockoutError) {
+    console.error("OFFICIAL KNOCKOUT ERROR:", officialKnockoutError);
     throw officialKnockoutError;
   }
 
@@ -83,6 +84,7 @@ export async function recalculateScoresAll() {
     .select("entry_id, match_id, home_goals, away_goals");
 
   if (groupPredictionsError) {
+    console.error("GROUP PREDICTIONS ERROR:", groupPredictionsError);
     throw groupPredictionsError;
   }
 
@@ -92,8 +94,15 @@ export async function recalculateScoresAll() {
     .select("entry_id, match_id, picked_team_id");
 
   if (knockoutPredictionsError) {
+    console.error("KNOCKOUT PREDICTIONS ERROR:", knockoutPredictionsError);
     throw knockoutPredictionsError;
   }
+
+  console.log("entries:", entries?.length ?? 0);
+  console.log("officialGroupResults:", officialGroupResults?.length ?? 0);
+  console.log("officialKnockoutResults:", officialKnockoutResults?.length ?? 0);
+  console.log("groupPredictions:", groupPredictions?.length ?? 0);
+  console.log("knockoutPredictions:", knockoutPredictions?.length ?? 0);
 
   const entryMap = new Map<string, EntryRow>();
   entries.forEach((entry) => entryMap.set(entry.id, entry));
@@ -119,6 +128,15 @@ export async function recalculateScoresAll() {
     is_outcome: boolean;
   }[] = [];
 
+  function getOutcome(
+    homeGoals: number,
+    awayGoals: number
+  ): "home" | "draw" | "away" {
+    if (homeGoals > awayGoals) return "home";
+    if (homeGoals < awayGoals) return "away";
+    return "draw";
+  }
+
   // 7. Calcular grupos
   (groupPredictions ?? []).forEach((pred) => {
     const entry = entryMap.get(pred.entry_id);
@@ -128,56 +146,46 @@ export async function recalculateScoresAll() {
     if (!official) return;
 
     if (official.home_goals === null || official.away_goals === null) return;
+    if (pred.home_goals === null || pred.away_goals === null) return;
 
-   
-const score = calculateMatchPredictionScore(
-  official.home_goals,
-  official.away_goals,
-  pred.home_goals,
-  pred.away_goals,
-  scoreSettings
-);
+    const score = calculateMatchPredictionScore(
+      official.home_goals,
+      official.away_goals,
+      pred.home_goals,
+      pred.away_goals,
+      scoreSettings
+    );
 
-const isExact =
-  pred.home_goals !== null &&
-  pred.away_goals !== null &&
-  pred.home_goals === official.home_goals &&
-  pred.away_goals === official.away_goals;
+    const isExact =
+      pred.home_goals === official.home_goals &&
+      pred.away_goals === official.away_goals;
 
-const isOutcome =
-  pred.home_goals !== null &&
-  pred.away_goals !== null &&
-  getOutcome(pred.home_goals, pred.away_goals) ===
-    getOutcome(official.home_goals, official.away_goals);
+    const isOutcome =
+      getOutcome(pred.home_goals, pred.away_goals) ===
+      getOutcome(official.home_goals, official.away_goals);
 
-scoresToInsert.push({
-  entry_id: pred.entry_id,
-  pool_id: entry.pool_id,
-  match_id: pred.match_id,
-  matchday: getMatchday(pred.match_id),
-  stage: "group",
-  points: score.points,
-  is_exact: isExact,
-  is_outcome: isOutcome,
-});
+    scoresToInsert.push({
+      entry_id: pred.entry_id,
+      pool_id: entry.pool_id,
+      match_id: pred.match_id,
+      matchday: getMatchday(pred.match_id),
+      stage: "group",
+      points: score.points,
+      is_exact: isExact,
+      is_outcome: isOutcome,
+    });
   });
 
   // 8. Calcular knockout
   const knockoutPointsByRound: Record<string, number> = {
-    "r32": scoreSettings.round32QualifiedPoints,
-    "r16": scoreSettings.round16QualifiedPoints,
-    "qf": scoreSettings.quarterfinalQualifiedPoints,
-    "sf": scoreSettings.semifinalQualifiedPoints,
-    "final": scoreSettings.finalQualifiedPoints,
-    "champion": scoreSettings.championPoints,
+    r32: scoreSettings.round32QualifiedPoints,
+    r16: scoreSettings.round16QualifiedPoints,
+    qf: scoreSettings.quarterfinalQualifiedPoints,
+    sf: scoreSettings.semifinalQualifiedPoints,
+    final: scoreSettings.finalQualifiedPoints,
+    champion: scoreSettings.championPoints,
   };
 
- function getOutcome(homeGoals: number, awayGoals: number): "home" | "draw" | "away" {
-  if (homeGoals > awayGoals) return "home";
-  if (homeGoals < awayGoals) return "away";
-  return "draw";
-}
- 
   function getKnockoutStage(matchId: string): string {
     if (matchId.startsWith("r32-")) return "r32";
     if (matchId.startsWith("r16-")) return "r16";
@@ -215,6 +223,9 @@ scoresToInsert.push({
     });
   });
 
+  console.log("scoresToInsert length:", scoresToInsert.length);
+  console.log("scoresToInsert sample:", scoresToInsert.slice(0, 5));
+
   // 9. Insertar todo
   if (scoresToInsert.length > 0) {
     const { error: insertError } = await supabase
@@ -222,7 +233,17 @@ scoresToInsert.push({
       .insert(scoresToInsert);
 
     if (insertError) {
+      console.error("INSERT entry_scores ERROR:", insertError);
       throw insertError;
     }
   }
+
+  return {
+    entries: entries?.length ?? 0,
+    officialGroupResults: officialGroupResults?.length ?? 0,
+    officialKnockoutResults: officialKnockoutResults?.length ?? 0,
+    groupPredictions: groupPredictions?.length ?? 0,
+    knockoutPredictions: knockoutPredictions?.length ?? 0,
+    scoresToInsert: scoresToInsert.length,
+  };
 }
