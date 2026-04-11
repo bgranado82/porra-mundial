@@ -134,7 +134,7 @@ export async function recalculateScoresAll() {
 
   const entryMap = new Map<string, EntryRow>();
   (entries ?? []).forEach((entry) => {
-    entryMap.set(entry.id, entry);
+    entryMap.set(String(entry.id), entry);
   });
 
   const officialGroupMap = new Map<string, OfficialGroupRow>();
@@ -180,7 +180,7 @@ export async function recalculateScoresAll() {
 
   (groupPredictions ?? []).forEach((pred: GroupPredictionRow) => {
     const normalizedMatchId = normalizeMatchId(pred.match_id);
-    const entry = entryMap.get(pred.entry_id);
+    const entry = entryMap.get(String(pred.entry_id));
     const official = officialGroupMap.get(normalizedMatchId);
 
     if (samplePredictions.length < 10) {
