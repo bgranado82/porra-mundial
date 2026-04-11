@@ -1,5 +1,7 @@
+
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { recalculateScoresAll } from "@/lib/recalculateScoresAll";
 
 type GroupResultRow = {
@@ -35,12 +37,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
+    const adminSupabase = createAdminClient();
+
     const body = await req.json();
     const groupResults = (body.groupResults ?? []) as GroupResultRow[];
     const knockoutResults = (body.knockoutResults ?? []) as KnockoutResultRow[];
 
     if (groupResults.length > 0) {
-      const { error: groupError } = await supabase
+      const { error: groupError } = await adminSupabase
         .from("official_group_results")
         .upsert(groupResults, { onConflict: "match_id" });
 
@@ -50,7 +54,7 @@ export async function POST(req: Request) {
     }
 
     if (knockoutResults.length > 0) {
-      const { error: knockoutError } = await supabase
+      const { error: knockoutError } = await adminSupabase
         .from("official_knockout_results")
         .upsert(knockoutResults, { onConflict: "match_id" });
 
@@ -61,20 +65,20 @@ export async function POST(req: Request) {
 
     const debug = await recalculateScoresAll();
 
-return NextResponse.json({ success: true, debug });
- } catch (error: any) {
-  console.error("ERROR API ADMIN:", error);
+    return NextResponse.json({ success: true, debug });
+  } catch (error: any) {
+    console.error("ERROR API ADMIN:", error);
 
-  return NextResponse.json(
-    {
-      error: "Error actualizando resultados",
-      details:
-        error?.message ||
-        error?.details ||
-        error?.hint ||
-        JSON.stringify(error, null, 2),
-    },
-    { status: 500 }
-  );
+    return NextResponse.json(
+      {
+        error: "Error actualizando resultados",
+        details:
+          error?.message ||
+          error?.details ||
+          error?.hint ||
+          JSON.stringify(error, null, 2),
+      },
+      { status: 500 }
+    );
   }
 }
