@@ -139,6 +139,8 @@ export async function recalculateScoresAll() {
 
   // 7. Calcular grupos
   (groupPredictions ?? []).forEach((pred) => {
+    console.log("PRED:", pred.match_id);
+console.log("OFFICIAL EXISTS:", officialGroupMap.has(pred.match_id));
     const entry = entryMap.get(pred.entry_id);
     if (!entry) return;
 
