@@ -1,7 +1,7 @@
-
 import { createAdminClient } from "@/utils/supabase/admin";
 import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { scoreSettings } from "@/data/settings";
+import { matches } from "@/data/matches";
 
 function normalize(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase();
@@ -13,10 +13,44 @@ function getOutcome(homeGoals: number, awayGoals: number): "home" | "draw" | "aw
   return "draw";
 }
 
+function getDateKeyFromKickoff(kickoff: string | null | undefined) {
+  if (!kickoff) return null;
+
+  const date = new Date(kickoff);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toISOString().slice(0, 10);
+}
+
+const groupMatches = matches.filter((match) => match.stage === "group");
+
+const uniqueGroupDates = Array.from(
+  new Set(
+    groupMatches
+      .map((match) => getDateKeyFromKickoff(match.kickoff))
+      .filter(Boolean)
+  )
+).sort();
+
+const matchdayByMatchId = new Map<string, number>();
+
+groupMatches.forEach((match) => {
+  const dateKey = getDateKeyFromKickoff(match.kickoff);
+  if (!dateKey) return;
+
+  const index = uniqueGroupDates.indexOf(dateKey);
+  if (index === -1) return;
+
+  matchdayByMatchId.set(String(match.id), index + 1);
+});
+
+function getMatchday(matchId: string) {
+  return matchdayByMatchId.get(String(matchId)) ?? 0;
+}
+
 export async function recalculateScoresAll() {
   const supabase = createAdminClient();
 
-  // 1. Borrar puntuaciones anteriores
   const { error: deleteError } = await supabase
     .from("entry_scores")
     .delete()
@@ -26,7 +60,6 @@ export async function recalculateScoresAll() {
     throw deleteError;
   }
 
-  // 2. Leer entries
   const { data: entries, error: entriesError } = await supabase
     .from("entries")
     .select("id, pool_id");
@@ -35,7 +68,6 @@ export async function recalculateScoresAll() {
     throw entriesError;
   }
 
-  // 3. Leer resultados oficiales de grupos
   const { data: officialResults, error: officialError } = await supabase
     .from("official_group_results")
     .select("match_id, home_goals, away_goals");
@@ -44,7 +76,6 @@ export async function recalculateScoresAll() {
     throw officialError;
   }
 
-  // 4. Leer predicciones de grupos
   const { data: predictions, error: predictionsError } = await supabase
     .from("entry_group_predictions")
     .select("entry_id, match_id, home_goals, away_goals");
@@ -53,7 +84,6 @@ export async function recalculateScoresAll() {
     throw predictionsError;
   }
 
-  // 5. Mapas auxiliares
   const entryById = new Map(
     (entries ?? []).map((entry) => [normalize(entry.id), entry])
   );
@@ -62,7 +92,6 @@ export async function recalculateScoresAll() {
     (officialResults ?? []).map((row) => [normalize(row.match_id), row])
   );
 
-  // 6. Generar filas de puntuación
   const rowsToUpsert: Array<{
     entry_id: string;
     pool_id: string;
@@ -80,46 +109,14 @@ export async function recalculateScoresAll() {
   let skippedPredictionNull = 0;
   let pushedGroupScores = 0;
 
-  const samplePredictions: Array<{
-    entry_id: string;
-    match_id: string;
-    normalized_entry_id: string;
-    normalized_match_id: string;
-    entryFound: boolean;
-    officialFound: boolean;
-    predHome: number | null;
-    predAway: number | null;
-    officialHome: number | null | undefined;
-    officialAway: number | null | undefined;
-  }> = [];
-
   for (const pred of predictions ?? []) {
-    const normalizedEntryId = normalize(pred.entry_id);
-    const normalizedMatchId = normalize(pred.match_id);
-
-    const entry = entryById.get(normalizedEntryId);
-    const official = officialByMatchId.get(normalizedMatchId);
-
-    if (samplePredictions.length < 10) {
-      samplePredictions.push({
-        entry_id: pred.entry_id,
-        match_id: pred.match_id,
-        normalized_entry_id: normalizedEntryId,
-        normalized_match_id: normalizedMatchId,
-        entryFound: !!entry,
-        officialFound: !!official,
-        predHome: pred.home_goals,
-        predAway: pred.away_goals,
-        officialHome: official?.home_goals,
-        officialAway: official?.away_goals,
-      });
-    }
-
+    const entry = entryById.get(normalize(pred.entry_id));
     if (!entry) {
       skippedNoEntry += 1;
       continue;
     }
 
+    const official = officialByMatchId.get(normalize(pred.match_id));
     if (!official) {
       skippedNoOfficial += 1;
       continue;
@@ -155,7 +152,7 @@ export async function recalculateScoresAll() {
       entry_id: pred.entry_id,
       pool_id: entry.pool_id,
       match_id: pred.match_id,
-      matchday: 0,
+      matchday: getMatchday(pred.match_id),
       stage: "group",
       points: score.points,
       is_exact: isExact,
@@ -165,8 +162,6 @@ export async function recalculateScoresAll() {
     pushedGroupScores += 1;
   }
 
-  // 7. Guardar
-  // IMPORTANTE: no metemos "id"
   if (rowsToUpsert.length > 0) {
     const { error: upsertError } = await supabase
       .from("entry_scores")
@@ -179,7 +174,6 @@ export async function recalculateScoresAll() {
     }
   }
 
-  // 8. Debug
   return {
     entries: entries?.length ?? 0,
     officialGroupResults: officialResults?.length ?? 0,
@@ -190,6 +184,6 @@ export async function recalculateScoresAll() {
     skippedOfficialNull,
     skippedPredictionNull,
     pushedGroupScores,
-    samplePredictions,
+    uniqueGroupDates,
   };
 }
