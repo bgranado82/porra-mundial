@@ -29,7 +29,7 @@ export async function recalculateScoresAll() {
   const { error: deleteScoresError } = await supabase
     .from("entry_scores")
     .delete()
-    .not("id", "is", null);
+    .not("entry_id", "is", null);
 
   if (deleteScoresError) {
     console.error("DELETE entry_scores ERROR:", deleteScoresError);
