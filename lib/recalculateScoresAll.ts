@@ -115,6 +115,12 @@ export async function recalculateScoresAll() {
       throw insertError;
     }
   }
+console.log("DEBUG FINAL:", {
+  entries: entries?.length,
+  officialResults: officialResults?.length,
+  predictions: predictions?.length,
+  rowsToInsert: rowsToInsert.length,
+});
 
   return {
     entries: entries?.length ?? 0,
