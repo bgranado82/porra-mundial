@@ -1,105 +1,129 @@
 
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
+
+type StandingRow = {
+  entry_id: string;
+  pool_id: string;
+  full_name: string | null;
+  email: string | null;
+  day_points: Record<string, number>;
+  group_total: number;
+  r32_points: number;
+  r16_points: number;
+  qf_points: number;
+  sf_points: number;
+  third_points: number;
+  final_points: number;
+  total_points: number;
+};
 
 export async function GET(req: Request) {
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { searchParams } = new URL(req.url);
     const poolId = searchParams.get("poolId");
 
-    if (!poolId) {
-      return NextResponse.json({ error: "poolId requerido" }, { status: 400 });
-    }
-
-    const { data: scores, error } = await supabase
-      .from("entry_scores")
-      .select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome")
-      .eq("pool_id", poolId);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    const { data: entries, error: entriesError } = await supabase
+    const entriesQuery = supabase
       .from("entries")
-      .select("id, name, email")
-      .eq("pool_id", poolId);
+      .select(`
+        id,
+        pool_id,
+        user_id,
+        profiles (
+          full_name,
+          email
+        )
+      `);
+
+    const { data: entries, error: entriesError } = poolId
+      ? await entriesQuery.eq("pool_id", poolId)
+      : await entriesQuery;
 
     if (entriesError) {
       return NextResponse.json({ error: entriesError.message }, { status: 500 });
     }
 
-    const entryMap = new Map(
-      (entries ?? []).map((entry) => [entry.id, entry])
-    );
+    const entryIds = (entries ?? []).map((e) => e.id);
 
-    const grouped = new Map<
-      string,
-      {
-        entry_id: string;
-        name: string;
-        total_points: number;
-        day_1: number;
-        day_2: number;
-        day_3: number;
-        outcome_hits: number;
-        exact_hits: number;
-        total_group_matches: number;
-      }
-    >();
+    if (entryIds.length === 0) {
+      return NextResponse.json({
+        days: [],
+        standings: [],
+      });
+    }
 
-    (scores ?? []).forEach((row) => {
-      const current = grouped.get(row.entry_id) ?? {
-        entry_id: row.entry_id,
-        name:
-          entryMap.get(row.entry_id)?.name ||
-          entryMap.get(row.entry_id)?.email ||
-          "Jugador",
+    const { data: scores, error: scoresError } = await supabase
+      .from("entry_scores")
+      .select("entry_id, pool_id, stage, matchday, points, is_exact, is_outcome")
+      .in("entry_id", entryIds);
+
+    if (scoresError) {
+      return NextResponse.json({ error: scoresError.message }, { status: 500 });
+    }
+
+    const daysSet = new Set<number>();
+    const standingsMap = new Map<string, StandingRow>();
+
+    for (const entry of entries ?? []) {
+      const profile = Array.isArray(entry.profiles) ? entry.profiles[0] : entry.profiles;
+
+      standingsMap.set(entry.id, {
+        entry_id: entry.id,
+        pool_id: entry.pool_id,
+        full_name: profile?.full_name ?? null,
+        email: profile?.email ?? null,
+        day_points: {},
+        group_total: 0,
+        r32_points: 0,
+        r16_points: 0,
+        qf_points: 0,
+        sf_points: 0,
+        third_points: 0,
+        final_points: 0,
         total_points: 0,
-        day_1: 0,
-        day_2: 0,
-        day_3: 0,
-        outcome_hits: 0,
-        exact_hits: 0,
-        total_group_matches: 0,
-      };
+      });
+    }
 
-      current.total_points += row.points ?? 0;
+    for (const row of scores ?? []) {
+      const standing = standingsMap.get(row.entry_id);
+      if (!standing) continue;
 
-      if (row.matchday === 1) current.day_1 += row.points ?? 0;
-      if (row.matchday === 2) current.day_2 += row.points ?? 0;
-      if (row.matchday === 3) current.day_3 += row.points ?? 0;
+      const points = Number(row.points ?? 0);
+      standing.total_points += points;
 
       if (row.stage === "group") {
-        current.total_group_matches += 1;
-        if (row.is_outcome) current.outcome_hits += 1;
-        if (row.is_exact) current.exact_hits += 1;
+        standing.group_total += points;
+
+        if (row.matchday !== null && row.matchday !== undefined) {
+          const day = Number(row.matchday);
+          daysSet.add(day);
+          standing.day_points[String(day)] =
+            (standing.day_points[String(day)] ?? 0) + points;
+        }
       }
 
-      grouped.set(row.entry_id, current);
+      if (row.stage === "r32") standing.r32_points += points;
+      if (row.stage === "r16") standing.r16_points += points;
+      if (row.stage === "qf") standing.qf_points += points;
+      if (row.stage === "sf") standing.sf_points += points;
+      if (row.stage === "third") standing.third_points += points;
+      if (row.stage === "final") standing.final_points += points;
+    }
+
+    const days = Array.from(daysSet).sort((a, b) => a - b);
+
+    const standings = Array.from(standingsMap.values()).sort(
+      (a, b) => b.total_points - a.total_points
+    );
+
+    return NextResponse.json({
+      days,
+      standings,
     });
-
-    const standings = Array.from(grouped.values())
-      .sort((a, b) => b.total_points - a.total_points)
-      .map((row, index) => ({
-        ...row,
-        position: index + 1,
-        outcome_percent:
-          row.total_group_matches > 0
-            ? Math.round((row.outcome_hits / row.total_group_matches) * 100)
-            : 0,
-        exact_percent:
-          row.total_group_matches > 0
-            ? Math.round((row.exact_hits / row.total_group_matches) * 100)
-            : 0,
-      }));
-
-    return NextResponse.json({ standings });
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
     return NextResponse.json(
-      { error: "Error cargando clasificación" },
+      { error: error?.message ?? "Error loading standings" },
       { status: 500 }
     );
   }
