@@ -102,56 +102,54 @@ export default function AdminPageClient() {
   }
 
   async function handleSaveAllResults() {
-    setSavingAll(true);
-    setMessage("");
+  setSavingAll(true);
+  setMessage("");
 
-    try {
-      const groupRows = Object.entries(groupResults)
-        .filter(([, value]) => value.homeGoals !== "" && value.awayGoals !== "")
-        .map(([matchId, value]) => ({
-          match_id: matchId,
-          home_goals: Number(value.homeGoals),
-          away_goals: Number(value.awayGoals),
-        }));
+  try {
+    const groupRows = Object.entries(groupResults)
+      .filter(([, value]) => value.homeGoals !== "" && value.awayGoals !== "")
+      .map(([matchId, value]) => ({
+        match_id: matchId,
+        home_goals: Number(value.homeGoals),
+        away_goals: Number(value.awayGoals),
+      }));
 
-      const knockoutRows = Object.entries(knockoutResults)
-        .filter(([, teamId]) => !!teamId)
-        .map(([matchId, pickedTeamId]) => ({
-          match_id: matchId,
-          picked_team_id: pickedTeamId,
-        }));
+    const knockoutRows = Object.entries(knockoutResults)
+      .filter(([, teamId]) => !!teamId)
+      .map(([matchId, pickedTeamId]) => ({
+        match_id: matchId,
+        picked_team_id: pickedTeamId,
+      }));
 
-      const res = await fetch("/api/admin/update-results", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          groupResults: groupRows,
-          knockoutResults: knockoutRows,
-        }),
-      });
+    const res = await fetch("/api/admin/update-results", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        groupResults: groupRows,
+        knockoutResults: knockoutRows,
+      }),
+    });
 
-      const data = await res.json();
-console.log("UPDATE RESULTS RESPONSE:", data);
+    const data = await res.json();
+    console.log("UPDATE RESULTS RESPONSE:", data);
 
-if (!res.ok) {
-  setMessage(data.error || "Error guardando resultados.");
-  return;
-}
-
-setMessage(
-  `Guardado OK. entries=${data.debug?.entries ?? 0}, official=${data.debug?.officialGroupResults ?? 0}, predictions=${data.debug?.groupPredictions ?? 0}, scores=${data.debug?.scoresToInsert ?? 0}`
-);
-
-      setMessage("Resultados guardados y clasificación recalculada correctamente.");
-    } catch (err) {
-      console.error(err);
-      setMessage("Error guardando resultados.");
-    } finally {
-      setSavingAll(false);
+    if (!res.ok) {
+      setMessage(data.error || "Error guardando resultados.");
+      return;
     }
+
+    setMessage(
+      `Guardado OK. entries=${data.debug?.entries ?? 0}, official=${data.debug?.officialGroupResults ?? 0}, predictions=${data.debug?.groupPredictions ?? 0}, scores=${data.debug?.scoresToInsert ?? 0}`
+    );
+  } catch (err) {
+    console.error(err);
+    setMessage("Error guardando resultados.");
+  } finally {
+    setSavingAll(false);
   }
+}
 
   if (loading) {
     return <div className="p-6">Cargando admin...</div>;
