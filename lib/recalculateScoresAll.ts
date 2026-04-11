@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/utils/supabase/admin";
+    import { createAdminClient } from "@/utils/supabase/admin";
 import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { scoreSettings } from "@/data/settings";
 import { matches } from "@/data/matches";
@@ -21,6 +21,7 @@ function getDateKeyFromKickoff(kickoff: string | null | undefined) {
 
   return date.toISOString().slice(0, 10);
 }
+
 
 const groupMatches = matches.filter((match) => match.stage === "group");
 
@@ -175,15 +176,23 @@ export async function recalculateScoresAll() {
   }
 
   return {
-    entries: entries?.length ?? 0,
-    officialGroupResults: officialResults?.length ?? 0,
-    groupPredictions: predictions?.length ?? 0,
-    rowsToUpsert: rowsToUpsert.length,
-    skippedNoEntry,
-    skippedNoOfficial,
-    skippedOfficialNull,
-    skippedPredictionNull,
-    pushedGroupScores,
-    uniqueGroupDates,
-  };
+  entries: entries?.length ?? 0,
+  officialGroupResults: officialResults?.length ?? 0,
+  groupPredictions: predictions?.length ?? 0,
+  rowsToUpsert: rowsToUpsert.length,
+  skippedNoEntry,
+  skippedNoOfficial,
+  skippedOfficialNull,
+  skippedPredictionNull,
+  pushedGroupScores,
+  sampleMatchdays: (predictions ?? []).slice(0, 10).map((pred) => {
+    const match = matches.find((m) => String(m.id) === String(pred.match_id));
+    return {
+      match_id: pred.match_id,
+      kickoff: match?.kickoff ?? null,
+      computed_matchday: getMatchday(pred.match_id),
+    };
+  }),
+  uniqueGroupDates,
+};
 }
