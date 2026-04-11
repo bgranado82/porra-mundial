@@ -1,3 +1,4 @@
+
 import { createClient } from "@/utils/supabase/server";
 import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { scoreSettings } from "@/data/settings";
@@ -10,22 +11,55 @@ type OfficialGroupRow = {
   away_goals: number | null;
 };
 
-type OfficialKnockoutRow = {
-  match_id: string;
-  picked_team_id: string | null;
-};
-
 type EntryRow = {
   id: string;
   pool_id: string;
 };
+
+type GroupPredictionRow = {
+  entry_id: string;
+  match_id: string;
+  home_goals: number | null;
+  away_goals: number | null;
+};
+
+type KnockoutPredictionRow = {
+  entry_id: string;
+  match_id: string;
+  picked_team_id: string | null;
+};
+
+function normalizeMatchId(value: string | null | undefined) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function getOutcome(
+  homeGoals: number,
+  awayGoals: number
+): "home" | "draw" | "away" {
+  if (homeGoals > awayGoals) return "home";
+  if (homeGoals < awayGoals) return "away";
+  return "draw";
+}
+
+function getKnockoutStage(matchId: string): string {
+  const id = normalizeMatchId(matchId);
+
+  if (id.startsWith("r32-")) return "r32";
+  if (id.startsWith("r16-")) return "r16";
+  if (id.startsWith("qf-")) return "qf";
+  if (id.startsWith("sf-")) return "sf";
+  if (id.startsWith("final-")) return "final";
+  if (id === "champion") return "champion";
+
+  return "knockout";
+}
 
 export async function recalculateScoresAll() {
   const supabase = await createClient();
 
   console.log("RECALCULANDO SCORES ALL");
 
-  // 1. Borrar puntuaciones anteriores
   const { error: deleteScoresError } = await supabase
     .from("entry_scores")
     .delete()
@@ -36,7 +70,6 @@ export async function recalculateScoresAll() {
     throw deleteScoresError;
   }
 
-  // 2. Cargar entries
   const { data: entries, error: entriesError } = await supabase
     .from("entries")
     .select("id, pool_id");
@@ -47,7 +80,6 @@ export async function recalculateScoresAll() {
   }
 
   if (!entries || entries.length === 0) {
-    console.log("No hay entries");
     return {
       entries: 0,
       officialGroupResults: 0,
@@ -55,10 +87,15 @@ export async function recalculateScoresAll() {
       groupPredictions: 0,
       knockoutPredictions: 0,
       scoresToInsert: 0,
+      skippedNoEntry: 0,
+      skippedNoOfficial: 0,
+      skippedOfficialNull: 0,
+      skippedPredictionNull: 0,
+      pushedGroupScores: 0,
+      samplePredictions: [],
     };
   }
 
-  // 3. Cargar resultados oficiales de grupos
   const { data: officialGroupResults, error: officialGroupError } = await supabase
     .from("official_group_results")
     .select("match_id, home_goals, away_goals");
@@ -68,7 +105,6 @@ export async function recalculateScoresAll() {
     throw officialGroupError;
   }
 
-  // 4. Cargar resultados oficiales de knockout
   const { data: officialKnockoutResults, error: officialKnockoutError } = await supabase
     .from("official_knockout_results")
     .select("match_id, picked_team_id");
@@ -78,7 +114,6 @@ export async function recalculateScoresAll() {
     throw officialKnockoutError;
   }
 
-  // 5. Cargar predicciones de grupos
   const { data: groupPredictions, error: groupPredictionsError } = await supabase
     .from("entry_group_predictions")
     .select("entry_id, match_id, home_goals, away_goals");
@@ -88,7 +123,6 @@ export async function recalculateScoresAll() {
     throw groupPredictionsError;
   }
 
-  // 6. Cargar predicciones de knockout
   const { data: knockoutPredictions, error: knockoutPredictionsError } = await supabase
     .from("entry_knockout_predictions")
     .select("entry_id, match_id, picked_team_id");
@@ -98,23 +132,22 @@ export async function recalculateScoresAll() {
     throw knockoutPredictionsError;
   }
 
-  console.log("entries:", entries?.length ?? 0);
-  console.log("officialGroupResults:", officialGroupResults?.length ?? 0);
-  console.log("officialKnockoutResults:", officialKnockoutResults?.length ?? 0);
-  console.log("groupPredictions:", groupPredictions?.length ?? 0);
-  console.log("knockoutPredictions:", knockoutPredictions?.length ?? 0);
-
   const entryMap = new Map<string, EntryRow>();
-  entries.forEach((entry) => entryMap.set(entry.id, entry));
+  (entries ?? []).forEach((entry) => {
+    entryMap.set(entry.id, entry);
+  });
 
   const officialGroupMap = new Map<string, OfficialGroupRow>();
   (officialGroupResults ?? []).forEach((row) => {
-    officialGroupMap.set(row.match_id, row);
+    officialGroupMap.set(normalizeMatchId(row.match_id), row);
   });
 
   const officialKnockoutMap = new Map<string, string | null>();
   (officialKnockoutResults ?? []).forEach((row) => {
-    officialKnockoutMap.set(row.match_id, row.picked_team_id);
+    officialKnockoutMap.set(
+      normalizeMatchId(row.match_id),
+      row.picked_team_id ?? null
+    );
   });
 
   const scoresToInsert: {
@@ -128,27 +161,60 @@ export async function recalculateScoresAll() {
     is_outcome: boolean;
   }[] = [];
 
-  function getOutcome(
-    homeGoals: number,
-    awayGoals: number
-  ): "home" | "draw" | "away" {
-    if (homeGoals > awayGoals) return "home";
-    if (homeGoals < awayGoals) return "away";
-    return "draw";
-  }
+  let skippedNoEntry = 0;
+  let skippedNoOfficial = 0;
+  let skippedOfficialNull = 0;
+  let skippedPredictionNull = 0;
+  let pushedGroupScores = 0;
 
-  // 7. Calcular grupos
-  (groupPredictions ?? []).forEach((pred) => {
-    console.log("PRED:", pred.match_id);
-console.log("OFFICIAL EXISTS:", officialGroupMap.has(pred.match_id));
+  const samplePredictions: Array<{
+    match_id: string;
+    normalized_match_id: string;
+    entryFound: boolean;
+    officialFound: boolean;
+    officialHome: number | null | undefined;
+    officialAway: number | null | undefined;
+    predHome: number | null | undefined;
+    predAway: number | null | undefined;
+  }> = [];
+
+  (groupPredictions ?? []).forEach((pred: GroupPredictionRow) => {
+    const normalizedMatchId = normalizeMatchId(pred.match_id);
     const entry = entryMap.get(pred.entry_id);
-    if (!entry) return;
+    const official = officialGroupMap.get(normalizedMatchId);
 
-    const official = officialGroupMap.get(pred.match_id);
-    if (!official) return;
+    if (samplePredictions.length < 10) {
+      samplePredictions.push({
+        match_id: pred.match_id,
+        normalized_match_id: normalizedMatchId,
+        entryFound: !!entry,
+        officialFound: !!official,
+        officialHome: official?.home_goals,
+        officialAway: official?.away_goals,
+        predHome: pred.home_goals,
+        predAway: pred.away_goals,
+      });
+    }
 
-    if (official.home_goals === null || official.away_goals === null) return;
-    if (pred.home_goals === null || pred.away_goals === null) return;
+    if (!entry) {
+      skippedNoEntry += 1;
+      return;
+    }
+
+    if (!official) {
+      skippedNoOfficial += 1;
+      return;
+    }
+
+    if (official.home_goals === null || official.away_goals === null) {
+      skippedOfficialNull += 1;
+      return;
+    }
+
+    if (pred.home_goals === null || pred.away_goals === null) {
+      skippedPredictionNull += 1;
+      return;
+    }
 
     const score = calculateMatchPredictionScore(
       official.home_goals,
@@ -176,9 +242,10 @@ console.log("OFFICIAL EXISTS:", officialGroupMap.has(pred.match_id));
       is_exact: isExact,
       is_outcome: isOutcome,
     });
+
+    pushedGroupScores += 1;
   });
 
-  // 8. Calcular knockout
   const knockoutPointsByRound: Record<string, number> = {
     r32: scoreSettings.round32QualifiedPoints,
     r16: scoreSettings.round16QualifiedPoints,
@@ -188,23 +255,16 @@ console.log("OFFICIAL EXISTS:", officialGroupMap.has(pred.match_id));
     champion: scoreSettings.championPoints,
   };
 
-  function getKnockoutStage(matchId: string): string {
-    if (matchId.startsWith("r32-")) return "r32";
-    if (matchId.startsWith("r16-")) return "r16";
-    if (matchId.startsWith("qf-")) return "qf";
-    if (matchId.startsWith("sf-")) return "sf";
-    if (matchId.startsWith("final-")) return "final";
-    if (matchId === "champion") return "champion";
-    return "knockout";
-  }
-
-  (knockoutPredictions ?? []).forEach((pred) => {
+  (knockoutPredictions ?? []).forEach((pred: KnockoutPredictionRow) => {
     const entry = entryMap.get(pred.entry_id);
     if (!entry) return;
 
+    const normalizedMatchId = normalizeMatchId(pred.match_id);
+
     const officialPicked =
-      officialKnockoutMap.get(pred.match_id) ??
+      officialKnockoutMap.get(normalizedMatchId) ??
       initialRealKnockoutPredictions[pred.match_id] ??
+      initialRealKnockoutPredictions[normalizedMatchId] ??
       null;
 
     if (!officialPicked || !pred.picked_team_id) return;
@@ -225,10 +285,12 @@ console.log("OFFICIAL EXISTS:", officialGroupMap.has(pred.match_id));
     });
   });
 
-  console.log("scoresToInsert length:", scoresToInsert.length);
-  console.log("scoresToInsert sample:", scoresToInsert.slice(0, 5));
+  console.log("entries:", entries.length);
+  console.log("officialGroupResults:", officialGroupResults?.length ?? 0);
+  console.log("groupPredictions:", groupPredictions?.length ?? 0);
+  console.log("scoresToInsert:", scoresToInsert.length);
+  console.log("samplePredictions:", samplePredictions);
 
-  // 9. Insertar todo
   if (scoresToInsert.length > 0) {
     const { error: insertError } = await supabase
       .from("entry_scores")
@@ -241,11 +303,17 @@ console.log("OFFICIAL EXISTS:", officialGroupMap.has(pred.match_id));
   }
 
   return {
-    entries: entries?.length ?? 0,
+    entries: entries.length,
     officialGroupResults: officialGroupResults?.length ?? 0,
     officialKnockoutResults: officialKnockoutResults?.length ?? 0,
     groupPredictions: groupPredictions?.length ?? 0,
     knockoutPredictions: knockoutPredictions?.length ?? 0,
     scoresToInsert: scoresToInsert.length,
+    skippedNoEntry,
+    skippedNoOfficial,
+    skippedOfficialNull,
+    skippedPredictionNull,
+    pushedGroupScores,
+    samplePredictions,
   };
 }
