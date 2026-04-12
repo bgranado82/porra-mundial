@@ -42,7 +42,7 @@ function MovementBadge({
 }) {
   if (movement === "up") {
     return (
-      <span className="inline-flex items-center justify-center rounded-full bg-green-50 px-2.5 py-1 font-bold text-green-700">
+      <span className="inline-flex min-w-[64px] items-center justify-center rounded-full bg-green-50 px-2.5 py-1 font-bold text-green-700">
         ▲ {movementValue}
       </span>
     );
@@ -50,14 +50,14 @@ function MovementBadge({
 
   if (movement === "down") {
     return (
-      <span className="inline-flex items-center justify-center rounded-full bg-red-50 px-2.5 py-1 font-bold text-red-700">
+      <span className="inline-flex min-w-[64px] items-center justify-center rounded-full bg-red-50 px-2.5 py-1 font-bold text-red-700">
         ▼ -{movementValue}
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center justify-center rounded-full bg-gray-100 px-2.5 py-1 font-bold text-gray-600">
+    <span className="inline-flex min-w-[64px] items-center justify-center rounded-full bg-gray-100 px-2.5 py-1 font-bold text-gray-600">
       =
     </span>
   );
@@ -87,11 +87,26 @@ function TabButton({
   );
 }
 
+function getRankHeatClass(position: number, totalRows: number) {
+  if (totalRows <= 1) {
+    return "bg-green-50 text-green-800";
+  }
+
+  const ratio = (position - 1) / (totalRows - 1);
+
+  if (ratio <= 0.2) return "bg-green-100 text-green-900";
+  if (ratio <= 0.4) return "bg-lime-100 text-lime-900";
+  if (ratio <= 0.6) return "bg-yellow-100 text-yellow-900";
+  if (ratio <= 0.8) return "bg-orange-100 text-orange-900";
+  return "bg-red-100 text-red-900";
+}
+
 export default function StandingsTable({ days, standings }: Props) {
   const [tab, setTab] = useState<TabKey>("groups");
 
   const hasGroupDays = days.length > 0;
   const sortedDays = useMemo(() => [...days].sort((a, b) => a - b), [days]);
+  const totalRows = standings.length;
 
   return (
     <section className="space-y-4">
@@ -121,7 +136,7 @@ export default function StandingsTable({ days, standings }: Props) {
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold"
+                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[210px]"
                   >
                     Jugador
                   </th>
@@ -135,14 +150,14 @@ export default function StandingsTable({ days, standings }: Props) {
 
                   <th
                     colSpan={4}
-                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-blue-50 px-3 py-2 text-center font-bold text-slate-700"
+                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-slate-50 px-3 py-2 text-center font-semibold text-slate-700"
                   >
                     Precisión
                   </th>
 
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-amber-50 px-3 py-3 text-center font-bold text-slate-700"
+                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-amber-50 px-3 py-3 text-center font-bold text-slate-700 min-w-[110px]"
                   >
                     Variación
                   </th>
@@ -154,90 +169,98 @@ export default function StandingsTable({ days, standings }: Props) {
                       {sortedDays.map((day) => (
                         <th
                           key={day}
-                          className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap"
+                          className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[92px]"
                         >
                           Día {day}
                         </th>
                       ))}
-                      <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                      <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-bold whitespace-nowrap min-w-[96px]">
                         Grupos
                       </th>
                     </>
                   ) : (
-                    <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                    <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-bold whitespace-nowrap min-w-[96px]">
                       Grupos
                     </th>
                   )}
 
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-blue-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[78px]">
                     Aciertos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-blue-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[88px]">
                     % acierto
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-blue-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[72px]">
                     Exactos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-blue-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[82px]">
                     % exacto
                   </th>
                 </tr>
               </thead>
 
               <tbody>
-                {standings.map((row) => (
-                  <tr key={row.entry_id} className="hover:bg-gray-50">
-                    <td className="border-b border-gray-100 px-3 py-3 font-bold whitespace-nowrap">
-                      {row.position}
-                    </td>
+                {standings.map((row) => {
+                  const heatClass = getRankHeatClass(row.position, totalRows);
 
-                    <td className="border-b border-gray-100 px-3 py-3 font-medium whitespace-nowrap">
-                      <Link href={`/entry/${row.entry_id}`} className="hover:underline">
-                        {row.name || row.email || "Jugador"}
-                      </Link>
-                    </td>
+                  return (
+                    <tr key={row.entry_id} className="hover:bg-gray-50">
+                      <td className="border-b border-gray-100 px-3 py-3 font-bold whitespace-nowrap">
+                        {row.position}
+                      </td>
 
-                    {hasGroupDays ? (
-                      <>
-                        {sortedDays.map((day) => (
+                      <td className="border-b border-gray-100 px-3 py-3 font-medium whitespace-nowrap">
+                        <Link href={`/entry/${row.entry_id}`} className="hover:underline">
+                          {row.name || row.email || "Jugador"}
+                        </Link>
+                      </td>
+
+                      {hasGroupDays ? (
+                        <>
+                          {sortedDays.map((day) => (
+                            <td
+                              key={day}
+                              className="border-b border-l border-gray-100 px-3 py-3 text-center"
+                            >
+                              {row.day_points[String(day)] ?? 0}
+                            </td>
+                          ))}
                           <td
-                            key={day}
-                            className="border-b border-l border-gray-100 px-3 py-3 text-center"
+                            className={`border-b border-l border-gray-100 px-3 py-3 text-center font-bold ${heatClass}`}
                           >
-                            {row.day_points[String(day)] ?? 0}
+                            {row.group_total}
                           </td>
-                        ))}
-                        <td className="border-b border-l border-gray-100 px-3 py-3 text-center font-semibold">
+                        </>
+                      ) : (
+                        <td
+                          className={`border-b border-l border-gray-100 px-3 py-3 text-center font-bold ${heatClass}`}
+                        >
                           {row.group_total}
                         </td>
-                      </>
-                    ) : (
-                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center font-semibold">
-                        {row.group_total}
+                      )}
+
+                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                        {row.outcome_hits}
                       </td>
-                    )}
+                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                        {row.outcome_percent}%
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                        {row.exact_hits}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                        {row.exact_percent}%
+                      </td>
 
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      {row.outcome_hits}
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      {row.outcome_percent}%
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      {row.exact_hits}
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      {row.exact_percent}%
-                    </td>
-
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      <MovementBadge
-                        movement={row.movement}
-                        movementValue={row.movement_value}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                        <MovementBadge
+                          movement={row.movement}
+                          movementValue={row.movement_value}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           ) : (
@@ -252,7 +275,7 @@ export default function StandingsTable({ days, standings }: Props) {
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold"
+                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[210px]"
                   >
                     Jugador
                   </th>
@@ -266,52 +289,52 @@ export default function StandingsTable({ days, standings }: Props) {
 
                   <th
                     colSpan={4}
-                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-blue-50 px-3 py-2 text-center font-bold text-slate-700"
+                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-slate-50 px-3 py-2 text-center font-semibold text-slate-700"
                   >
                     Precisión
                   </th>
 
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-amber-50 px-3 py-3 text-center font-bold text-slate-700"
+                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-amber-50 px-3 py-3 text-center font-bold text-slate-700 min-w-[110px]"
                   >
                     Variación
                   </th>
                 </tr>
 
                 <tr>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[96px]">
                     Grupos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[70px]">
                     32
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[70px]">
                     16
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[70px]">
                     QF
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[70px]">
                     SF
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[70px]">
                     3º
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-bold whitespace-nowrap min-w-[86px]">
                     Total
                   </th>
 
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-blue-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[78px]">
                     Aciertos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-blue-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[88px]">
                     % acierto
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-blue-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[72px]">
                     Exactos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-blue-50 px-3 py-3 text-center font-semibold whitespace-nowrap">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[82px]">
                     % exacto
                   </th>
                 </tr>
@@ -352,16 +375,16 @@ export default function StandingsTable({ days, standings }: Props) {
                       {row.total_points}
                     </td>
 
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                    <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
                       {row.outcome_hits}
                     </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                    <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
                       {row.outcome_percent}%
                     </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                    <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
                       {row.exact_hits}
                     </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                    <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
                       {row.exact_percent}%
                     </td>
 

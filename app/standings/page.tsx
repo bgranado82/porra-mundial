@@ -1,6 +1,5 @@
 import StandingsTable from "@/components/StandingsTable";
 import { headers } from "next/headers";
-import Image from "next/image";
 
 type PageProps = {
   searchParams: Promise<{
@@ -54,11 +53,9 @@ export default async function StandingsPage({ searchParams }: PageProps) {
         <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-[var(--iberdrola-green)] bg-white">
-              <Image
+              <img
                 src="/icon-512.png"
                 alt="Porra Mundial 2026"
-                width={44}
-                height={44}
                 className="h-11 w-11 object-contain"
               />
             </div>
