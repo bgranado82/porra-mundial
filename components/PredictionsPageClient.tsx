@@ -1063,7 +1063,7 @@ if (extraRows.length > 0) {
   </div>
 
   <div className="p-4">
-    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
       <RulePill
         label={t.extras.first_goal_scorer_world}
         value={`${scoreSettings.firstGoalScorerWorldPoints} ${t.points}`}
