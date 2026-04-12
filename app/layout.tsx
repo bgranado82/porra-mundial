@@ -9,19 +9,9 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 
   icons: {
-    icon: [
-      { url: "/favicon.ico" },
-      { url: "/logo-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/logo-512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [{ url: "/logo-192.png" }],
-    shortcut: ["/favicon.ico"],
-  },
-
-  appleWebApp: {
-    capable: true,
-    title: "Ibe World Cup",
-    statusBarStyle: "black-translucent",
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+    shortcut: "/favicon.ico",
   },
 
   openGraph: {
@@ -46,6 +36,12 @@ export const metadata: Metadata = {
     title: "Ibe World Cup",
     description: "Porra del Mundial",
     images: ["/og-image.png"],
+  },
+
+  appleWebApp: {
+    capable: true,
+    title: "Ibe World Cup",
+    statusBarStyle: "black-translucent",
   },
 };
 
