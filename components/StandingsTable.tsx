@@ -362,11 +362,11 @@ export default function StandingsTable({ days, standings }: Props) {
                   </th>
 
                   <th
-                    colSpan={14}
-                    className="top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-2 text-center font-bold text-[var(--iberdrola-forest)] md:px-2"
-                  >
-                    Puntos
-                  </th>
+  colSpan={14}
+  className="top-0 z-30 border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-2 text-center font-bold text-white md:px-2"
+>
+  Puntos
+</th>
                 </tr>
 
                 <tr>
