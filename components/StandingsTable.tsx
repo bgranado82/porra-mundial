@@ -176,7 +176,7 @@ export default function StandingsTable({ days, standings }: Props) {
                   </th>
 
                   <th
-                    colSpan={hasGroupDays ? sortedDays.length + 3 : 3}
+                    colSpan={hasGroupDays ? sortedDays.length + 4 : 4}
                     className="top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-2 text-center font-bold text-[var(--iberdrola-forest)] md:px-2"
                   >
                     Puntos
@@ -191,42 +191,49 @@ export default function StandingsTable({ days, standings }: Props) {
                 </tr>
 
                 <tr>
-                  {hasGroupDays ? (
-                    <>
-                      {sortedDays.map((day) => (
-                        <th
-                          key={day}
-                          className="top-[44px] z-30 w-[64px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2"
-                        >
-                          J{day}
-                        </th>
-                      ))}
-                    </>
-                  ) : null}
+  {hasGroupDays ? (
+    <>
+      {sortedDays.map((day) => (
+        <th
+          key={day}
+          className="top-[44px] z-30 w-[64px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2"
+        >
+          J{day}
+        </th>
+      ))}
+    </>
+  ) : null}
 
-                  <th className="top-[44px] z-30 w-[120px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-                    Primer<br />goleador
-                  </th>
-                  <th className="top-[44px] z-30 w-[138px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-                    Primer goleador<br />de España
-                  </th>
-                  <th className="top-[44px] z-30 w-[110px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold leading-tight text-white md:px-2">
-                    Total fase<br />de grupos
-                  </th>
+  {/* ✅ NUEVO: TOTAL JORNADAS */}
+  <th className="top-[44px] z-30 w-[95px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
+    Total<br />jornadas
+  </th>
 
-                  <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
-                    Aciertos
-                  </th>
-                  <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
-                    %<br />acierto
-                  </th>
-                  <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
-                    Exactos
-                  </th>
-                  <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
-                    %<br />exacto
-                  </th>
-                </tr>
+  <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold md:px-2">
+    1º gol
+  </th>
+
+  <th className="top-[44px] z-30 w-[95px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
+    1º gol<br />España
+  </th>
+
+  <th className="top-[44px] z-30 w-[90px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold text-white md:px-2">
+    Total<br />grupos
+  </th>
+
+  <th className="top-[44px] z-30 w-[72px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium md:px-2">
+    Aciertos
+  </th>
+  <th className="top-[44px] z-30 w-[72px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium md:px-2">
+    %<br />acierto
+  </th>
+  <th className="top-[44px] z-30 w-[72px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium md:px-2">
+    Exactos
+  </th>
+  <th className="top-[44px] z-30 w-[72px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium md:px-2">
+    %<br />exacto
+  </th>
+</tr>
               </thead>
 
               <tbody>
