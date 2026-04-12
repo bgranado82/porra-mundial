@@ -152,10 +152,18 @@ export default function AdminPageClient() {
           picked_team_id: pickedTeamId,
         }));
 
-      const extraRows = EXTRA_QUESTIONS.map((question) => ({
-        question_key: question.key,
-        official_value: (officialExtras[question.key] ?? "").trim(),
-      })).filter((row) => row.official_value !== "");
+      const extraRows = EXTRA_QUESTIONS
+  .map((question) => {
+    const value = (officialExtras[question.key] ?? "").trim();
+
+    if (!value) return null;
+
+    return {
+      question_key: question.key,
+      official_value: value,
+    };
+  })
+  .filter(Boolean);
 
       const { error: extrasError } = await supabase
         .from("official_extra_results")
