@@ -1006,13 +1006,6 @@ const extraPointsTotal = useMemo(() => {
                         </div>
                       </div>
                     </div>
-
-                    <div className="mt-3">
-                      <MovementMini
-                        movement={lastStanding.movement}
-                        movementValue={lastStanding.movement_value}
-                      />
-                    </div>
                   </div>
                 ) : (
                   <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
