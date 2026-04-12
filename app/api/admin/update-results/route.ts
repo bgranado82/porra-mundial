@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -15,6 +14,19 @@ type KnockoutResultRow = {
   picked_team_id: string;
 };
 
+type EntryRow = {
+  id: string;
+  pool_id: string;
+  name: string | null;
+  email: string | null;
+};
+
+type ScoreRow = {
+  entry_id: string;
+  pool_id: string;
+  points: number | null;
+};
+
 export async function POST(req: Request) {
   try {
     const supabase = await createClient();
@@ -27,13 +39,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
 
-    if (!profile || profile.role !== "admin") {
+    if (profileError || !profile || profile.role !== "admin") {
       return NextResponse.json({ error: "No autorizado" }, { status: 403 });
     }
 
@@ -64,6 +76,97 @@ export async function POST(req: Request) {
     }
 
     const debug = await recalculateScoresAll();
+
+    // Crear snapshot de clasificación tras recalcular
+    const { data: entries, error: entriesError } = await adminSupabase
+      .from("entries")
+      .select("id, pool_id, name, email");
+
+    if (entriesError) {
+      return NextResponse.json({ error: entriesError.message }, { status: 500 });
+    }
+
+    const { data: scores, error: scoresError } = await adminSupabase
+      .from("entry_scores")
+      .select("entry_id, pool_id, points");
+
+    if (scoresError) {
+      return NextResponse.json({ error: scoresError.message }, { status: 500 });
+    }
+
+    const typedEntries = (entries ?? []) as EntryRow[];
+    const typedScores = (scores ?? []) as ScoreRow[];
+
+    const entryMap = new Map<string, EntryRow>(
+      typedEntries.map((entry) => [String(entry.id), entry])
+    );
+
+    const grouped = new Map<
+      string,
+      { entry_id: string; pool_id: string; total_points: number; name: string }
+    >();
+
+    typedScores.forEach((row) => {
+      const entryId = String(row.entry_id);
+      const entry = entryMap.get(entryId);
+      if (!entry) return;
+
+      const current = grouped.get(entryId) ?? {
+        entry_id: entryId,
+        pool_id: String(row.pool_id),
+        total_points: 0,
+        name: entry.name || entry.email || "Jugador",
+      };
+
+      current.total_points += Number(row.points ?? 0);
+      grouped.set(entryId, current);
+    });
+
+    const byPool = new Map<
+      string,
+      Array<{ entry_id: string; pool_id: string; total_points: number; name: string }>
+    >();
+
+    Array.from(grouped.values()).forEach((row) => {
+      const current = byPool.get(row.pool_id) ?? [];
+      current.push(row);
+      byPool.set(row.pool_id, current);
+    });
+
+    const snapshotRows: Array<{
+      pool_id: string;
+      entry_id: string;
+      position: number;
+      total_points: number;
+    }> = [];
+
+    for (const [poolId, poolRows] of byPool.entries()) {
+      const sorted = poolRows.sort((a, b) => {
+        if (b.total_points !== a.total_points) {
+          return b.total_points - a.total_points;
+        }
+        return a.name.localeCompare(b.name);
+      });
+
+      sorted.forEach((row, index) => {
+        snapshotRows.push({
+          pool_id: poolId,
+          entry_id: row.entry_id,
+          position: index + 1,
+          total_points: row.total_points,
+        });
+      });
+    }
+
+    if (snapshotRows.length > 0) {
+      const { error: snapshotError } = await adminSupabase
+        .from("standings_snapshots")
+        .insert(snapshotRows);
+
+      if (snapshotError) {
+        return NextResponse.json({ error: snapshotError.message }, { status: 500 });
+      }
+    }
 
     return NextResponse.json({ success: true, debug });
   } catch (error: any) {

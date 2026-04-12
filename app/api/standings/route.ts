@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
@@ -6,6 +5,7 @@ type EntryRow = {
   id: string;
   name: string | null;
   email: string | null;
+  pool_id: string;
 };
 
 type ScoreRow = {
@@ -55,7 +55,7 @@ export async function GET(req: Request) {
 
     const { data: entries, error: entriesError } = await supabase
       .from("entries")
-      .select("id, name, email")
+      .select("id, name, email, pool_id")
       .eq("pool_id", poolId);
 
     if (entriesError) {
@@ -101,9 +101,9 @@ export async function GET(req: Request) {
       if (!current) {
         current = {
           entry_id: entryId,
-          pool_id: String(row.pool_id),
-          name: entry?.name ?? entry?.email ?? `Entry ${entryId.slice(0, 8)}`,
-          email: entry?.email ?? "",
+          pool_id: entry?.pool_id || String(row.pool_id),
+          name: entry?.name || entry?.email || "Jugador",
+          email: entry?.email || "",
           day_points: {},
           group_total: 0,
           r32_points: 0,
@@ -147,16 +147,16 @@ export async function GET(req: Request) {
       grouped.set(entryId, current);
     });
 
-    // Importante: incluir también entries sin puntos todavía
+    // Incluir también entries sin puntos todavía
     typedEntries.forEach((entry) => {
       const entryId = String(entry.id);
 
       if (!grouped.has(entryId)) {
         grouped.set(entryId, {
           entry_id: entryId,
-          pool_id: poolId,
-          name: entry.name ?? entry.email ?? `Entry ${entryId.slice(0, 8)}`,
-          email: entry.email ?? "",
+          pool_id: String(entry.pool_id),
+          name: entry.name || entry.email || "Jugador",
+          email: entry.email || "",
           day_points: {},
           group_total: 0,
           r32_points: 0,

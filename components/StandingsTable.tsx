@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -82,10 +81,10 @@ export default function StandingsTable({ days, standings }: Props) {
 
               <td className="px-3 py-3 font-medium whitespace-nowrap">
                 <Link
-                  href={`/pool/${row.pool_id}/entry/${row.entry_id}`}
+                  href={`/entry/${row.entry_id}`}
                   className="hover:underline"
                 >
-                  {row.name || row.email}
+                  {row.name || row.email || "Jugador"}
                 </Link>
               </td>
 
