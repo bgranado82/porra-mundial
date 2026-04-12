@@ -1,6 +1,8 @@
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import GroupMatchRow from "@/components/GroupMatchRow";
 import GroupStandingsTable from "@/components/GroupStandingsTable";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -9,7 +11,7 @@ import ThirdPlaceTable from "@/components/ThirdPlaceTable";
 import { matches as initialMatches } from "@/data/matches";
 import { scoreSettings } from "@/data/settings";
 import { teams } from "@/data/teams";
-import { realKnockoutPredictions as initialRealKnockoutPredictions } from "@/data/realKnockoutPredictions";
+import { realKnockoutPredictions as initialRealKnoutPredictions } from "@/data/realKnockoutPredictions";
 import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { calculatePredictedStandings } from "@/lib/standings";
 import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
@@ -35,6 +37,32 @@ type OfficialGroupRow = {
 type OfficialKnockoutRow = {
   match_id: string;
   picked_team_id: string | null;
+};
+
+type StandingSummary = {
+  entry_id: string;
+  pool_id: string;
+  name: string;
+  email: string;
+  company?: string;
+  country?: string;
+  day_points: Record<string, number>;
+  group_total: number;
+  r32_points: number;
+  r16_points: number;
+  qf_points: number;
+  sf_points: number;
+  third_points: number;
+  final_points: number;
+  total_points: number;
+  outcome_hits: number;
+  exact_hits: number;
+  outcome_percent: number;
+  exact_percent: number;
+  position: number;
+  previous_position?: number;
+  movement: "up" | "down" | "same";
+  movement_value: number;
 };
 
 const LOCALE_KEY = "porra-mundial-locale";
@@ -95,6 +123,73 @@ function RulePill({
   );
 }
 
+function MovementMini({
+  movement,
+  movementValue,
+}: {
+  movement: StandingSummary["movement"];
+  movementValue: number;
+}) {
+  if (movement === "up") {
+    return (
+      <span className="inline-flex items-center justify-center rounded-full bg-green-50 px-3 py-1 text-sm font-bold text-green-700">
+        ▲ +{movementValue}
+      </span>
+    );
+  }
+
+  if (movement === "down") {
+    return (
+      <span className="inline-flex items-center justify-center rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-red-700">
+        ▼ -{movementValue}
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center justify-center rounded-full bg-gray-100 px-3 py-1 text-sm font-bold text-gray-600">
+      =
+    </span>
+  );
+}
+
+function ClassificationHeaderCard({
+  currentUserStanding,
+}: {
+  currentUserStanding: StandingSummary | null;
+}) {
+  return (
+    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4 shadow-sm">
+      <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+        Clasificación
+      </div>
+
+      <div className="flex min-h-[110px] flex-col items-center justify-center text-center">
+        {currentUserStanding ? (
+          <>
+            <div className="text-5xl font-black text-[var(--iberdrola-green)] sm:text-6xl">
+              {currentUserStanding.position}º
+            </div>
+
+            <div className="mt-3">
+              <MovementMini
+                movement={currentUserStanding.movement}
+                movementValue={currentUserStanding.movement_value}
+              />
+            </div>
+
+            <div className="mt-2 text-xs font-medium text-[var(--iberdrola-forest)]/65">
+              Variación respecto a la última clasificación
+            </div>
+          </>
+        ) : (
+          <div className="text-3xl font-black text-[var(--iberdrola-green)]">-</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 type Props = {
   entryId: string;
 };
@@ -106,7 +201,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [knockoutPredictions, setKnockoutPredictions] =
     useState<KnockoutPredictionMap>({});
   const [realKnockoutPredictions, setRealKnockoutPredictions] =
-    useState(initialRealKnockoutPredictions);
+    useState(initialRealKnoutPredictions);
   const [officialMatches, setOfficialMatches] = useState<Match[]>(initialMatches);
   const [locale, setLocale] = useState<Locale>("es");
   const [timeZone, setTimeZone] = useState<TimezoneValue>("local");
@@ -116,10 +211,13 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [entryStatus, setEntryStatus] = useState<"draft" | "submitted">("draft");
   const [entryNumber, setEntryNumber] = useState<number | null>(null);
   const [poolName, setPoolName] = useState("");
+  const [poolId, setPoolId] = useState<string | null>(null);
   const [loadingEntry, setLoadingEntry] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
+  const [standings, setStandings] = useState<StandingSummary[]>([]);
+  const [loadingStandings, setLoadingStandings] = useState(false);
 
   useEffect(() => {
     const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
@@ -213,6 +311,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
         setEntryStatus((entry.status ?? "draft") as "draft" | "submitted");
         setEntryNumber(entry.entry_number ?? null);
         setPoolName(pool?.name ?? "");
+        setPoolId(entry.pool_id ?? null);
 
         const { data: groupRows, error: groupError } = await supabase
           .from("entry_group_predictions")
@@ -274,7 +373,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
         if (officialKnockoutError) console.error(officialKnockoutError);
 
         const nextRealKo: KnockoutPredictionMap = {
-          ...initialRealKnockoutPredictions,
+          ...initialRealKnoutPredictions,
         };
 
         (officialKnockoutRows as OfficialKnockoutRow[] | null)?.forEach((row) => {
@@ -294,6 +393,34 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
     loadFromSupabase();
   }, [entryId, supabase]);
+
+  useEffect(() => {
+    async function loadStandings() {
+      if (!poolId) return;
+
+      setLoadingStandings(true);
+
+      try {
+        const res = await fetch(`/api/standings?poolId=${poolId}`, {
+          cache: "no-store",
+        });
+
+        if (!res.ok) {
+          throw new Error("Error cargando clasificación");
+        }
+
+        const data = await res.json();
+        setStandings((data?.standings ?? []) as StandingSummary[]);
+      } catch (err) {
+        console.error(err);
+        setStandings([]);
+      } finally {
+        setLoadingStandings(false);
+      }
+    }
+
+    loadStandings();
+  }, [poolId]);
 
   function updatePrediction(
     matchId: string,
@@ -319,6 +446,23 @@ export default function PredictionsPageClient({ entryId }: Props) {
       ...current,
       [matchId]: teamId,
     }));
+  }
+
+  async function refreshStandings() {
+    if (!poolId) return;
+
+    try {
+      const res = await fetch(`/api/standings?poolId=${poolId}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setStandings((data?.standings ?? []) as StandingSummary[]);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   async function handleSaveEntry() {
@@ -377,6 +521,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
       }
 
       setSubmitMessage("Porra guardada correctamente.");
+      await refreshStandings();
     } catch (err) {
       console.error(err);
       setSubmitMessage("Error guardando la porra.");
@@ -420,6 +565,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
       setEntryStatus("submitted");
       setSubmitMessage("Porra enviada correctamente.");
+      await refreshStandings();
     } catch (err) {
       console.error(err);
       setSubmitMessage("Error de conexión al enviar.");
@@ -487,7 +633,13 @@ export default function PredictionsPageClient({ entryId }: Props) {
   );
 
   const realBracket = useMemo(
-    () => buildRealKnockoutBracket(teams, officialMatches, groups, realKnockoutPredictions),
+    () =>
+      buildRealKnockoutBracket(
+        teams,
+        officialMatches,
+        groups,
+        realKnockoutPredictions
+      ),
     [officialMatches, groups, realKnockoutPredictions]
   );
 
@@ -510,6 +662,18 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
   const totalPoints = groupPointsTotal + knockoutScore.total;
   const greetingName = authUserName?.trim() || authUserEmail?.trim() || "Jugador";
+
+  const currentUserStanding = useMemo(
+    () => standings.find((row) => row.entry_id === activeEntryId) ?? null,
+    [standings, activeEntryId]
+  );
+
+  const top3Standings = useMemo(() => standings.slice(0, 3), [standings]);
+
+  const lastStanding = useMemo(
+    () => (standings.length > 0 ? standings[standings.length - 1] : null),
+    [standings]
+  );
 
   if (loadingEntry) {
     return (
@@ -584,7 +748,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
             <div className="mt-5 grid gap-3 lg:grid-cols-[1.3fr_0.8fr_auto]">
               <HeaderPill label={t.totalPoints} value={totalPoints} big />
-              <HeaderPill label="Clasificación" value="-" />
+              <ClassificationHeaderCard currentUserStanding={currentUserStanding} />
 
               <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
                 <button
@@ -605,8 +769,8 @@ export default function PredictionsPageClient({ entryId }: Props) {
                   {entryStatus === "submitted"
                     ? "Porra enviada"
                     : submitLoading
-                    ? "Enviando..."
-                    : "Enviar porra"}
+                      ? "Enviando..."
+                      : "Enviar porra"}
                 </button>
 
                 <button
@@ -624,6 +788,121 @@ export default function PredictionsPageClient({ entryId }: Props) {
                 {submitMessage}
               </div>
             ) : null}
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+          <div className="p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+                  Resumen clasificación
+                </div>
+                <div className="mt-1 text-lg font-black text-[var(--iberdrola-forest)]">
+                  Top 3 y último puesto
+                </div>
+                <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+                  Consulta rápida de la clasificación general actual.
+                </div>
+              </div>
+
+              {poolId ? (
+                <Link
+                  href={`/standings?poolId=${poolId}`}
+                  className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+                >
+                  Ver clasificación completa
+                </Link>
+              ) : null}
+            </div>
+
+            <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
+              <div>
+                <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+                  Top 3
+                </div>
+
+                <div className="space-y-2">
+                  {loadingStandings ? (
+                    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
+                      Cargando clasificación...
+                    </div>
+                  ) : top3Standings.length > 0 ? (
+                    top3Standings.map((row) => (
+                      <div
+                        key={row.entry_id}
+                        className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3"
+                      >
+                        <div className="min-w-0 pr-3">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[var(--iberdrola-green-light)] px-2 text-sm font-black text-[var(--iberdrola-forest)]">
+                              {row.position}
+                            </span>
+                            <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] sm:text-base">
+                              {row.name || row.email || "Jugador"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="shrink-0 text-right">
+                          <div className="text-lg font-black text-[var(--iberdrola-green)]">
+                            {row.total_points}
+                          </div>
+                          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
+                            puntos
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
+                      No hay clasificación disponible todavía.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+                  Último
+                </div>
+
+                {lastStanding ? (
+                  <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-base font-black text-[var(--iberdrola-forest)]">
+                          {lastStanding.name || lastStanding.email || "Jugador"}
+                        </div>
+                        <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+                          Puesto {lastStanding.position}
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-2xl font-black text-[var(--iberdrola-green)]">
+                          {lastStanding.total_points}
+                        </div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
+                          puntos
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3">
+                      <MovementMini
+                        movement={lastStanding.movement}
+                        movementValue={lastStanding.movement_value}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
+                    No hay clasificación disponible todavía.
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -785,26 +1064,26 @@ export default function PredictionsPageClient({ entryId }: Props) {
         </div>
 
         <ThirdPlaceTable
-  title={`${t.bestThirdPlaced}`}
-  subtitle={t.bestThirdPlacedSubtitle}
-  rows={predictedThirdPlaced}
-  labels={{
-    position: t.position,
-    group: t.group,
-    team: t.team,
-    played: t.played,
-    won: t.won,
-    drawn: t.drawn,
-    lost: t.lost,
-    goalsFor: t.goalsFor,
-    goalsAgainst: t.goalsAgainst,
-    goalDifference: t.goalDifference,
-    pointsShort: t.pointsShort,
-    status: t.status,
-    qualified: t.qualified,
-    eliminated: t.eliminated,
-  }}
-/>
+          title={`${t.bestThirdPlaced}`}
+          subtitle={t.bestThirdPlacedSubtitle}
+          rows={predictedThirdPlaced}
+          labels={{
+            position: t.position,
+            group: t.group,
+            team: t.team,
+            played: t.played,
+            won: t.won,
+            drawn: t.drawn,
+            lost: t.lost,
+            goalsFor: t.goalsFor,
+            goalsAgainst: t.goalsAgainst,
+            goalDifference: t.goalDifference,
+            pointsShort: t.pointsShort,
+            status: t.status,
+            qualified: t.qualified,
+            eliminated: t.eliminated,
+          }}
+        />
 
         <KnockoutBracket
           title={t.knockoutBracket}
