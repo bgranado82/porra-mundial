@@ -7,23 +7,112 @@ import { createClient } from "@/utils/supabase/client";
 import { matches as initialMatches } from "@/data/matches";
 import { teams } from "@/data/teams";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
-import { Match } from "@/types";
+import { buildRealKnockoutBracket } from "@/lib/realKnockout";
+import {
+  KnockoutPredictionMap,
+  Match,
+  KnockoutBracketMatch,
+} from "@/types";
 
 type GroupResultMap = Record<
   string,
   { homeGoals: string; awayGoals: string }
 >;
 
-type KnockoutResultMap = Record<string, string>;
 type OfficialExtraResultMap = Record<string, string>;
 
 const STANDINGS_POOL_ID = "eb10020a-f258-49c7-be10-b0350b35d54a";
+
+const EXTRA_LABELS: Record<string, string> = {
+  first_goal_scorer_world: "🥇 Primer goleador del Mundial",
+  first_goal_scorer_spain: "🇪🇸 Primer goleador de España",
+  golden_boot: "👟 Bota de Oro",
+  golden_ball: "🏆 Balón de Oro",
+  best_young_player: "🌟 Mejor jugador joven",
+  golden_glove: "🧤 Guante de Oro",
+  top_spanish_scorer: "🇪🇸 Máximo goleador de España",
+};
+
+function RoundSection({
+  title,
+  matches,
+  picks,
+  onPick,
+  teamMap,
+}: {
+  title: string;
+  matches: KnockoutBracketMatch[];
+  picks: KnockoutPredictionMap;
+  onPick: (matchId: string, teamId: string) => void;
+  teamMap: Map<string, { id: string; name: string; flag: string }>;
+}) {
+  if (matches.length === 0) return null;
+
+  return (
+    <section>
+      <h3 className="mb-3 text-lg font-semibold">{title}</h3>
+
+      <div className="space-y-3">
+        {matches.map((match) => {
+          const home = match.homeTeamId ? teamMap.get(match.homeTeamId) : null;
+          const away = match.awayTeamId ? teamMap.get(match.awayTeamId) : null;
+
+          const homeLabel =
+            home?.name || match.homeLabel || "Pendiente de definir";
+          const awayLabel =
+            away?.name || match.awayLabel || "Pendiente de definir";
+
+          const hasOptions = !!home || !!away;
+
+          return (
+            <div
+              key={match.id}
+              className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4"
+            >
+              <div className="mb-2 text-sm font-semibold text-[var(--iberdrola-forest)]/70">
+                {match.id}
+              </div>
+
+              <div className="mb-3 text-sm text-[var(--iberdrola-forest)]">
+                <div>{home ? `${home.flag} ${homeLabel}` : homeLabel}</div>
+                <div className="my-1 text-xs text-[var(--iberdrola-forest)]/55">
+                  vs
+                </div>
+                <div>{away ? `${away.flag} ${awayLabel}` : awayLabel}</div>
+              </div>
+
+              <select
+                value={picks[match.id] ?? ""}
+                onChange={(e) => onPick(match.id, e.target.value)}
+                disabled={!hasOptions}
+                className="w-full rounded-xl border px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <option value="">Selecciona ganador</option>
+                {home ? (
+                  <option value={home.id}>
+                    {home.flag} {home.name}
+                  </option>
+                ) : null}
+                {away ? (
+                  <option value={away.id}>
+                    {away.flag} {away.name}
+                  </option>
+                ) : null}
+              </select>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 export default function AdminPageClient() {
   const supabase = createClient();
 
   const [groupResults, setGroupResults] = useState<GroupResultMap>({});
-  const [knockoutResults, setKnockoutResults] = useState<KnockoutResultMap>({});
+  const [knockoutResults, setKnockoutResults] =
+    useState<KnockoutPredictionMap>({});
   const [officialExtras, setOfficialExtras] = useState<OfficialExtraResultMap>(
     {}
   );
@@ -36,14 +125,46 @@ export default function AdminPageClient() {
     []
   );
 
+  const groups = useMemo(
+    () =>
+      [...new Set(teams.map((team) => team.group).filter(Boolean))] as string[],
+    []
+  );
+
   const groupMatches = useMemo(
     () => initialMatches.filter((match) => match.stage === "group"),
     []
   );
 
-  const knockoutMatches = useMemo(
-    () => initialMatches.filter((match) => match.stage !== "group"),
-    []
+  const officialMatches = useMemo<Match[]>(() => {
+    return initialMatches.map((match) => {
+      if (match.stage !== "group") return match;
+
+      const official = groupResults[match.id];
+
+      return {
+        ...match,
+        homeGoals:
+          official?.homeGoals !== undefined && official.homeGoals !== ""
+            ? Number(official.homeGoals)
+            : null,
+        awayGoals:
+          official?.awayGoals !== undefined && official.awayGoals !== ""
+            ? Number(official.awayGoals)
+            : null,
+      };
+    });
+  }, [groupResults]);
+
+  const realBracket = useMemo(
+    () =>
+      buildRealKnockoutBracket(
+        teams,
+        officialMatches,
+        groups,
+        knockoutResults
+      ),
+    [officialMatches, groups, knockoutResults]
   );
 
   useEffect(() => {
@@ -73,7 +194,7 @@ export default function AdminPageClient() {
 
         if (koError) throw koError;
 
-        const nextKO: KnockoutResultMap = {};
+        const nextKO: KnockoutPredictionMap = {};
         (koRows ?? []).forEach((row) => {
           nextKO[row.match_id] = row.picked_team_id ?? "";
         });
@@ -152,18 +273,15 @@ export default function AdminPageClient() {
           picked_team_id: pickedTeamId,
         }));
 
-      const extraRows = EXTRA_QUESTIONS
-  .map((question) => {
-    const value = (officialExtras[question.key] ?? "").trim();
-
-    if (!value) return null;
-
-    return {
-      question_key: question.key,
-      official_value: value,
-    };
-  })
-  .filter(Boolean);
+      const extraRows = EXTRA_QUESTIONS.map((question) => {
+        const value = (officialExtras[question.key] ?? "").trim();
+        return value
+          ? {
+              question_key: question.key,
+              official_value: value,
+            }
+          : null;
+      }).filter(Boolean);
 
       const { error: extrasError } = await supabase
         .from("official_extra_results")
@@ -208,7 +326,7 @@ export default function AdminPageClient() {
   }
 
   return (
-    <main className="space-y-6 p-4">
+    <main className="space-y-8 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">ADMIN · Resultados</h1>
 
@@ -233,7 +351,7 @@ export default function AdminPageClient() {
       </div>
 
       <section>
-        <h2 className="mb-2 text-xl font-semibold">Grupos</h2>
+        <h2 className="mb-3 text-xl font-semibold">Grupos</h2>
 
         <div className="mt-4 space-y-2">
           {groupMatches.map((match: Match) => {
@@ -244,7 +362,9 @@ export default function AdminPageClient() {
 
             return (
               <div key={match.id} className="flex items-center gap-2">
-                <span className="min-w-[120px]">{home.name}</span>
+                <span className="min-w-[140px]">
+                  {home.flag} {home.name}
+                </span>
 
                 <input
                   value={groupResults[match.id]?.homeGoals ?? ""}
@@ -264,48 +384,67 @@ export default function AdminPageClient() {
                   className="w-12 rounded border px-2 py-1"
                 />
 
-                <span className="min-w-[120px]">{away.name}</span>
+                <span className="min-w-[140px]">
+                  {away.flag} {away.name}
+                </span>
               </div>
             );
           })}
         </div>
       </section>
 
-      <section>
-        <h2 className="mb-2 text-xl font-semibold">Eliminatorias</h2>
+      <section className="space-y-8">
+        <h2 className="text-xl font-semibold">Eliminatorias</h2>
 
-        <div className="mt-4 space-y-2">
-          {knockoutMatches.map((match: Match) => {
-            const home = teamMap.get(match.homeTeamId ?? "");
-            const away = teamMap.get(match.awayTeamId ?? "");
+        <RoundSection
+          title="Round of 32"
+          matches={realBracket.round32}
+          picks={knockoutResults}
+          onPick={updateKnockoutResult}
+          teamMap={teamMap}
+        />
 
-            return (
-              <div key={match.id}>
-                <select
-                  value={knockoutResults[match.id] ?? ""}
-                  onChange={(e) =>
-                    updateKnockoutResult(match.id, e.target.value)
-                  }
-                  className="rounded border px-3 py-2"
-                >
-                  <option value="">Selecciona</option>
-                  {home ? <option value={home.id}>{home.name}</option> : null}
-                  {away ? <option value={away.id}>{away.name}</option> : null}
-                </select>
-              </div>
-            );
-          })}
-        </div>
+        <RoundSection
+          title="Octavos"
+          matches={realBracket.round16}
+          picks={knockoutResults}
+          onPick={updateKnockoutResult}
+          teamMap={teamMap}
+        />
+
+        <RoundSection
+          title="Cuartos"
+          matches={realBracket.quarterfinals}
+          picks={knockoutResults}
+          onPick={updateKnockoutResult}
+          teamMap={teamMap}
+        />
+
+        <RoundSection
+          title="Semis"
+          matches={realBracket.semifinals}
+          picks={knockoutResults}
+          onPick={updateKnockoutResult}
+          teamMap={teamMap}
+        />
+
+        <RoundSection
+          title="Final"
+          matches={realBracket.finals}
+          picks={knockoutResults}
+          onPick={updateKnockoutResult}
+          teamMap={teamMap}
+        />
       </section>
 
       <section>
-        <h2 className="mb-2 text-xl font-semibold">Preguntas extra</h2>
+        <h2 className="mb-3 text-xl font-semibold">Preguntas extra</h2>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           {EXTRA_QUESTIONS.map((question) => (
             <div key={question.key} className="rounded-xl border p-3">
               <label className="mb-2 block text-sm font-medium">
-                {question.icon} {question.key}
+                {EXTRA_LABELS[question.key] ?? question.key}
               </label>
 
               <input
