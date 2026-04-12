@@ -1,4 +1,3 @@
-
 import StandingsTable from "@/components/StandingsTable";
 import { headers } from "next/headers";
 
@@ -31,9 +30,17 @@ export default async function StandingsPage({ searchParams }: PageProps) {
 
   if (!poolId) {
     return (
-      <main className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Clasificación</h1>
-        <p>Falta el poolId en la URL.</p>
+      <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-4">
+        <div className="mx-auto max-w-7xl space-y-4">
+          <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-5 shadow-sm">
+            <h1 className="text-2xl font-bold text-[var(--iberdrola-forest)]">
+              Clasificación
+            </h1>
+            <p className="mt-2 text-sm text-red-600">
+              Falta el poolId en la URL.
+            </p>
+          </section>
+        </div>
       </main>
     );
   }
