@@ -2,12 +2,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { matches as initialMatches } from "@/data/matches";
 import { teams } from "@/data/teams";
+import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import { Match } from "@/types";
-import Link from "next/link";
-
 
 type GroupResultMap = Record<
   string,
@@ -15,12 +15,18 @@ type GroupResultMap = Record<
 >;
 
 type KnockoutResultMap = Record<string, string>;
+type OfficialExtraResultMap = Record<string, string>;
+
+const STANDINGS_POOL_ID = "eb10020a-f258-49c7-be10-b0350b35d54a";
 
 export default function AdminPageClient() {
   const supabase = createClient();
 
   const [groupResults, setGroupResults] = useState<GroupResultMap>({});
   const [knockoutResults, setKnockoutResults] = useState<KnockoutResultMap>({});
+  const [officialExtras, setOfficialExtras] = useState<OfficialExtraResultMap>(
+    {}
+  );
   const [loading, setLoading] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
   const [message, setMessage] = useState("");
@@ -46,9 +52,11 @@ export default function AdminPageClient() {
       setMessage("");
 
       try {
-        const { data: groupRows } = await supabase
+        const { data: groupRows, error: groupError } = await supabase
           .from("official_group_results")
           .select("match_id, home_goals, away_goals");
+
+        if (groupError) throw groupError;
 
         const nextGroup: GroupResultMap = {};
         (groupRows ?? []).forEach((row) => {
@@ -59,15 +67,29 @@ export default function AdminPageClient() {
         });
         setGroupResults(nextGroup);
 
-        const { data: koRows } = await supabase
+        const { data: koRows, error: koError } = await supabase
           .from("official_knockout_results")
           .select("match_id, picked_team_id");
+
+        if (koError) throw koError;
 
         const nextKO: KnockoutResultMap = {};
         (koRows ?? []).forEach((row) => {
           nextKO[row.match_id] = row.picked_team_id ?? "";
         });
         setKnockoutResults(nextKO);
+
+        const { data: extraRows, error: extraError } = await supabase
+          .from("official_extra_results")
+          .select("question_key, official_value");
+
+        if (extraError) throw extraError;
+
+        const nextExtras: OfficialExtraResultMap = {};
+        (extraRows ?? []).forEach((row) => {
+          nextExtras[row.question_key] = row.official_value ?? "";
+        });
+        setOfficialExtras(nextExtras);
       } catch (err) {
         console.error(err);
         setMessage("Error cargando resultados.");
@@ -103,6 +125,13 @@ export default function AdminPageClient() {
     }));
   }
 
+  function updateOfficialExtra(questionKey: string, value: string) {
+    setOfficialExtras((prev) => ({
+      ...prev,
+      [questionKey]: value,
+    }));
+  }
+
   async function handleSaveAllResults() {
     setSavingAll(true);
     setMessage("");
@@ -123,6 +152,21 @@ export default function AdminPageClient() {
           picked_team_id: pickedTeamId,
         }));
 
+      const extraRows = EXTRA_QUESTIONS.map((question) => ({
+        question_key: question.key,
+        official_value: (officialExtras[question.key] ?? "").trim(),
+      })).filter((row) => row.official_value !== "");
+
+      const { error: extrasError } = await supabase
+        .from("official_extra_results")
+        .upsert(extraRows, { onConflict: "question_key" });
+
+      if (extrasError) {
+        console.error(extrasError);
+        setMessage("Error guardando resultados extra.");
+        return;
+      }
+
       const res = await fetch("/api/admin/update-results", {
         method: "POST",
         headers: {
@@ -135,18 +179,14 @@ export default function AdminPageClient() {
       });
 
       const data = await res.json();
-console.log("UPDATE RESULTS RESPONSE:", data);
+      console.log("UPDATE RESULTS RESPONSE:", data);
 
-if (!res.ok) {
-  setMessage(data.error || "Error guardando resultados.");
-  return;
-}
+      if (!res.ok) {
+        setMessage(data.error || "Error guardando resultados.");
+        return;
+      }
 
-setMessage(
-  `Guardado OK. entries=${data.debug?.entries ?? 0}, official=${data.debug?.officialGroupResults ?? 0}, predictions=${data.debug?.groupPredictions ?? 0}, scores=${data.debug?.scoresToInsert ?? 0}`
-);
-
-      setMessage("Resultados guardados y clasificación recalculada correctamente.");
+      setMessage("Resultados y preguntas extra guardados correctamente.");
     } catch (err) {
       console.error(err);
       setMessage("Error guardando resultados.");
@@ -158,18 +198,21 @@ setMessage(
   if (loading) {
     return <div className="p-6">Cargando admin...</div>;
   }
-<Link
-  href="/standings?poolId=eb10020a-f258-49c7-be10-b0350b35d54a"
-  className="inline-block rounded-xl border border-[var(--iberdrola-green)] bg-white px-4 py-2 text-sm font-medium text-[var(--iberdrola-forest)]"
->
-  Ver clasificación
-</Link>
 
- return (
-    <main className="p-4 space-y-6">
-      <h1 className="text-2xl font-bold">ADMIN · Resultados</h1>
+  return (
+    <main className="space-y-6 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold">ADMIN · Resultados</h1>
 
-      {message && <p>{message}</p>}
+        <Link
+          href={`/standings?poolId=${STANDINGS_POOL_ID}`}
+          className="inline-block rounded-xl border border-[var(--iberdrola-green)] bg-white px-4 py-2 text-sm font-medium text-[var(--iberdrola-forest)]"
+        >
+          Ver clasificación
+        </Link>
+      </div>
+
+      {message ? <p>{message}</p> : null}
 
       <div>
         <button
@@ -182,9 +225,9 @@ setMessage(
       </div>
 
       <section>
-        <h2 className="text-xl font-semibold mb-2">Grupos</h2>
+        <h2 className="mb-2 text-xl font-semibold">Grupos</h2>
 
-        <div className="space-y-2 mt-4">
+        <div className="mt-4 space-y-2">
           {groupMatches.map((match: Match) => {
             const home = teamMap.get(match.homeTeamId ?? "");
             const away = teamMap.get(match.awayTeamId ?? "");
@@ -192,15 +235,15 @@ setMessage(
             if (!home || !away) return null;
 
             return (
-              <div key={match.id} className="flex gap-2 items-center">
-                <span>{home.name}</span>
+              <div key={match.id} className="flex items-center gap-2">
+                <span className="min-w-[120px]">{home.name}</span>
 
                 <input
                   value={groupResults[match.id]?.homeGoals ?? ""}
                   onChange={(e) =>
                     updateGroupResult(match.id, "homeGoals", e.target.value)
                   }
-                  className="w-12 border"
+                  className="w-12 rounded border px-2 py-1"
                 />
 
                 <span>-</span>
@@ -210,10 +253,10 @@ setMessage(
                   onChange={(e) =>
                     updateGroupResult(match.id, "awayGoals", e.target.value)
                   }
-                  className="w-12 border"
+                  className="w-12 rounded border px-2 py-1"
                 />
 
-                <span>{away.name}</span>
+                <span className="min-w-[120px]">{away.name}</span>
               </div>
             );
           })}
@@ -221,9 +264,9 @@ setMessage(
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-2">Eliminatorias</h2>
+        <h2 className="mb-2 text-xl font-semibold">Eliminatorias</h2>
 
-        <div className="space-y-2 mt-4">
+        <div className="mt-4 space-y-2">
           {knockoutMatches.map((match: Match) => {
             const home = teamMap.get(match.homeTeamId ?? "");
             const away = teamMap.get(match.awayTeamId ?? "");
@@ -235,6 +278,7 @@ setMessage(
                   onChange={(e) =>
                     updateKnockoutResult(match.id, e.target.value)
                   }
+                  className="rounded border px-3 py-2"
                 >
                   <option value="">Selecciona</option>
                   {home ? <option value={home.id}>{home.name}</option> : null}
@@ -243,6 +287,30 @@ setMessage(
               </div>
             );
           })}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-2 text-xl font-semibold">Preguntas extra</h2>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {EXTRA_QUESTIONS.map((question) => (
+            <div key={question.key} className="rounded-xl border p-3">
+              <label className="mb-2 block text-sm font-medium">
+                {question.icon} {question.key}
+              </label>
+
+              <input
+                type="text"
+                value={officialExtras[question.key] ?? ""}
+                onChange={(e) =>
+                  updateOfficialExtra(question.key, e.target.value)
+                }
+                placeholder="Resultado oficial"
+                className="w-full rounded border px-3 py-2"
+              />
+            </div>
+          ))}
         </div>
       </section>
     </main>
