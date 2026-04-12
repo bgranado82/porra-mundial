@@ -6,6 +6,8 @@ type EntryRow = {
   id: string;
   name: string | null;
   email: string | null;
+  company: string | null;
+  country: string | null;
   pool_id: string;
 };
 
@@ -30,6 +32,8 @@ type StandingRow = {
   pool_id: string;
   name: string;
   email: string;
+  company: string;
+  country: string;
   day_points: Record<string, number>;
   group_total: number;
   r32_points: number;
@@ -56,7 +60,7 @@ export async function GET(req: Request) {
 
     const { data: entries, error: entriesError } = await supabase
       .from("entries")
-      .select("id, name, email, pool_id")
+      .select("id, name, email, company, country, pool_id")
       .eq("pool_id", poolId);
 
     if (entriesError) {
@@ -96,6 +100,8 @@ export async function GET(req: Request) {
         pool_id: String(entry.pool_id),
         name: entry.name || entry.email || "Jugador",
         email: entry.email || "",
+        company: entry.company || "",
+        country: entry.country || "",
         day_points: {},
         group_total: 0,
         r32_points: 0,
@@ -116,6 +122,7 @@ export async function GET(req: Request) {
     typedScores.forEach((row) => {
       const entryId = String(row.entry_id);
       const current = grouped.get(entryId);
+
       if (!current) return;
 
       const points = Number(row.points ?? 0);
@@ -132,6 +139,7 @@ export async function GET(req: Request) {
         }
 
         current.total_group_matches += 1;
+
         if (row.is_outcome) current.outcome_hits += 1;
         if (row.is_exact) current.exact_hits += 1;
       }

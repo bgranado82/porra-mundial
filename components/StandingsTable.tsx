@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useMemo, useState } from "react";
@@ -8,6 +9,8 @@ type Standing = {
   pool_id: string;
   name: string;
   email: string;
+  company?: string;
+  country?: string;
   day_points: Record<string, number>;
   group_total: number;
   r32_points: number;
@@ -141,6 +144,20 @@ export default function StandingsTable({ days, standings }: Props) {
                     Jugador
                   </th>
 
+                  {/* NUEVO */}
+                  <th
+                    rowSpan={2}
+                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[140px]"
+                  >
+                    Empresa
+                  </th>
+                  <th
+                    rowSpan={2}
+                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[120px]"
+                  >
+                    País
+                  </th>
+
                   <th
                     colSpan={hasGroupDays ? sortedDays.length + 1 : 1}
                     className="sticky top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-2 text-center font-bold text-[var(--iberdrola-forest)]"
@@ -215,6 +232,14 @@ export default function StandingsTable({ days, standings }: Props) {
                         </Link>
                       </td>
 
+                      {/* NUEVO */}
+                      <td className="border-b border-gray-100 px-3 py-3 whitespace-nowrap">
+                        {row.company || "-"}
+                      </td>
+                      <td className="border-b border-gray-100 px-3 py-3 whitespace-nowrap">
+                        {row.country || "-"}
+                      </td>
+
                       {hasGroupDays ? (
                         <>
                           {sortedDays.map((day) => (
@@ -280,6 +305,20 @@ export default function StandingsTable({ days, standings }: Props) {
                     Jugador
                   </th>
 
+                  {/* NUEVO */}
+                  <th
+                    rowSpan={2}
+                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[140px]"
+                  >
+                    Empresa
+                  </th>
+                  <th
+                    rowSpan={2}
+                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[120px]"
+                  >
+                    País
+                  </th>
+
                   <th
                     colSpan={7}
                     className="sticky top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-2 text-center font-bold text-[var(--iberdrola-forest)]"
@@ -341,61 +380,77 @@ export default function StandingsTable({ days, standings }: Props) {
               </thead>
 
               <tbody>
-                {standings.map((row) => (
-                  <tr key={row.entry_id} className="hover:bg-gray-50">
-                    <td className="border-b border-gray-100 px-3 py-3 font-bold whitespace-nowrap">
-                      {row.position}
-                    </td>
+                {standings.map((row) => {
+                  const heatClass = getRankHeatClass(row.position, totalRows);
 
-                    <td className="border-b border-gray-100 px-3 py-3 font-medium whitespace-nowrap">
-                      <Link href={`/entry/${row.entry_id}`} className="hover:underline">
-                        {row.name || row.email || "Jugador"}
-                      </Link>
-                    </td>
+                  return (
+                    <tr key={row.entry_id} className="hover:bg-gray-50">
+                      <td className="border-b border-gray-100 px-3 py-3 font-bold whitespace-nowrap">
+                        {row.position}
+                      </td>
 
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center font-semibold">
-                      {row.group_total}
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      {row.r32_points}
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      {row.r16_points}
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      {row.qf_points}
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      {row.sf_points}
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      {row.third_points}
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center font-bold">
-                      {row.total_points}
-                    </td>
+                      <td className="border-b border-gray-100 px-3 py-3 font-medium whitespace-nowrap">
+                        <Link href={`/entry/${row.entry_id}`} className="hover:underline">
+                          {row.name || row.email || "Jugador"}
+                        </Link>
+                      </td>
 
-                    <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
-                      {row.outcome_hits}
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
-                      {row.outcome_percent}%
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
-                      {row.exact_hits}
-                    </td>
-                    <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
-                      {row.exact_percent}%
-                    </td>
+                      {/* NUEVO */}
+                      <td className="border-b border-gray-100 px-3 py-3 whitespace-nowrap">
+                        {row.company || "-"}
+                      </td>
+                      <td className="border-b border-gray-100 px-3 py-3 whitespace-nowrap">
+                        {row.country || "-"}
+                      </td>
 
-                    <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
-                      <MovementBadge
-                        movement={row.movement}
-                        movementValue={row.movement_value}
-                      />
-                    </td>
-                  </tr>
-                ))}
+                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center font-semibold">
+                        {row.group_total}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                        {row.r32_points}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                        {row.r16_points}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                        {row.qf_points}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                        {row.sf_points}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                        {row.third_points}
+                      </td>
+
+                      {/* DEGRADADO EN TOTAL */}
+                      <td
+                        className={`border-b border-l border-gray-100 px-3 py-3 text-center font-bold ${heatClass}`}
+                      >
+                        {row.total_points}
+                      </td>
+
+                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                        {row.outcome_hits}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                        {row.outcome_percent}%
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                        {row.exact_hits}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                        {row.exact_percent}%
+                      </td>
+
+                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                        <MovementBadge
+                          movement={row.movement}
+                          movementValue={row.movement_value}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
