@@ -1,5 +1,6 @@
+
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 type EntryRow = {
   id: string;
@@ -45,7 +46,7 @@ type StandingRow = {
 
 export async function GET(req: Request) {
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { searchParams } = new URL(req.url);
     const poolId = searchParams.get("poolId");
 
@@ -85,7 +86,6 @@ export async function GET(req: Request) {
     const typedScores = (scores ?? []) as ScoreRow[];
     const typedSnapshots = (snapshots ?? []) as SnapshotRow[];
 
-    // Construimos SIEMPRE desde entries para que el nombre salga de entries.name
     const grouped = new Map<string, StandingRow>();
 
     typedEntries.forEach((entry) => {
@@ -153,7 +153,6 @@ export async function GET(req: Request) {
       return a.name.localeCompare(b.name);
     });
 
-    // Cogemos el snapshot anterior al último
     const snapshotTimes = Array.from(
       new Set(typedSnapshots.map((s) => s.captured_at))
     ).sort((a, b) => (a < b ? 1 : -1));
