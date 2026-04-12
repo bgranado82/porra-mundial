@@ -3,6 +3,11 @@ import { createAdminClient } from "@/utils/supabase/admin";
 import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { scoreSettings } from "@/data/settings";
 import { matches } from "@/data/matches";
+import { teams } from "@/data/teams";
+import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
+import { buildRealKnockoutBracket } from "@/lib/realKnockout";
+import { calculateKnockoutScore } from "@/lib/knockoutScoring";
+import { KnockoutPredictionMap, Match } from "@/types";
 
 function normalize(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase();
@@ -132,6 +137,24 @@ export async function recalculateScoresAll() {
     throw officialExtraResultsError;
   }
 
+  const { data: knockoutPredictions, error: knockoutPredictionsError } =
+    await supabase
+      .from("entry_knockout_predictions")
+      .select("entry_id, match_id, picked_team_id");
+
+  if (knockoutPredictionsError) {
+    throw knockoutPredictionsError;
+  }
+
+  const { data: officialKnockoutResults, error: officialKnockoutResultsError } =
+    await supabase
+      .from("official_knockout_results")
+      .select("match_id, picked_team_id");
+
+  if (officialKnockoutResultsError) {
+    throw officialKnockoutResultsError;
+  }
+
   const entryById = new Map(
     (entries ?? []).map((entry) => [normalize(entry.id), entry])
   );
@@ -146,6 +169,27 @@ export async function recalculateScoresAll() {
       row,
     ])
   );
+
+  const officialKnockoutMap: KnockoutPredictionMap = {};
+  (officialKnockoutResults ?? []).forEach((row) => {
+    officialKnockoutMap[row.match_id] = row.picked_team_id ?? null;
+  });
+
+  const officialMatchesWithResults: Match[] = matches.map((match) => {
+    if (match.stage !== "group") return match;
+
+    const official = officialByMatchId.get(normalize(match.id));
+
+    return {
+      ...match,
+      homeGoals: official?.home_goals ?? null,
+      awayGoals: official?.away_goals ?? null,
+    };
+  });
+
+  const groups = [
+    ...new Set(teams.map((team) => team.group).filter(Boolean)),
+  ] as string[];
 
   const rowsToInsert: Array<{
     entry_id: string;
@@ -170,6 +214,10 @@ export async function recalculateScoresAll() {
   let skippedExtraPredictionNull = 0;
   let pushedExtraScores = 0;
 
+  let pushedKnockoutScores = 0;
+  let skippedKnockoutNoEntry = 0;
+
+  // GROUPS
   for (const pred of predictions ?? []) {
     const entry = entryById.get(normalize(pred.entry_id));
     if (!entry) {
@@ -223,6 +271,7 @@ export async function recalculateScoresAll() {
     pushedGroupScores += 1;
   }
 
+  // EXTRAS
   for (const pred of extraPredictions ?? []) {
     const entry = entryById.get(normalize(pred.entry_id));
     if (!entry) {
@@ -265,6 +314,116 @@ export async function recalculateScoresAll() {
     pushedExtraScores += 1;
   }
 
+  // KNOCKOUT
+  const knockoutPredictionsByEntry = new Map<string, KnockoutPredictionMap>();
+
+  (knockoutPredictions ?? []).forEach((row) => {
+    const entryId = String(row.entry_id);
+    const current = knockoutPredictionsByEntry.get(entryId) ?? {};
+    current[row.match_id] = row.picked_team_id ?? null;
+    knockoutPredictionsByEntry.set(entryId, current);
+  });
+
+  const realBracket = buildRealKnockoutBracket(
+    teams,
+    officialMatchesWithResults,
+    groups,
+    officialKnockoutMap
+  );
+
+  for (const [entryId, picks] of knockoutPredictionsByEntry.entries()) {
+    const entry = entryById.get(normalize(entryId));
+    if (!entry) {
+      skippedKnockoutNoEntry += 1;
+      continue;
+    }
+
+    const userGroupPredictions = (predictions ?? []).filter(
+      (row) => String(row.entry_id) === entryId
+    );
+
+    const groupPredictionMap: Record<
+      string,
+      { homeGoals: number | null; awayGoals: number | null }
+    > = {};
+
+    userGroupPredictions.forEach((row) => {
+      groupPredictionMap[row.match_id] = {
+        homeGoals: row.home_goals,
+        awayGoals: row.away_goals,
+      };
+    });
+
+    const userBracket = buildUserKnockoutBracket(
+      teams,
+      officialMatchesWithResults,
+      groups,
+      groupPredictionMap,
+      picks
+    );
+
+    const knockoutScore = calculateKnockoutScore(
+      scoreSettings,
+      userBracket,
+      realBracket
+    );
+
+    rowsToInsert.push(
+      {
+        entry_id: entryId,
+        pool_id: entry.pool_id,
+        match_id: null,
+        matchday: null,
+        stage: "r32",
+        points: knockoutScore.round32,
+        is_exact: false,
+        is_outcome: false,
+      },
+      {
+        entry_id: entryId,
+        pool_id: entry.pool_id,
+        match_id: null,
+        matchday: null,
+        stage: "r16",
+        points: knockoutScore.round16,
+        is_exact: false,
+        is_outcome: false,
+      },
+      {
+        entry_id: entryId,
+        pool_id: entry.pool_id,
+        match_id: null,
+        matchday: null,
+        stage: "qf",
+        points: knockoutScore.quarterfinals,
+        is_exact: false,
+        is_outcome: false,
+      },
+      {
+        entry_id: entryId,
+        pool_id: entry.pool_id,
+        match_id: null,
+        matchday: null,
+        stage: "sf",
+        points: knockoutScore.semifinals,
+        is_exact: false,
+        is_outcome: false,
+      },
+      {
+        entry_id: entryId,
+        pool_id: entry.pool_id,
+        match_id: null,
+        matchday: null,
+        stage: "final",
+        points: knockoutScore.final + knockoutScore.champion,
+        is_exact: false,
+        is_outcome: false,
+      }
+    );
+
+    pushedKnockoutScores += 5;
+  }
+
   if (rowsToInsert.length > 0) {
     const { error: insertError } = await supabase
       .from("entry_scores")
@@ -278,7 +437,9 @@ export async function recalculateScoresAll() {
   return {
     entries: entries?.length ?? 0,
     officialGroupResults: officialResults?.length ?? 0,
+    officialKnockoutResults: officialKnockoutResults?.length ?? 0,
     groupPredictions: predictions?.length ?? 0,
+    knockoutPredictions: knockoutPredictions?.length ?? 0,
     extraPredictions: extraPredictions?.length ?? 0,
     officialExtraResults: officialExtraResults?.length ?? 0,
     rowsToInsert: rowsToInsert.length,
@@ -292,6 +453,8 @@ export async function recalculateScoresAll() {
     skippedExtraOfficialNull,
     skippedExtraPredictionNull,
     pushedExtraScores,
+    skippedKnockoutNoEntry,
+    pushedKnockoutScores,
     sampleMatchdays: (predictions ?? []).slice(0, 10).map((pred) => {
       const match = matches.find((m) => String(m.id) === String(pred.match_id));
       return {
