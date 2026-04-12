@@ -1,4 +1,5 @@
-    import { createAdminClient } from "@/utils/supabase/admin";
+
+import { createAdminClient } from "@/utils/supabase/admin";
 import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { scoreSettings } from "@/data/settings";
 import { matches } from "@/data/matches";
@@ -7,7 +8,10 @@ function normalize(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase();
 }
 
-function getOutcome(homeGoals: number, awayGoals: number): "home" | "draw" | "away" {
+function getOutcome(
+  homeGoals: number,
+  awayGoals: number
+): "home" | "draw" | "away" {
   if (homeGoals > awayGoals) return "home";
   if (homeGoals < awayGoals) return "away";
   return "draw";
@@ -22,6 +26,31 @@ function getDateKeyFromKickoff(kickoff: string | null | undefined) {
   return date.toISOString().slice(0, 10);
 }
 
+function getExtraQuestionPoints(questionKey: string) {
+  if (questionKey === "first_goal_scorer_world") {
+    return scoreSettings.firstGoalScorerWorldPoints;
+  }
+  if (questionKey === "first_goal_scorer_spain") {
+    return scoreSettings.firstGoalScorerSpainPoints;
+  }
+  if (questionKey === "golden_boot") {
+    return scoreSettings.goldenBootPoints;
+  }
+  if (questionKey === "golden_ball") {
+    return scoreSettings.goldenBallPoints;
+  }
+  if (questionKey === "best_young_player") {
+    return scoreSettings.bestYoungPlayerPoints;
+  }
+  if (questionKey === "golden_glove") {
+    return scoreSettings.goldenGlovePoints;
+  }
+  if (questionKey === "top_spanish_scorer") {
+    return scoreSettings.topSpanishScorerPoints;
+  }
+
+  return 0;
+}
 
 const groupMatches = matches.filter((match) => match.stage === "group");
 
@@ -85,6 +114,24 @@ export async function recalculateScoresAll() {
     throw predictionsError;
   }
 
+  const { data: extraPredictions, error: extraPredictionsError } =
+    await supabase
+      .from("entry_extra_predictions")
+      .select("entry_id, question_key, predicted_value");
+
+  if (extraPredictionsError) {
+    throw extraPredictionsError;
+  }
+
+  const { data: officialExtraResults, error: officialExtraResultsError } =
+    await supabase
+      .from("official_extra_results")
+      .select("question_key, official_value");
+
+  if (officialExtraResultsError) {
+    throw officialExtraResultsError;
+  }
+
   const entryById = new Map(
     (entries ?? []).map((entry) => [normalize(entry.id), entry])
   );
@@ -93,11 +140,18 @@ export async function recalculateScoresAll() {
     (officialResults ?? []).map((row) => [normalize(row.match_id), row])
   );
 
-  const rowsToUpsert: Array<{
+  const officialExtraByQuestionKey = new Map(
+    (officialExtraResults ?? []).map((row) => [
+      normalize(row.question_key),
+      row,
+    ])
+  );
+
+  const rowsToInsert: Array<{
     entry_id: string;
     pool_id: string;
-    match_id: string;
-    matchday: number;
+    match_id: string | null;
+    matchday: number | null;
     stage: string;
     points: number;
     is_exact: boolean;
@@ -109,6 +163,12 @@ export async function recalculateScoresAll() {
   let skippedOfficialNull = 0;
   let skippedPredictionNull = 0;
   let pushedGroupScores = 0;
+
+  let skippedExtraNoEntry = 0;
+  let skippedExtraNoOfficial = 0;
+  let skippedExtraOfficialNull = 0;
+  let skippedExtraPredictionNull = 0;
+  let pushedExtraScores = 0;
 
   for (const pred of predictions ?? []) {
     const entry = entryById.get(normalize(pred.entry_id));
@@ -149,7 +209,7 @@ export async function recalculateScoresAll() {
       getOutcome(pred.home_goals, pred.away_goals) ===
       getOutcome(official.home_goals, official.away_goals);
 
-    rowsToUpsert.push({
+    rowsToInsert.push({
       entry_id: pred.entry_id,
       pool_id: entry.pool_id,
       match_id: pred.match_id,
@@ -163,36 +223,83 @@ export async function recalculateScoresAll() {
     pushedGroupScores += 1;
   }
 
-  if (rowsToUpsert.length > 0) {
-    const { error: upsertError } = await supabase
-      .from("entry_scores")
-      .upsert(rowsToUpsert, {
-        onConflict: "entry_id,match_id",
-      });
+  for (const pred of extraPredictions ?? []) {
+    const entry = entryById.get(normalize(pred.entry_id));
+    if (!entry) {
+      skippedExtraNoEntry += 1;
+      continue;
+    }
 
-    if (upsertError) {
-      throw upsertError;
+    const official = officialExtraByQuestionKey.get(normalize(pred.question_key));
+    if (!official) {
+      skippedExtraNoOfficial += 1;
+      continue;
+    }
+
+    if (!official.official_value) {
+      skippedExtraOfficialNull += 1;
+      continue;
+    }
+
+    if (!pred.predicted_value) {
+      skippedExtraPredictionNull += 1;
+      continue;
+    }
+
+    const predictedValue = normalize(pred.predicted_value);
+    const officialValue = normalize(official.official_value);
+    const isExact = predictedValue === officialValue;
+    const points = isExact ? getExtraQuestionPoints(pred.question_key) : 0;
+
+    rowsToInsert.push({
+      entry_id: pred.entry_id,
+      pool_id: entry.pool_id,
+      match_id: null,
+      matchday: null,
+      stage: `extra:${pred.question_key}`,
+      points,
+      is_exact: isExact,
+      is_outcome: false,
+    });
+
+    pushedExtraScores += 1;
+  }
+
+  if (rowsToInsert.length > 0) {
+    const { error: insertError } = await supabase
+      .from("entry_scores")
+      .insert(rowsToInsert);
+
+    if (insertError) {
+      throw insertError;
     }
   }
 
   return {
-  entries: entries?.length ?? 0,
-  officialGroupResults: officialResults?.length ?? 0,
-  groupPredictions: predictions?.length ?? 0,
-  rowsToUpsert: rowsToUpsert.length,
-  skippedNoEntry,
-  skippedNoOfficial,
-  skippedOfficialNull,
-  skippedPredictionNull,
-  pushedGroupScores,
-  sampleMatchdays: (predictions ?? []).slice(0, 10).map((pred) => {
-    const match = matches.find((m) => String(m.id) === String(pred.match_id));
-    return {
-      match_id: pred.match_id,
-      kickoff: match?.kickoff ?? null,
-      computed_matchday: getMatchday(pred.match_id),
-    };
-  }),
-  uniqueGroupDates,
-};
+    entries: entries?.length ?? 0,
+    officialGroupResults: officialResults?.length ?? 0,
+    groupPredictions: predictions?.length ?? 0,
+    extraPredictions: extraPredictions?.length ?? 0,
+    officialExtraResults: officialExtraResults?.length ?? 0,
+    rowsToInsert: rowsToInsert.length,
+    skippedNoEntry,
+    skippedNoOfficial,
+    skippedOfficialNull,
+    skippedPredictionNull,
+    pushedGroupScores,
+    skippedExtraNoEntry,
+    skippedExtraNoOfficial,
+    skippedExtraOfficialNull,
+    skippedExtraPredictionNull,
+    pushedExtraScores,
+    sampleMatchdays: (predictions ?? []).slice(0, 10).map((pred) => {
+      const match = matches.find((m) => String(m.id) === String(pred.match_id));
+      return {
+        match_id: pred.match_id,
+        kickoff: match?.kickoff ?? null,
+        computed_matchday: getMatchday(pred.match_id),
+      };
+    }),
+    uniqueGroupDates,
+  };
 }
