@@ -1,6 +1,10 @@
 import { Match, Team } from "@/types";
 import { calculateStandings } from "@/lib/standings";
 import { getBestThirdPlacedTeams } from "@/lib/thirdPlace";
+import {
+  buildThirdComboKey,
+  THIRD_PLACE_COMBINATIONS,
+} from "@/lib/thirdPlaceCombinations";
 
 export type Round32Match = {
   id: string;
@@ -15,9 +19,18 @@ type StandingTeam = {
   label: string;
 };
 
+type TeamRankingMeta = {
+  fairPlayPoints?: number | null;
+  fifaRanking?: number | null;
+};
+
+type TeamRankingMetaMap = Record<string, TeamRankingMeta | undefined>;
+
 type GenerateRound32Options = {
   requireCompleteGroupsForQualifiedTeams?: boolean;
   requireWholeGroupStageForThirds?: boolean;
+  rankingMeta?: TeamRankingMetaMap;
+  allowLegacyFallbackWhileTableIsIncomplete?: boolean;
 };
 
 type ThirdCandidate = {
@@ -48,22 +61,23 @@ const SLOT_ALLOWED_GROUPS: Record<ThirdSlot, string[]> = {
 
 function isGroupComplete(matches: Match[], group: string) {
   const groupMatches = matches.filter(
-    (match) => match.stage === "group" && match.group === group
+    (match) => match.stage === "group" && match.group === group,
   );
 
   if (groupMatches.length === 0) return false;
 
   return groupMatches.every(
-    (match) => match.homeGoals !== null && match.awayGoals !== null
+    (match) => match.homeGoals !== null && match.awayGoals !== null,
   );
 }
 
 function isWholeGroupStageComplete(matches: Match[]) {
   const groupMatches = matches.filter((match) => match.stage === "group");
+
   if (groupMatches.length === 0) return false;
 
   return groupMatches.every(
-    (match) => match.homeGoals !== null && match.awayGoals !== null
+    (match) => match.homeGoals !== null && match.awayGoals !== null,
   );
 }
 
@@ -72,14 +86,15 @@ function getGroupPosition(
   matches: Match[],
   group: string,
   position: 1 | 2 | 3,
-  requireCompleteGroup: boolean
+  requireCompleteGroup: boolean,
+  rankingMeta?: TeamRankingMetaMap,
 ): StandingTeam {
   const label =
     position === 1
       ? `1º Grupo ${group}`
       : position === 2
-      ? `2º Grupo ${group}`
-      : `3º Grupo ${group}`;
+        ? `2º Grupo ${group}`
+        : `3º Grupo ${group}`;
 
   if (requireCompleteGroup && !isGroupComplete(matches, group)) {
     return {
@@ -88,7 +103,7 @@ function getGroupPosition(
     };
   }
 
-  const standings = calculateStandings(teams, matches, group);
+  const standings = calculateStandings(teams, matches, group, rankingMeta);
   const row = standings[position - 1];
 
   return {
@@ -97,7 +112,7 @@ function getGroupPosition(
   };
 }
 
-function assignThirdsBacktracking(availableThirds: ThirdCandidate[]) {
+function assignThirdsLegacyBacktracking(availableThirds: ThirdCandidate[]) {
   const result: Record<ThirdSlot, string | null> = {
     third74: null,
     third77: null,
@@ -111,11 +126,13 @@ function assignThirdsBacktracking(availableThirds: ThirdCandidate[]) {
 
   const slots = (Object.keys(SLOT_ALLOWED_GROUPS) as ThirdSlot[]).sort((a, b) => {
     const aCount = availableThirds.filter(
-      (t) => t.group && SLOT_ALLOWED_GROUPS[a].includes(t.group)
+      (t) => t.group && SLOT_ALLOWED_GROUPS[a].includes(t.group),
     ).length;
+
     const bCount = availableThirds.filter(
-      (t) => t.group && SLOT_ALLOWED_GROUPS[b].includes(t.group)
+      (t) => t.group && SLOT_ALLOWED_GROUPS[b].includes(t.group),
     ).length;
+
     return aCount - bCount;
   });
 
@@ -131,7 +148,7 @@ function assignThirdsBacktracking(availableThirds: ThirdCandidate[]) {
       (team) =>
         team.group !== null &&
         allowedGroups.includes(team.group) &&
-        !used.has(team.teamId)
+        !used.has(team.teamId),
     );
 
     for (const candidate of candidates) {
@@ -165,195 +182,145 @@ function assignThirdsBacktracking(availableThirds: ThirdCandidate[]) {
   return result;
 }
 
+function resolveThirdAssignments(
+  qualifiedThirds: ThirdCandidate[],
+  allowLegacyFallbackWhileTableIsIncomplete: boolean,
+) {
+  const groups = qualifiedThirds
+    .map((team) => team.group)
+    .filter((group): group is string => Boolean(group));
+
+  const teamIdByGroup = new Map(
+    qualifiedThirds
+      .filter((team): team is { teamId: string; group: string } => Boolean(team.group))
+      .map((team) => [team.group, team.teamId]),
+  );
+
+  const key = buildThirdComboKey(groups);
+  const official = THIRD_PLACE_COMBINATIONS[key];
+
+  if (official) {
+    return {
+      third74: teamIdByGroup.get(official.third74) ?? null,
+      third77: teamIdByGroup.get(official.third77) ?? null,
+      third79: teamIdByGroup.get(official.third79) ?? null,
+      third80: teamIdByGroup.get(official.third80) ?? null,
+      third81: teamIdByGroup.get(official.third81) ?? null,
+      third82: teamIdByGroup.get(official.third82) ?? null,
+      third85: teamIdByGroup.get(official.third85) ?? null,
+      third87: teamIdByGroup.get(official.third87) ?? null,
+      source: "official" as const,
+      key,
+    };
+  }
+
+  if (allowLegacyFallbackWhileTableIsIncomplete) {
+    return {
+      ...assignThirdsLegacyBacktracking(qualifiedThirds),
+      source: "legacy-fallback" as const,
+      key,
+    };
+  }
+
+  return {
+    third74: null,
+    third77: null,
+    third79: null,
+    third80: null,
+    third81: null,
+    third82: null,
+    third85: null,
+    third87: null,
+    source: "missing-official-combination" as const,
+    key,
+  };
+}
+
 export function generateRound32(
   teams: Team[],
   matches: Match[],
   groups: string[],
-  options?: GenerateRound32Options
+  options?: GenerateRound32Options,
 ): Round32Match[] {
   const requireCompleteGroupsForQualifiedTeams =
     options?.requireCompleteGroupsForQualifiedTeams ?? true;
   const requireWholeGroupStageForThirds =
     options?.requireWholeGroupStageForThirds ?? true;
+  const rankingMeta = options?.rankingMeta;
+  const allowLegacyFallbackWhileTableIsIncomplete =
+    options?.allowLegacyFallbackWhileTableIsIncomplete ?? true;
 
   const A1 = getGroupPosition(
-    teams,
-    matches,
-    "A",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "A", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const A2 = getGroupPosition(
-    teams,
-    matches,
-    "A",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "A", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const B1 = getGroupPosition(
-    teams,
-    matches,
-    "B",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "B", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const B2 = getGroupPosition(
-    teams,
-    matches,
-    "B",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "B", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const C1 = getGroupPosition(
-    teams,
-    matches,
-    "C",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "C", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const C2 = getGroupPosition(
-    teams,
-    matches,
-    "C",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "C", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const D1 = getGroupPosition(
-    teams,
-    matches,
-    "D",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "D", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const D2 = getGroupPosition(
-    teams,
-    matches,
-    "D",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "D", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const E1 = getGroupPosition(
-    teams,
-    matches,
-    "E",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "E", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const E2 = getGroupPosition(
-    teams,
-    matches,
-    "E",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "E", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const F1 = getGroupPosition(
-    teams,
-    matches,
-    "F",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "F", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const F2 = getGroupPosition(
-    teams,
-    matches,
-    "F",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "F", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const G1 = getGroupPosition(
-    teams,
-    matches,
-    "G",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "G", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const G2 = getGroupPosition(
-    teams,
-    matches,
-    "G",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "G", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const H1 = getGroupPosition(
-    teams,
-    matches,
-    "H",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "H", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const H2 = getGroupPosition(
-    teams,
-    matches,
-    "H",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "H", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const I1 = getGroupPosition(
-    teams,
-    matches,
-    "I",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "I", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const I2 = getGroupPosition(
-    teams,
-    matches,
-    "I",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "I", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const J1 = getGroupPosition(
-    teams,
-    matches,
-    "J",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "J", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const J2 = getGroupPosition(
-    teams,
-    matches,
-    "J",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "J", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const K1 = getGroupPosition(
-    teams,
-    matches,
-    "K",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "K", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const K2 = getGroupPosition(
-    teams,
-    matches,
-    "K",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "K", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
-
   const L1 = getGroupPosition(
-    teams,
-    matches,
-    "L",
-    1,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "L", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
   const L2 = getGroupPosition(
-    teams,
-    matches,
-    "L",
-    2,
-    requireCompleteGroupsForQualifiedTeams
+    teams, matches, "L", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
   );
 
   let third74: string | null = null;
@@ -370,14 +337,23 @@ export function generateRound32(
     : true;
 
   if (canResolveThirds) {
-    const availableThirds = getBestThirdPlacedTeams(teams, matches, groups, 8)
+    const qualifiedThirds = getBestThirdPlacedTeams(
+      teams,
+      matches,
+      groups,
+      8,
+      rankingMeta,
+    )
       .filter((team) => team.qualifies)
       .map((team) => ({
         teamId: team.teamId,
         group: team.group,
       }));
 
-    const assigned = assignThirdsBacktracking(availableThirds);
+    const assigned = resolveThirdAssignments(
+      qualifiedThirds,
+      allowLegacyFallbackWhileTableIsIncomplete,
+    );
 
     third74 = assigned.third74;
     third77 = assigned.third77;
@@ -390,117 +366,21 @@ export function generateRound32(
   }
 
   return [
-    {
-      id: "r32-1",
-      homeTeamId: A2.teamId,
-      awayTeamId: B2.teamId,
-      homeLabel: "2º Grupo A",
-      awayLabel: "2º Grupo B",
-    },
-    {
-      id: "r32-2",
-      homeTeamId: E1.teamId,
-      awayTeamId: third74,
-      homeLabel: "1º Grupo E",
-      awayLabel: "3º Grupo A/B/C/D/F",
-    },
-    {
-      id: "r32-3",
-      homeTeamId: F1.teamId,
-      awayTeamId: C2.teamId,
-      homeLabel: "1º Grupo F",
-      awayLabel: "2º Grupo C",
-    },
-    {
-      id: "r32-4",
-      homeTeamId: C1.teamId,
-      awayTeamId: F2.teamId,
-      homeLabel: "1º Grupo C",
-      awayLabel: "2º Grupo F",
-    },
-    {
-      id: "r32-5",
-      homeTeamId: I1.teamId,
-      awayTeamId: third77,
-      homeLabel: "1º Grupo I",
-      awayLabel: "3º Grupo C/D/F/G/H",
-    },
-    {
-      id: "r32-6",
-      homeTeamId: E2.teamId,
-      awayTeamId: I2.teamId,
-      homeLabel: "2º Grupo E",
-      awayLabel: "2º Grupo I",
-    },
-    {
-      id: "r32-7",
-      homeTeamId: A1.teamId,
-      awayTeamId: third79,
-      homeLabel: "1º Grupo A",
-      awayLabel: "3º Grupo C/E/F/H/I",
-    },
-    {
-      id: "r32-8",
-      homeTeamId: L1.teamId,
-      awayTeamId: third80,
-      homeLabel: "1º Grupo L",
-      awayLabel: "3º Grupo E/H/I/J/K",
-    },
-    {
-      id: "r32-9",
-      homeTeamId: D1.teamId,
-      awayTeamId: third81,
-      homeLabel: "1º Grupo D",
-      awayLabel: "3º Grupo B/E/F/I/J",
-    },
-    {
-      id: "r32-10",
-      homeTeamId: G1.teamId,
-      awayTeamId: third82,
-      homeLabel: "1º Grupo G",
-      awayLabel: "3º Grupo A/E/H/I/J",
-    },
-    {
-      id: "r32-11",
-      homeTeamId: K2.teamId,
-      awayTeamId: L2.teamId,
-      homeLabel: "2º Grupo K",
-      awayLabel: "2º Grupo L",
-    },
-    {
-      id: "r32-12",
-      homeTeamId: H1.teamId,
-      awayTeamId: J2.teamId,
-      homeLabel: "1º Grupo H",
-      awayLabel: "2º Grupo J",
-    },
-    {
-      id: "r32-13",
-      homeTeamId: B1.teamId,
-      awayTeamId: third85,
-      homeLabel: "1º Grupo B",
-      awayLabel: "3º Grupo E/F/G/I/J",
-    },
-    {
-      id: "r32-14",
-      homeTeamId: J1.teamId,
-      awayTeamId: H2.teamId,
-      homeLabel: "1º Grupo J",
-      awayLabel: "2º Grupo H",
-    },
-    {
-      id: "r32-15",
-      homeTeamId: K1.teamId,
-      awayTeamId: third87,
-      homeLabel: "1º Grupo K",
-      awayLabel: "3º Grupo D/E/I/J/L",
-    },
-    {
-      id: "r32-16",
-      homeTeamId: D2.teamId,
-      awayTeamId: G2.teamId,
-      homeLabel: "2º Grupo D",
-      awayLabel: "2º Grupo G",
-    },
+    { id: "r32-1", homeTeamId: A2.teamId, awayTeamId: B2.teamId, homeLabel: "2º Grupo A", awayLabel: "2º Grupo B" },
+    { id: "r32-2", homeTeamId: E1.teamId, awayTeamId: third74, homeLabel: "1º Grupo E", awayLabel: "3º oficial" },
+    { id: "r32-3", homeTeamId: F1.teamId, awayTeamId: C2.teamId, homeLabel: "1º Grupo F", awayLabel: "2º Grupo C" },
+    { id: "r32-4", homeTeamId: C1.teamId, awayTeamId: F2.teamId, homeLabel: "1º Grupo C", awayLabel: "2º Grupo F" },
+    { id: "r32-5", homeTeamId: I1.teamId, awayTeamId: third77, homeLabel: "1º Grupo I", awayLabel: "3º oficial" },
+    { id: "r32-6", homeTeamId: E2.teamId, awayTeamId: I2.teamId, homeLabel: "2º Grupo E", awayLabel: "2º Grupo I" },
+    { id: "r32-7", homeTeamId: A1.teamId, awayTeamId: third79, homeLabel: "1º Grupo A", awayLabel: "3º oficial" },
+    { id: "r32-8", homeTeamId: L1.teamId, awayTeamId: third80, homeLabel: "1º Grupo L", awayLabel: "3º oficial" },
+    { id: "r32-9", homeTeamId: D1.teamId, awayTeamId: third81, homeLabel: "1º Grupo D", awayLabel: "3º oficial" },
+    { id: "r32-10", homeTeamId: G1.teamId, awayTeamId: third82, homeLabel: "1º Grupo G", awayLabel: "3º oficial" },
+    { id: "r32-11", homeTeamId: K2.teamId, awayTeamId: L2.teamId, homeLabel: "2º Grupo K", awayLabel: "2º Grupo L" },
+    { id: "r32-12", homeTeamId: H1.teamId, awayTeamId: J2.teamId, homeLabel: "1º Grupo H", awayLabel: "2º Grupo J" },
+    { id: "r32-13", homeTeamId: B1.teamId, awayTeamId: third85, homeLabel: "1º Grupo B", awayLabel: "3º oficial" },
+    { id: "r32-14", homeTeamId: J1.teamId, awayTeamId: H2.teamId, homeLabel: "1º Grupo J", awayLabel: "2º Grupo H" },
+    { id: "r32-15", homeTeamId: K1.teamId, awayTeamId: third87, homeLabel: "1º Grupo K", awayLabel: "3º oficial" },
+    { id: "r32-16", homeTeamId: D2.teamId, awayTeamId: G2.teamId, homeLabel: "2º Grupo D", awayLabel: "2º Grupo G" },
   ];
 }
