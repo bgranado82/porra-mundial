@@ -45,7 +45,7 @@ function MovementBadge({
 }) {
   if (movement === "up") {
     return (
-      <span className="inline-flex min-w-[64px] items-center justify-center rounded-full bg-green-50 px-2.5 py-1 font-bold text-green-700">
+      <span className="inline-flex items-center justify-center rounded-full bg-green-50 px-2 py-1 font-bold text-green-700">
         ▲ {movementValue}
       </span>
     );
@@ -53,14 +53,14 @@ function MovementBadge({
 
   if (movement === "down") {
     return (
-      <span className="inline-flex min-w-[64px] items-center justify-center rounded-full bg-red-50 px-2.5 py-1 font-bold text-red-700">
+      <span className="inline-flex items-center justify-center rounded-full bg-red-50 px-2 py-1 font-bold text-red-700">
         ▼ -{movementValue}
       </span>
     );
   }
 
   return (
-    <span className="inline-flex min-w-[64px] items-center justify-center rounded-full bg-gray-100 px-2.5 py-1 font-bold text-gray-600">
+    <span className="inline-flex items-center justify-center rounded-full bg-gray-100 px-2 py-1 font-bold text-gray-600">
       =
     </span>
   );
@@ -126,55 +126,53 @@ export default function StandingsTable({ days, standings }: Props) {
       </div>
 
       <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white shadow-sm">
-        <div className="max-h-[70vh] overflow-auto rounded-3xl">
+        <div className="overflow-x-hidden rounded-3xl">
           {tab === "groups" ? (
-            <table className="min-w-full border-separate border-spacing-0 text-sm">
+            <table className="w-full table-fixed border-separate border-spacing-0 text-xs md:text-sm">
               <thead className="sticky top-0 z-20 bg-white shadow-sm">
                 <tr>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold"
+                    className="sticky top-0 z-30 w-[6%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     #
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[210px]"
+                    className="sticky top-0 z-30 w-[16%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     Jugador
                   </th>
-
-                  {/* NUEVO */}
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[140px]"
+                    className="sticky top-0 z-30 w-[14%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     Empresa
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[120px]"
+                    className="sticky top-0 z-30 w-[10%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     País
                   </th>
 
                   <th
                     colSpan={hasGroupDays ? sortedDays.length + 1 : 1}
-                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-2 text-center font-bold text-[var(--iberdrola-forest)]"
+                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-2 text-center font-bold text-[var(--iberdrola-forest)] md:px-2"
                   >
                     Puntos
                   </th>
 
                   <th
                     colSpan={4}
-                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-slate-50 px-3 py-2 text-center font-semibold text-slate-700"
+                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-semibold text-slate-700 md:px-2"
                   >
                     Precisión
                   </th>
 
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-amber-50 px-3 py-3 text-center font-bold text-slate-700 min-w-[110px]"
+                    className="sticky top-0 z-30 w-[10%] border-b border-l border-gray-200 bg-amber-50 px-1 py-3 text-center font-bold text-slate-700 md:px-2"
                   >
                     Variación
                   </th>
@@ -186,31 +184,31 @@ export default function StandingsTable({ days, standings }: Props) {
                       {sortedDays.map((day) => (
                         <th
                           key={day}
-                          className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[92px]"
+                          className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2"
                         >
                           Día {day}
                         </th>
                       ))}
-                      <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-bold whitespace-nowrap min-w-[96px]">
+                      <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold whitespace-nowrap text-white md:px-2">
                         Grupos
                       </th>
                     </>
                   ) : (
-                    <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-bold whitespace-nowrap min-w-[96px]">
+                    <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold whitespace-nowrap text-white md:px-2">
                       Grupos
                     </th>
                   )}
 
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[78px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
                     Aciertos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[88px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
                     % acierto
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[72px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
                     Exactos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[82px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
                     % exacto
                   </th>
                 </tr>
@@ -222,22 +220,32 @@ export default function StandingsTable({ days, standings }: Props) {
 
                   return (
                     <tr key={row.entry_id} className="hover:bg-gray-50">
-                      <td className="border-b border-gray-100 px-3 py-3 font-bold whitespace-nowrap">
+                      <td className="border-b border-gray-100 px-1 py-3 text-center font-bold whitespace-nowrap md:px-2">
                         {row.position}
                       </td>
 
-                      <td className="border-b border-gray-100 px-3 py-3 font-medium whitespace-nowrap">
-                        <Link href={`/entry/${row.entry_id}`} className="hover:underline">
-                          {row.name || row.email || "Jugador"}
-                        </Link>
+                      <td className="border-b border-gray-100 px-1 py-3 font-medium md:px-2">
+                        <div className="truncate">
+                          <Link
+                            href={`/entry/${row.entry_id}`}
+                            className="hover:underline"
+                            title={row.name || row.email || "Jugador"}
+                          >
+                            {row.name || row.email || "Jugador"}
+                          </Link>
+                        </div>
                       </td>
 
-                      {/* NUEVO */}
-                      <td className="border-b border-gray-100 px-3 py-3 whitespace-nowrap">
-                        {row.company || "-"}
+                      <td className="border-b border-gray-100 px-1 py-3 md:px-2">
+                        <div className="truncate" title={row.company || "-"}>
+                          {row.company || "-"}
+                        </div>
                       </td>
-                      <td className="border-b border-gray-100 px-3 py-3 whitespace-nowrap">
-                        {row.country || "-"}
+
+                      <td className="border-b border-gray-100 px-1 py-3 md:px-2">
+                        <div className="truncate" title={row.country || "-"}>
+                          {row.country || "-"}
+                        </div>
                       </td>
 
                       {hasGroupDays ? (
@@ -245,39 +253,39 @@ export default function StandingsTable({ days, standings }: Props) {
                           {sortedDays.map((day) => (
                             <td
                               key={day}
-                              className="border-b border-l border-gray-100 px-3 py-3 text-center"
+                              className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2"
                             >
                               {row.day_points[String(day)] ?? 0}
                             </td>
                           ))}
                           <td
-                            className={`border-b border-l border-gray-100 px-3 py-3 text-center font-bold ${heatClass}`}
+                            className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
                           >
                             {row.group_total}
                           </td>
                         </>
                       ) : (
                         <td
-                          className={`border-b border-l border-gray-100 px-3 py-3 text-center font-bold ${heatClass}`}
+                          className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
                         >
                           {row.group_total}
                         </td>
                       )}
 
-                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
                         {row.outcome_hits}
                       </td>
-                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
                         {row.outcome_percent}%
                       </td>
-                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
                         {row.exact_hits}
                       </td>
-                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
                         {row.exact_percent}%
                       </td>
 
-                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         <MovementBadge
                           movement={row.movement}
                           movementValue={row.movement_value}
@@ -289,91 +297,90 @@ export default function StandingsTable({ days, standings }: Props) {
               </tbody>
             </table>
           ) : (
-            <table className="min-w-full border-separate border-spacing-0 text-sm">
+            <table className="w-full table-fixed border-separate border-spacing-0 text-xs md:text-sm">
               <thead className="sticky top-0 z-20 bg-white shadow-sm">
                 <tr>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold"
+                    className="sticky top-0 z-30 w-[6%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     #
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[210px]"
+                    className="sticky top-0 z-30 w-[16%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     Jugador
                   </th>
 
-                  {/* NUEVO */}
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[140px]"
+                    className="sticky top-0 z-30 w-[14%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     Empresa
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-gray-200 bg-white px-3 py-3 text-left font-bold min-w-[120px]"
+                    className="sticky top-0 z-30 w-[10%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     País
                   </th>
 
                   <th
                     colSpan={7}
-                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-2 text-center font-bold text-[var(--iberdrola-forest)]"
+                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-2 text-center font-bold text-[var(--iberdrola-forest)] md:px-2"
                   >
                     Puntos
                   </th>
 
                   <th
                     colSpan={4}
-                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-slate-50 px-3 py-2 text-center font-semibold text-slate-700"
+                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-semibold text-slate-700 md:px-2"
                   >
                     Precisión
                   </th>
 
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 border-b border-l border-gray-200 bg-amber-50 px-3 py-3 text-center font-bold text-slate-700 min-w-[110px]"
+                    className="sticky top-0 z-30 w-[10%] border-b border-l border-gray-200 bg-amber-50 px-1 py-3 text-center font-bold text-slate-700 md:px-2"
                   >
                     Variación
                   </th>
                 </tr>
 
                 <tr>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[96px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
                     Grupos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[70px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
                     32
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[70px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
                     16
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[70px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
                     QF
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[70px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
                     SF
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-semibold whitespace-nowrap min-w-[70px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
                     3º
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-green-50 px-3 py-3 text-center font-bold whitespace-nowrap min-w-[86px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold whitespace-nowrap text-white md:px-2">
                     Total
                   </th>
 
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[78px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
                     Aciertos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[88px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
                     % acierto
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[72px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
                     Exactos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-2 py-3 text-center font-medium whitespace-nowrap min-w-[82px]">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
                     % exacto
                   </th>
                 </tr>
@@ -385,64 +392,72 @@ export default function StandingsTable({ days, standings }: Props) {
 
                   return (
                     <tr key={row.entry_id} className="hover:bg-gray-50">
-                      <td className="border-b border-gray-100 px-3 py-3 font-bold whitespace-nowrap">
+                      <td className="border-b border-gray-100 px-1 py-3 text-center font-bold whitespace-nowrap md:px-2">
                         {row.position}
                       </td>
 
-                      <td className="border-b border-gray-100 px-3 py-3 font-medium whitespace-nowrap">
-                        <Link href={`/entry/${row.entry_id}`} className="hover:underline">
-                          {row.name || row.email || "Jugador"}
-                        </Link>
+                      <td className="border-b border-gray-100 px-1 py-3 font-medium md:px-2">
+                        <div className="truncate">
+                          <Link
+                            href={`/entry/${row.entry_id}`}
+                            className="hover:underline"
+                            title={row.name || row.email || "Jugador"}
+                          >
+                            {row.name || row.email || "Jugador"}
+                          </Link>
+                        </div>
                       </td>
 
-                      {/* NUEVO */}
-                      <td className="border-b border-gray-100 px-3 py-3 whitespace-nowrap">
-                        {row.company || "-"}
+                      <td className="border-b border-gray-100 px-1 py-3 md:px-2">
+                        <div className="truncate" title={row.company || "-"}>
+                          {row.company || "-"}
+                        </div>
                       </td>
-                      <td className="border-b border-gray-100 px-3 py-3 whitespace-nowrap">
-                        {row.country || "-"}
+                      <td className="border-b border-gray-100 px-1 py-3 md:px-2">
+                        <div className="truncate" title={row.country || "-"}>
+                          {row.country || "-"}
+                        </div>
                       </td>
 
-                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center font-semibold">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center font-semibold md:px-2">
                         {row.group_total}
                       </td>
-                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         {row.r32_points}
                       </td>
-                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         {row.r16_points}
                       </td>
-                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         {row.qf_points}
                       </td>
-                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         {row.sf_points}
                       </td>
-                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         {row.third_points}
                       </td>
 
-                      {/* DEGRADADO EN TOTAL */}
                       <td
-                        className={`border-b border-l border-gray-100 px-3 py-3 text-center font-bold ${heatClass}`}
+                        className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
                       >
                         {row.total_points}
                       </td>
 
-                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
                         {row.outcome_hits}
                       </td>
-                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
                         {row.outcome_percent}%
                       </td>
-                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
                         {row.exact_hits}
                       </td>
-                      <td className="border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
                         {row.exact_percent}%
                       </td>
 
-                      <td className="border-b border-l border-gray-100 px-3 py-3 text-center">
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         <MovementBadge
                           movement={row.movement}
                           movementValue={row.movement_value}
