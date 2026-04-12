@@ -85,39 +85,38 @@ export async function GET(req: Request) {
     const typedScores = (scores ?? []) as ScoreRow[];
     const typedSnapshots = (snapshots ?? []) as SnapshotRow[];
 
-    const entryMap = new Map<string, EntryRow>(
-      typedEntries.map((entry) => [String(entry.id), entry])
-    );
-
+    // Construimos SIEMPRE desde entries para que el nombre salga de entries.name
     const grouped = new Map<string, StandingRow>();
+
+    typedEntries.forEach((entry) => {
+      const entryId = String(entry.id);
+
+      grouped.set(entryId, {
+        entry_id: entryId,
+        pool_id: String(entry.pool_id),
+        name: entry.name || entry.email || "Jugador",
+        email: entry.email || "",
+        day_points: {},
+        group_total: 0,
+        r32_points: 0,
+        r16_points: 0,
+        qf_points: 0,
+        sf_points: 0,
+        third_points: 0,
+        final_points: 0,
+        total_points: 0,
+        outcome_hits: 0,
+        exact_hits: 0,
+        total_group_matches: 0,
+      });
+    });
+
     const daysSet = new Set<number>();
 
     typedScores.forEach((row) => {
       const entryId = String(row.entry_id);
-      const entry = entryMap.get(entryId);
-
-      let current = grouped.get(entryId);
-
-      if (!current) {
-        current = {
-          entry_id: entryId,
-          pool_id: entry?.pool_id || String(row.pool_id),
-          name: entry?.name || entry?.email || "Jugador",
-          email: entry?.email || "",
-          day_points: {},
-          group_total: 0,
-          r32_points: 0,
-          r16_points: 0,
-          qf_points: 0,
-          sf_points: 0,
-          third_points: 0,
-          final_points: 0,
-          total_points: 0,
-          outcome_hits: 0,
-          exact_hits: 0,
-          total_group_matches: 0,
-        };
-      }
+      const current = grouped.get(entryId);
+      if (!current) return;
 
       const points = Number(row.points ?? 0);
       current.total_points += points;
@@ -143,34 +142,6 @@ export async function GET(req: Request) {
       if (row.stage === "sf") current.sf_points += points;
       if (row.stage === "third") current.third_points += points;
       if (row.stage === "final") current.final_points += points;
-
-      grouped.set(entryId, current);
-    });
-
-    // Incluir también entries sin puntos todavía
-    typedEntries.forEach((entry) => {
-      const entryId = String(entry.id);
-
-      if (!grouped.has(entryId)) {
-        grouped.set(entryId, {
-          entry_id: entryId,
-          pool_id: String(entry.pool_id),
-          name: entry.name || entry.email || "Jugador",
-          email: entry.email || "",
-          day_points: {},
-          group_total: 0,
-          r32_points: 0,
-          r16_points: 0,
-          qf_points: 0,
-          sf_points: 0,
-          third_points: 0,
-          final_points: 0,
-          total_points: 0,
-          outcome_hits: 0,
-          exact_hits: 0,
-          total_group_matches: 0,
-        });
-      }
     });
 
     const days = Array.from(daysSet).sort((a, b) => a - b);
@@ -182,6 +153,7 @@ export async function GET(req: Request) {
       return a.name.localeCompare(b.name);
     });
 
+    // Cogemos el snapshot anterior al último
     const snapshotTimes = Array.from(
       new Set(typedSnapshots.map((s) => s.captured_at))
     ).sort((a, b) => (a < b ? 1 : -1));
@@ -204,14 +176,22 @@ export async function GET(req: Request) {
       const previousPosition = previousPositionMap.get(row.entry_id) ?? position;
 
       let movement: "up" | "down" | "same" = "same";
-      if (position < previousPosition) movement = "up";
-      if (position > previousPosition) movement = "down";
+      let movement_value = 0;
+
+      if (position < previousPosition) {
+        movement = "up";
+        movement_value = previousPosition - position;
+      } else if (position > previousPosition) {
+        movement = "down";
+        movement_value = position - previousPosition;
+      }
 
       return {
         ...row,
         position,
         previous_position: previousPosition,
         movement,
+        movement_value,
         outcome_percent:
           row.total_group_matches > 0
             ? Math.round((row.outcome_hits / row.total_group_matches) * 100)

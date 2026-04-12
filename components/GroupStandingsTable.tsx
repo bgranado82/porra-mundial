@@ -1,110 +1,139 @@
-import { teams } from "@/data/teams";
-
-type Labels = {
-  team: string;
-  played: string;
-  won: string;
-  drawn: string;
-  lost: string;
-  goalsFor: string;
-  goalsAgainst: string;
-  goalDifference: string;
-  pointsShort: string;
+type Row = {
+  teamId: string;
+  teamName?: string;
+  teamFlag?: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
 };
 
 type Props = {
   title: string;
-  rows: any[];
-  labels: Labels;
+  rows: Row[];
+  labels: {
+    team: string;
+    played: string;
+    won: string;
+    drawn: string;
+    lost: string;
+    goalsFor: string;
+    goalsAgainst: string;
+    goalDifference: string;
+    pointsShort: string;
+  };
 };
-
-const teamMap = new Map(teams.map((team) => [team.id, team]));
 
 export default function GroupStandingsTable({ title, rows, labels }: Props) {
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white p-4">
-      <h3 className="mb-3 text-lg font-semibold text-[var(--iberdrola-forest)]">
-        {title}
-      </h3>
+    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+        <h3 className="text-lg font-black text-[var(--iberdrola-forest)]">
+          {title}
+        </h3>
+      </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[700px] table-fixed">
-          <colgroup>
-            <col style={{ width: "42px" }} />
-            <col style={{ width: "260px" }} />
-            <col style={{ width: "52px" }} />
-            <col style={{ width: "52px" }} />
-            <col style={{ width: "52px" }} />
-            <col style={{ width: "52px" }} />
-            <col style={{ width: "52px" }} />
-            <col style={{ width: "52px" }} />
-            <col style={{ width: "52px" }} />
-            <col style={{ width: "52px" }} />
-          </colgroup>
+      <div className="p-4">
+        <div className="hidden overflow-x-auto lg:block">
+          <table className="min-w-full text-sm">
+            <thead className="text-[var(--iberdrola-forest)]">
+              <tr className="border-b border-[var(--iberdrola-sky)]">
+                <th className="px-2 py-2 text-left font-black">#</th>
+                <th className="px-2 py-2 text-left font-black">{labels.team}</th>
+                <th className="px-2 py-2 text-center font-black">{labels.played}</th>
+                <th className="px-2 py-2 text-center font-black">{labels.won}</th>
+                <th className="px-2 py-2 text-center font-black">{labels.drawn}</th>
+                <th className="px-2 py-2 text-center font-black">{labels.lost}</th>
+                <th className="px-2 py-2 text-center font-black">{labels.goalsFor}</th>
+                <th className="px-2 py-2 text-center font-black">
+                  {labels.goalsAgainst}
+                </th>
+                <th className="px-2 py-2 text-center font-black">
+                  {labels.goalDifference}
+                </th>
+                <th className="px-2 py-2 text-center font-black">
+                  {labels.pointsShort}
+                </th>
+              </tr>
+            </thead>
 
-          <thead>
-            <tr className="text-left text-sm text-[var(--iberdrola-forest)]">
-              <th className="border-b border-[var(--iberdrola-sky)] px-2 py-2 font-semibold">#</th>
-              <th className="border-b border-[var(--iberdrola-sky)] px-2 py-2 font-semibold">
-                {labels.team}
-              </th>
-              <th className="border-b border-[var(--iberdrola-sky)] px-2 py-2 text-center font-semibold">
-                {labels.played}
-              </th>
-              <th className="border-b border-[var(--iberdrola-sky)] px-2 py-2 text-center font-semibold">
-                {labels.won}
-              </th>
-              <th className="border-b border-[var(--iberdrola-sky)] px-2 py-2 text-center font-semibold">
-                {labels.drawn}
-              </th>
-              <th className="border-b border-[var(--iberdrola-sky)] px-2 py-2 text-center font-semibold">
-                {labels.lost}
-              </th>
-              <th className="border-b border-[var(--iberdrola-sky)] px-2 py-2 text-center font-semibold">
-                {labels.goalsFor}
-              </th>
-              <th className="border-b border-[var(--iberdrola-sky)] px-2 py-2 text-center font-semibold">
-                {labels.goalsAgainst}
-              </th>
-              <th className="border-b border-[var(--iberdrola-sky)] px-2 py-2 text-center font-semibold">
-                {labels.goalDifference}
-              </th>
-              <th className="border-b border-[var(--iberdrola-sky)] px-2 py-2 text-center font-semibold">
-                {labels.pointsShort}
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {rows.map((row, index) => {
-              const fallbackTeam = row.teamId ? teamMap.get(row.teamId) : null;
-              const displayFlag = row.flag || fallbackTeam?.flag || "";
-              const displayName = row.name || fallbackTeam?.name || row.teamId || "";
-
-              return (
-                <tr key={row.teamId ?? index} className="text-sm text-[var(--iberdrola-forest)]">
-                  <td className="border-b border-gray-100 px-2 py-2.5">{index + 1}</td>
-                  <td className="border-b border-gray-100 px-2 py-2.5">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <span className="shrink-0 text-base">{displayFlag}</span>
-                      <span className="truncate">{displayName}</span>
-                    </div>
+            <tbody>
+              {rows.map((row, index) => (
+                <tr key={row.teamId} className="border-b border-gray-100">
+                  <td className="px-2 py-2 font-semibold">{index + 1}</td>
+                  <td className="whitespace-nowrap px-2 py-2 font-bold">
+                    {row.teamFlag} {row.teamName ?? row.teamId}
                   </td>
-                  <td className="border-b border-gray-100 px-2 py-2.5 text-center">{row.played}</td>
-                  <td className="border-b border-gray-100 px-2 py-2.5 text-center">{row.won}</td>
-                  <td className="border-b border-gray-100 px-2 py-2.5 text-center">{row.drawn}</td>
-                  <td className="border-b border-gray-100 px-2 py-2.5 text-center">{row.lost}</td>
-                  <td className="border-b border-gray-100 px-2 py-2.5 text-center">{row.goalsFor}</td>
-                  <td className="border-b border-gray-100 px-2 py-2.5 text-center">{row.goalsAgainst}</td>
-                  <td className="border-b border-gray-100 px-2 py-2.5 text-center">{row.goalDifference}</td>
-                  <td className="border-b border-gray-100 px-2 py-2.5 text-center font-semibold text-[var(--iberdrola-green)]">
-                    {row.points}
-                  </td>
+                  <td className="px-2 py-2 text-center">{row.played}</td>
+                  <td className="px-2 py-2 text-center">{row.won}</td>
+                  <td className="px-2 py-2 text-center">{row.drawn}</td>
+                  <td className="px-2 py-2 text-center">{row.lost}</td>
+                  <td className="px-2 py-2 text-center">{row.goalsFor}</td>
+                  <td className="px-2 py-2 text-center">{row.goalsAgainst}</td>
+                  <td className="px-2 py-2 text-center">{row.goalDifference}</td>
+                  <td className="px-2 py-2 text-center font-black">{row.points}</td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="space-y-2 lg:hidden">
+          {rows.map((row, index) => (
+            <div
+              key={row.teamId}
+              className="rounded-xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-3 py-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0 text-sm font-black text-[var(--iberdrola-forest)]">
+                  {index + 1}. {row.teamFlag} {row.teamName ?? row.teamId}
+                </div>
+                <div className="rounded-full bg-[var(--iberdrola-green)] px-2.5 py-1 text-xs font-black text-white">
+                  {row.points} {labels.pointsShort}
+                </div>
+              </div>
+
+              <div className="mt-2 grid grid-cols-4 gap-2 text-center text-xs text-[var(--iberdrola-forest)]">
+                <div>
+                  <div className="font-semibold opacity-70">{labels.played}</div>
+                  <div className="font-black">{row.played}</div>
+                </div>
+                <div>
+                  <div className="font-semibold opacity-70">{labels.won}</div>
+                  <div className="font-black">{row.won}</div>
+                </div>
+                <div>
+                  <div className="font-semibold opacity-70">{labels.drawn}</div>
+                  <div className="font-black">{row.drawn}</div>
+                </div>
+                <div>
+                  <div className="font-semibold opacity-70">{labels.lost}</div>
+                  <div className="font-black">{row.lost}</div>
+                </div>
+                <div>
+                  <div className="font-semibold opacity-70">{labels.goalsFor}</div>
+                  <div className="font-black">{row.goalsFor}</div>
+                </div>
+                <div>
+                  <div className="font-semibold opacity-70">{labels.goalsAgainst}</div>
+                  <div className="font-black">{row.goalsAgainst}</div>
+                </div>
+                <div>
+                  <div className="font-semibold opacity-70">{labels.goalDifference}</div>
+                  <div className="font-black">{row.goalDifference}</div>
+                </div>
+                <div>
+                  <div className="font-semibold opacity-70">{labels.pointsShort}</div>
+                  <div className="font-black">{row.points}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

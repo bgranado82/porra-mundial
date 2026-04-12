@@ -60,8 +60,8 @@ export default function GroupMatchRow({
         </div>
       </div>
 
-      <div className="hidden items-center gap-3 sm:grid sm:grid-cols-[1fr_auto_auto_auto_1fr]">
-        <div className="truncate text-right text-sm font-bold text-[var(--iberdrola-forest)]">
+      <div className="hidden items-center gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_44px_20px_44px_minmax(0,1fr)]">
+        <div className="truncate text-right text-[15px] font-bold text-[var(--iberdrola-forest)]">
           {homeTeam.flag} {homeTeam.name}
         </div>
 
@@ -72,10 +72,12 @@ export default function GroupMatchRow({
           onChange={(e) =>
             onChangeHome(e.target.value === "" ? null : Number(e.target.value))
           }
-          className="h-10 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
+          className="h-10 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
         />
 
-        <div className="text-sm font-black text-[var(--iberdrola-forest)]">-</div>
+        <div className="text-center text-sm font-black text-[var(--iberdrola-forest)]">
+          -
+        </div>
 
         <input
           type="number"
@@ -84,15 +86,15 @@ export default function GroupMatchRow({
           onChange={(e) =>
             onChangeAway(e.target.value === "" ? null : Number(e.target.value))
           }
-          className="h-10 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
+          className="h-10 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
         />
 
-        <div className="truncate text-left text-sm font-bold text-[var(--iberdrola-forest)]">
+        <div className="truncate text-left text-[15px] font-bold text-[var(--iberdrola-forest)]">
           {awayTeam.name} {awayTeam.flag}
         </div>
       </div>
 
-      <div className="space-y-3 sm:hidden">
+      <div className="space-y-3 lg:hidden">
         <div className="grid grid-cols-[1fr_auto] items-center gap-3">
           <div className="min-w-0 truncate text-sm font-bold text-[var(--iberdrola-forest)]">
             {homeTeam.flag} {homeTeam.name}

@@ -22,6 +22,7 @@ type Standing = {
   exact_percent: number;
   position: number;
   movement: "up" | "down" | "same";
+  movement_value: number;
 };
 
 type Props = {
@@ -29,16 +30,22 @@ type Props = {
   standings: Standing[];
 };
 
-function MovementBadge({ movement }: { movement: Standing["movement"] }) {
+function MovementBadge({
+  movement,
+  movementValue,
+}: {
+  movement: Standing["movement"];
+  movementValue: number;
+}) {
   if (movement === "up") {
-    return <span className="ml-1 text-green-600">🔺</span>;
+    return <span className="font-bold text-green-600">▲ {movementValue}</span>;
   }
 
   if (movement === "down") {
-    return <span className="ml-1 text-red-600">🔻</span>;
+    return <span className="font-bold text-red-600">▼ -{movementValue}</span>;
   }
 
-  return <span className="ml-1 text-gray-400">=</span>;
+  return <span className="font-bold text-gray-500">=</span>;
 }
 
 export default function StandingsTable({ days, standings }: Props) {
@@ -68,6 +75,9 @@ export default function StandingsTable({ days, standings }: Props) {
             <th className="px-3 py-3 text-center whitespace-nowrap">Exactos</th>
             <th className="px-3 py-3 text-center whitespace-nowrap">% signo</th>
             <th className="px-3 py-3 text-center whitespace-nowrap">% exacto</th>
+            <th className="px-3 py-3 text-center whitespace-nowrap text-base font-bold">
+              Variación
+            </th>
           </tr>
         </thead>
 
@@ -76,14 +86,10 @@ export default function StandingsTable({ days, standings }: Props) {
             <tr key={row.entry_id} className="border-t border-gray-100 hover:bg-gray-50">
               <td className="px-3 py-3 font-bold whitespace-nowrap">
                 {row.position}
-                <MovementBadge movement={row.movement} />
               </td>
 
               <td className="px-3 py-3 font-medium whitespace-nowrap">
-                <Link
-                  href={`/entry/${row.entry_id}`}
-                  className="hover:underline"
-                >
+                <Link href={`/entry/${row.entry_id}`} className="hover:underline">
                   {row.name || row.email || "Jugador"}
                 </Link>
               </td>
@@ -106,6 +112,12 @@ export default function StandingsTable({ days, standings }: Props) {
               <td className="px-3 py-3 text-center">{row.exact_hits}</td>
               <td className="px-3 py-3 text-center">{row.outcome_percent}%</td>
               <td className="px-3 py-3 text-center">{row.exact_percent}%</td>
+              <td className="px-3 py-3 text-center whitespace-nowrap text-base">
+                <MovementBadge
+                  movement={row.movement}
+                  movementValue={row.movement_value}
+                />
+              </td>
             </tr>
           ))}
         </tbody>

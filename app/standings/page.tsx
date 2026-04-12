@@ -12,10 +12,9 @@ async function getStandings(poolId: string) {
   const protocol = host?.includes("localhost") ? "http" : "https";
   const baseUrl = `${protocol}://${host}`;
 
-  const res = await fetch(
-    `${baseUrl}/api/standings?poolId=${poolId}`,
-    { cache: "no-store" }
-  );
+  const res = await fetch(`${baseUrl}/api/standings?poolId=${poolId}`, {
+    cache: "no-store",
+  });
 
   if (!res.ok) {
     throw new Error("Error cargando standings");
