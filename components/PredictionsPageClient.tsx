@@ -745,7 +745,25 @@ if (extraRows.length > 0) {
     [realBracket]
   );
 
-  const totalPoints = groupPointsTotal + knockoutScore.total;
+const extraPointsTotal = useMemo(() => {
+  return EXTRA_QUESTIONS.reduce((sum, question) => {
+    const currentValue = extraPredictions[question.key] ?? "";
+    const officialValue = officialExtraResults[question.key] ?? "";
+
+    const isCorrect =
+      !!officialValue &&
+      normalizeExtraValue(currentValue) === normalizeExtraValue(officialValue);
+
+    const points =
+      (scoreSettings[
+        question.pointsKey as keyof typeof scoreSettings
+      ] as number) ?? 0;
+
+    return sum + (isCorrect ? points : 0);
+  }, 0);
+}, [extraPredictions, officialExtraResults]);
+
+  const totalPoints = groupPointsTotal + knockoutScore.total + extraPointsTotal;
   const greetingName = authUserName?.trim() || authUserEmail?.trim() || "Jugador";
 
   const currentUserStanding = useMemo(
