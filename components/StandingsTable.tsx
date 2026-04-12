@@ -4,6 +4,16 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
+type ExtraPointsMap = {
+  first_goal_scorer_world: number;
+  first_goal_scorer_spain: number;
+  golden_boot: number;
+  golden_ball: number;
+  best_young_player: number;
+  golden_glove: number;
+  top_spanish_scorer: number;
+};
+
 type Standing = {
   entry_id: string;
   pool_id: string;
@@ -19,6 +29,9 @@ type Standing = {
   sf_points: number;
   third_points: number;
   final_points: number;
+  extra_group_points: number;
+  extra_total_points: number;
+  extra_points: ExtraPointsMap;
   total_points: number;
   outcome_hits: number;
   exact_hits: number;
@@ -128,7 +141,7 @@ export default function StandingsTable({ days, standings }: Props) {
       <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white shadow-sm">
         <div className="overflow-x-auto rounded-3xl">
           {tab === "groups" ? (
-            <table className="min-w-[1100px] w-full table-fixed border-separate border-spacing-0 text-[11px] md:text-sm">
+            <table className="min-w-[1380px] w-full table-fixed border-separate border-spacing-0 text-[11px] md:text-sm">
               <thead className="sticky top-0 z-20 bg-white shadow-sm">
                 <tr>
                   <th
@@ -145,19 +158,19 @@ export default function StandingsTable({ days, standings }: Props) {
                   </th>
                   <th
                     rowSpan={2}
-                    className="top-0 z-30 w-[140px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="top-0 z-30 w-[130px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     Empresa
                   </th>
                   <th
                     rowSpan={2}
-                    className="top-0 z-30 w-[110px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="top-0 z-30 w-[100px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     País
                   </th>
 
                   <th
-                    colSpan={hasGroupDays ? sortedDays.length + 1 : 1}
+                    colSpan={hasGroupDays ? sortedDays.length + 3 : 3}
                     className="top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-2 text-center font-bold text-[var(--iberdrola-forest)] md:px-2"
                   >
                     Puntos
@@ -189,15 +202,18 @@ export default function StandingsTable({ days, standings }: Props) {
                           J{day}
                         </th>
                       ))}
-                      <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold whitespace-nowrap text-white md:px-2">
-                        Grupos
-                      </th>
                     </>
-                  ) : (
-                    <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold whitespace-nowrap text-white md:px-2">
-                      Grupos
-                    </th>
-                  )}
+                  ) : null}
+
+                  <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
+                    1º gol
+                  </th>
+                  <th className="top-[44px] z-30 w-[88px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
+                    1º gol ESP
+                  </th>
+                  <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold whitespace-nowrap text-white md:px-2">
+                    Grupos
+                  </th>
 
                   <th className="top-[44px] z-30 w-[72px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
                     Aciertos
@@ -258,19 +274,21 @@ export default function StandingsTable({ days, standings }: Props) {
                               {row.day_points[String(day)] ?? 0}
                             </td>
                           ))}
-                          <td
-                            className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
-                          >
-                            {row.group_total}
-                          </td>
                         </>
-                      ) : (
-                        <td
-                          className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
-                        >
-                          {row.group_total}
-                        </td>
-                      )}
+                      ) : null}
+
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+                        {row.extra_points.first_goal_scorer_world}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+                        {row.extra_points.first_goal_scorer_spain}
+                      </td>
+
+                      <td
+                        className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
+                      >
+                        {row.group_total + row.extra_group_points}
+                      </td>
 
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
                         {row.outcome_hits}
@@ -297,7 +315,7 @@ export default function StandingsTable({ days, standings }: Props) {
               </tbody>
             </table>
           ) : (
-            <table className="min-w-[1250px] w-full table-fixed border-separate border-spacing-0 text-[11px] md:text-sm">
+            <table className="min-w-[1800px] w-full table-fixed border-separate border-spacing-0 text-[11px] md:text-sm">
               <thead className="sticky top-0 z-20 bg-white shadow-sm">
                 <tr>
                   <th
@@ -315,19 +333,19 @@ export default function StandingsTable({ days, standings }: Props) {
 
                   <th
                     rowSpan={2}
-                    className="top-0 z-30 w-[140px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="top-0 z-30 w-[130px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     Empresa
                   </th>
                   <th
                     rowSpan={2}
-                    className="top-0 z-30 w-[110px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="top-0 z-30 w-[100px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     País
                   </th>
 
                   <th
-                    colSpan={7}
+                    colSpan={14}
                     className="top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-2 text-center font-bold text-[var(--iberdrola-forest)] md:px-2"
                   >
                     Puntos
@@ -366,6 +384,27 @@ export default function StandingsTable({ days, standings }: Props) {
                   </th>
                   <th className="top-[44px] z-30 w-[60px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
                     3º
+                  </th>
+                  <th className="top-[44px] z-30 w-[72px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
+                    1º gol
+                  </th>
+                  <th className="top-[44px] z-30 w-[88px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
+                    1º gol ESP
+                  </th>
+                  <th className="top-[44px] z-30 w-[72px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
+                    Bota
+                  </th>
+                  <th className="top-[44px] z-30 w-[72px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
+                    Balón
+                  </th>
+                  <th className="top-[44px] z-30 w-[72px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
+                    Joven
+                  </th>
+                  <th className="top-[44px] z-30 w-[72px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
+                    Guante
+                  </th>
+                  <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
+                    ESP gol
                   </th>
                   <th className="top-[44px] z-30 w-[78px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold whitespace-nowrap text-white md:px-2">
                     Total
@@ -436,6 +475,28 @@ export default function StandingsTable({ days, standings }: Props) {
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         {row.third_points}
+                      </td>
+
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+                        {row.extra_points.first_goal_scorer_world}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+                        {row.extra_points.first_goal_scorer_spain}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+                        {row.extra_points.golden_boot}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+                        {row.extra_points.golden_ball}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+                        {row.extra_points.best_young_player}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+                        {row.extra_points.golden_glove}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+                        {row.extra_points.top_spanish_scorer}
                       </td>
 
                       <td

@@ -27,6 +27,16 @@ type SnapshotRow = {
   captured_at: string;
 };
 
+type ExtraPointsMap = {
+  first_goal_scorer_world: number;
+  first_goal_scorer_spain: number;
+  golden_boot: number;
+  golden_ball: number;
+  best_young_player: number;
+  golden_glove: number;
+  top_spanish_scorer: number;
+};
+
 type StandingRow = {
   entry_id: string;
   pool_id: string;
@@ -42,11 +52,26 @@ type StandingRow = {
   sf_points: number;
   third_points: number;
   final_points: number;
+  extra_group_points: number;
+  extra_total_points: number;
+  extra_points: ExtraPointsMap;
   total_points: number;
   outcome_hits: number;
   exact_hits: number;
   total_group_matches: number;
 };
+
+function createEmptyExtraPoints(): ExtraPointsMap {
+  return {
+    first_goal_scorer_world: 0,
+    first_goal_scorer_spain: 0,
+    golden_boot: 0,
+    golden_ball: 0,
+    best_young_player: 0,
+    golden_glove: 0,
+    top_spanish_scorer: 0,
+  };
+}
 
 export async function GET(req: Request) {
   try {
@@ -83,21 +108,20 @@ export async function GET(req: Request) {
       .order("captured_at", { ascending: false });
 
     if (snapshotsError) {
-      return NextResponse.json({ error: snapshotsError.message }, { status: 500 });
+      return NextResponse.json(
+        { error: snapshotsError.message },
+        { status: 500 }
+      );
     }
-
-    const typedEntries = (entries ?? []) as EntryRow[];
-    const typedScores = (scores ?? []) as ScoreRow[];
-    const typedSnapshots = (snapshots ?? []) as SnapshotRow[];
 
     const grouped = new Map<string, StandingRow>();
 
-    typedEntries.forEach((entry) => {
-      const entryId = String(entry.id);
+    (entries ?? []).forEach((entry: EntryRow) => {
+      const id = String(entry.id);
 
-      grouped.set(entryId, {
-        entry_id: entryId,
-        pool_id: String(entry.pool_id),
+      grouped.set(id, {
+        entry_id: id,
+        pool_id: entry.pool_id,
         name: entry.name || entry.email || "Jugador",
         email: entry.email || "",
         company: entry.company || "",
@@ -110,6 +134,9 @@ export async function GET(req: Request) {
         sf_points: 0,
         third_points: 0,
         final_points: 0,
+        extra_group_points: 0,
+        extra_total_points: 0,
+        extra_points: createEmptyExtraPoints(),
         total_points: 0,
         outcome_hits: 0,
         exact_hits: 0,
@@ -119,37 +146,76 @@ export async function GET(req: Request) {
 
     const daysSet = new Set<number>();
 
-    typedScores.forEach((row) => {
-      const entryId = String(row.entry_id);
-      const current = grouped.get(entryId);
-
+    (scores ?? []).forEach((row: ScoreRow) => {
+      const current = grouped.get(String(row.entry_id));
       if (!current) return;
 
-      const points = Number(row.points ?? 0);
-      current.total_points += points;
+      const pts = Number(row.points ?? 0);
+      current.total_points += pts;
 
       if (row.stage === "group") {
-        current.group_total += points;
+        current.group_total += pts;
 
-        if (row.matchday !== null && row.matchday !== undefined) {
+        if (row.matchday != null) {
           const day = Number(row.matchday);
           daysSet.add(day);
+
           current.day_points[String(day)] =
-            (current.day_points[String(day)] ?? 0) + points;
+            (current.day_points[String(day)] ?? 0) + pts;
         }
 
-        current.total_group_matches += 1;
+        current.total_group_matches++;
 
-        if (row.is_outcome) current.outcome_hits += 1;
-        if (row.is_exact) current.exact_hits += 1;
+        if (row.is_outcome) current.outcome_hits++;
+        if (row.is_exact) current.exact_hits++;
+        return;
       }
 
-      if (row.stage === "r32") current.r32_points += points;
-      if (row.stage === "r16") current.r16_points += points;
-      if (row.stage === "qf") current.qf_points += points;
-      if (row.stage === "sf") current.sf_points += points;
-      if (row.stage === "third") current.third_points += points;
-      if (row.stage === "final") current.final_points += points;
+      if (row.stage === "r32") {
+        current.r32_points += pts;
+        return;
+      }
+
+      if (row.stage === "r16") {
+        current.r16_points += pts;
+        return;
+      }
+
+      if (row.stage === "qf") {
+        current.qf_points += pts;
+        return;
+      }
+
+      if (row.stage === "sf") {
+        current.sf_points += pts;
+        return;
+      }
+
+      if (row.stage === "third") {
+        current.third_points += pts;
+        return;
+      }
+
+      if (row.stage === "final") {
+        current.final_points += pts;
+        return;
+      }
+
+      if (row.stage.startsWith("extra:")) {
+        const questionKey = row.stage.replace("extra:", "") as keyof ExtraPointsMap;
+
+        if (questionKey in current.extra_points) {
+          current.extra_points[questionKey] += pts;
+          current.extra_total_points += pts;
+
+          if (
+            questionKey === "first_goal_scorer_world" ||
+            questionKey === "first_goal_scorer_spain"
+          ) {
+            current.extra_group_points += pts;
+          }
+        }
+      }
     });
 
     const days = Array.from(daysSet).sort((a, b) => a - b);
@@ -162,41 +228,38 @@ export async function GET(req: Request) {
     });
 
     const snapshotTimes = Array.from(
-      new Set(typedSnapshots.map((s) => s.captured_at))
+      new Set((snapshots ?? []).map((s: SnapshotRow) => s.captured_at))
     ).sort((a, b) => (a < b ? 1 : -1));
 
-    const previousSnapshotTime =
-      snapshotTimes.length >= 2 ? snapshotTimes[1] : null;
+    const prevTime = snapshotTimes[1];
+    const prevMap = new Map<string, number>();
 
-    const previousPositionMap = new Map<string, number>();
-
-    if (previousSnapshotTime) {
-      typedSnapshots
-        .filter((s) => s.captured_at === previousSnapshotTime)
-        .forEach((s) => {
-          previousPositionMap.set(String(s.entry_id), s.position);
+    if (prevTime) {
+      (snapshots ?? [])
+        .filter((s: SnapshotRow) => s.captured_at === prevTime)
+        .forEach((s: SnapshotRow) => {
+          prevMap.set(String(s.entry_id), s.position);
         });
     }
 
     const standings = currentStandings.map((row, index) => {
       const position = index + 1;
-      const previousPosition = previousPositionMap.get(row.entry_id) ?? position;
+      const prev = prevMap.get(row.entry_id) ?? position;
 
       let movement: "up" | "down" | "same" = "same";
       let movement_value = 0;
 
-      if (position < previousPosition) {
+      if (position < prev) {
         movement = "up";
-        movement_value = previousPosition - position;
-      } else if (position > previousPosition) {
+        movement_value = prev - position;
+      } else if (position > prev) {
         movement = "down";
-        movement_value = position - previousPosition;
+        movement_value = position - prev;
       }
 
       return {
         ...row,
         position,
-        previous_position: previousPosition,
         movement,
         movement_value,
         outcome_percent:
@@ -210,10 +273,7 @@ export async function GET(req: Request) {
       };
     });
 
-    return NextResponse.json({
-      days,
-      standings,
-    });
+    return NextResponse.json({ days, standings });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
