@@ -37,6 +37,13 @@ export type ScoreSettings = {
   semifinalQualifiedPoints: number;
   finalQualifiedPoints: number;
   championPoints: number;
+  firstGoalScorerWorldPoints: number;
+  firstGoalScorerSpainPoints: number;
+  goldenBootPoints: number;
+  goldenBallPoints: number;
+  bestYoungPlayerPoints: number;
+  goldenGlovePoints: number;
+  topSpanishScorerPoints: number;
 };
 
 export type MatchPrediction = {

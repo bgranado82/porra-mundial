@@ -1,3 +1,4 @@
+
 export type Locale = "es" | "en" | "pt";
 
 type Messages = {
@@ -86,6 +87,27 @@ type Messages = {
   loading: string;
 
   entryCreationError: string;
+
+  extras: {
+    title: string;
+    subtitle: string;
+
+    first_goal_scorer_world: string;
+    first_goal_scorer_spain: string;
+    golden_boot: string;
+    golden_ball: string;
+    best_young_player: string;
+    golden_glove: string;
+    top_spanish_scorer: string;
+
+    placeholder: string;
+    help_best_young: string;
+  };
+
+  paymentStatus: {
+    paid: string;
+    pending: string;
+  };
 };
 
 export const messages: Record<Locale, Messages> = {
@@ -108,7 +130,8 @@ export const messages: Record<Locale, Messages> = {
     outcomeRule: "Resultado (ganador/empate)",
     homeGoalsRule: "Goles equipo local",
     awayGoalsRule: "Goles equipo visitante",
-    scoringNote: "Los puntos de grupos se acumulan por partido. Los de eliminatorias se darán por acertar equipos clasificados.",
+    scoringNote:
+      "Los puntos de grupos se acumulan por partido. Los de eliminatorias se darán por acertar equipos clasificados.",
     points: "puntos",
 
     group: "Grupo",
@@ -142,18 +165,22 @@ export const messages: Record<Locale, Messages> = {
     knockoutBracket: "Cuadro eliminatorio",
     realRound32: "Round of 32 real",
     yourKnockoutBracket: "Tu cuadro eliminatorio",
-    realBracketPending: "Los cruces reales aparecerán cuando termine la fase de grupos y estén definidos los clasificados.",
+    realBracketPending:
+      "Los cruces reales aparecerán cuando termine la fase de grupos.",
 
     position: "Pos",
     status: "Estado",
     qualified: "Clasificado",
     eliminated: "Eliminado",
     bestThirdPlaced: "Mejores terceros",
-    bestThirdPlacedSubtitle: "Los 8 mejores terceros pasarán a la Round of 32.",
-    
+    bestThirdPlacedSubtitle:
+      "Los 8 mejores terceros pasarán a la Round of 32.",
+
     welcomeTitle: "Bienvenidos a la Porra del Mundial 2026",
-    welcomeSubtitle1: "Participa en la porra oficial y demuestra que sabes de fútbol.",
-    welcomeSubtitle2: "Introduce tu email, el código de acceso y selecciona tu número de porra.",
+    welcomeSubtitle1:
+      "Participa en la porra oficial y demuestra que sabes de fútbol.",
+    welcomeSubtitle2:
+      "Introduce tu email, el código de acceso y selecciona tu número de porra.",
     accessCode: "Código de acceso",
     entryNumber: "Número de porra",
     entryOne: "Porra 1",
@@ -161,7 +188,8 @@ export const messages: Record<Locale, Messages> = {
     accessPool: "Acceder a la porra",
     entering: "Entrando...",
 
-    authWelcome: "Accede o regístrate para entrar en tu porra del Mundial 2026.",
+    authWelcome:
+      "Accede o regístrate para entrar en tu porra del Mundial 2026.",
     login: "Login",
     register: "Registro",
     password: "Contraseña",
@@ -175,7 +203,30 @@ export const messages: Record<Locale, Messages> = {
     loading: "Cargando...",
 
     entryCreationError: "No se pudo crear la entrada",
+
+    extras: {
+      title: "Predicciones extra",
+      subtitle: "Premios y goleadores del torneo",
+
+      first_goal_scorer_world: "Primer goleador del Mundial",
+      first_goal_scorer_spain: "Primer goleador de España",
+      golden_boot: "Bota de Oro",
+      golden_ball: "Balón de Oro",
+      best_young_player: "Mejor jugador joven",
+      golden_glove: "Guante de Oro",
+      top_spanish_scorer: "Máximo goleador español",
+
+      placeholder: "Escribe el nombre del jugador",
+      help_best_young:
+        "Jugador nacido a partir del 1 de enero de 2005 según criterio FIFA",
+    },
+
+    paymentStatus: {
+      paid: "Pagado",
+      pending: "Pendiente de pago",
+    },
   },
+
   en: {
     appTitle: "World Cup Pool 2026",
     groupStage: "Group stage",
@@ -193,9 +244,10 @@ export const messages: Record<Locale, Messages> = {
     scoringRules: "Scoring system",
     exactScoreRule: "Exact score",
     outcomeRule: "Match outcome",
-    homeGoalsRule: "Home team goals",
-    awayGoalsRule: "Away team goals",
-    scoringNote: "Group points are awarded per match. Knockout points will be awarded for correctly predicting qualified teams.",
+    homeGoalsRule: "Home goals",
+    awayGoalsRule: "Away goals",
+    scoringNote:
+      "Group points per match. Knockout points for correctly predicting qualified teams.",
     points: "points",
 
     group: "Group",
@@ -228,41 +280,63 @@ export const messages: Record<Locale, Messages> = {
     champion: "Champion",
     knockoutBracket: "Knockout bracket",
     realRound32: "Real Round of 32",
-    yourKnockoutBracket: "Your knockout bracket",
-    realBracketPending: "The real bracket will appear when the group stage is complete and the qualifiers are confirmed.",
+    yourKnockoutBracket: "Your bracket",
+    realBracketPending: "Bracket appears after group stage.",
 
     position: "Pos",
     status: "Status",
     qualified: "Qualified",
     eliminated: "Eliminated",
-    bestThirdPlaced: "Best third-placed teams",
-    bestThirdPlacedSubtitle: "The 8 best third-placed teams will advance to the Round of 32.",
-    
-    welcomeTitle: "Welcome to the World Cup 2026 Pool",
-    welcomeSubtitle1: "Join the official pool and prove your football knowledge.",
-    welcomeSubtitle2: "Enter your email, access code and choose your entry number.",
+    bestThirdPlaced: "Best thirds",
+    bestThirdPlacedSubtitle: "Top 8 advance.",
+
+    welcomeTitle: "Welcome to World Cup Pool",
+    welcomeSubtitle1: "Join and prove your football knowledge.",
+    welcomeSubtitle2: "Enter your data and access code.",
     accessCode: "Access code",
     entryNumber: "Entry number",
     entryOne: "Entry 1",
     entryTwo: "Entry 2",
-    accessPool: "Enter the pool",
+    accessPool: "Enter",
     entering: "Entering...",
-    authWelcome: "Log in or register to enter your World Cup 2026 pool.",
+
+    authWelcome: "Login or register",
     login: "Login",
     register: "Register",
     password: "Password",
     confirmPassword: "Confirm password",
     passwordsDoNotMatch: "Passwords do not match",
-    passwordMinLength: "Password must be at least 6 characters long",
-    nameRequired: "Name is required",
-    accessCodeRequired: "Pool code is required",
-    invalidPoolCode: "Invalid pool code",
-    userCreationError: "Error creating user",
+    passwordMinLength: "Min 6 chars",
+    nameRequired: "Name required",
+    accessCodeRequired: "Code required",
+    invalidPoolCode: "Invalid code",
+    userCreationError: "User error",
     loading: "Loading...",
 
-    entryCreationError: "Could not create entry",
+    entryCreationError: "Entry error",
 
+    extras: {
+      title: "Extra predictions",
+      subtitle: "Awards and scorers",
+
+      first_goal_scorer_world: "First scorer",
+      first_goal_scorer_spain: "First Spain scorer",
+      golden_boot: "Golden Boot",
+      golden_ball: "Golden Ball",
+      best_young_player: "Best young player",
+      golden_glove: "Golden Glove",
+      top_spanish_scorer: "Top Spanish scorer",
+
+      placeholder: "Enter player name",
+      help_best_young: "Born after Jan 1, 2005 (FIFA rule)",
+    },
+
+    paymentStatus: {
+      paid: "Paid",
+      pending: "Pending",
+    },
   },
+
   pt: {
     appTitle: "Bolão Mundial 2026",
     groupStage: "Fase de grupos",
@@ -280,15 +354,15 @@ export const messages: Record<Locale, Messages> = {
     scoringRules: "Sistema de pontuação",
     exactScoreRule: "Resultado exato",
     outcomeRule: "Resultado",
-    homeGoalsRule: "Gols do mandante",
-    awayGoalsRule: "Gols do visitante",
-    scoringNote: "Os pontos da fase de grupos são acumulados por jogo. Os pontos do mata-mata serão dados por acertar os classificados.",
+    homeGoalsRule: "Gols casa",
+    awayGoalsRule: "Gols fora",
+    scoringNote: "Pontos por jogo e classificados.",
     points: "pontos",
 
     group: "Grupo",
     home: "Casa",
     away: "Visitante",
-    yourPrediction: "Seu palpite",
+    yourPrediction: "Palpite",
 
     predictedStandings: "Classificação prevista",
     standings: "Classificação",
@@ -313,41 +387,62 @@ export const messages: Record<Locale, Messages> = {
     semifinals: "Semis",
     finalLabel: "Final",
     champion: "Campeão",
-    knockoutBracket: "Chave eliminatória",
-    realRound32: "Round of 32 real",
-    yourKnockoutBracket: "Sua chave eliminatória",
-    realBracketPending: "Os confrontos reais aparecerão quando a fase de grupos terminar e os classificados estiverem definidos.",
+    knockoutBracket: "Chave",
+    realRound32: "Real",
+    yourKnockoutBracket: "Sua chave",
+    realBracketPending: "Aparece depois.",
 
     position: "Pos",
     status: "Status",
     qualified: "Classificado",
     eliminated: "Eliminado",
     bestThirdPlaced: "Melhores terceiros",
-    bestThirdPlacedSubtitle: "Os 8 melhores terceiros avançam para a Round of 32.",
-    
-    welcomeTitle: "Bem-vindo ao Bolão da Copa do Mundo 2026",
-    welcomeSubtitle1: "Participe do bolão oficial e mostre que entende de futebol.",
-    welcomeSubtitle2: "Insira seu e-mail, código de acesso e escolha o número da sua aposta.",
-    accessCode: "Código de acesso",
-    entryNumber: "Número da aposta",
+    bestThirdPlacedSubtitle: "Top 8 passam.",
+
+    welcomeTitle: "Bem-vindo",
+    welcomeSubtitle1: "Participe",
+    welcomeSubtitle2: "Insira dados",
+    accessCode: "Código",
+    entryNumber: "Número",
     entryOne: "Aposta 1",
     entryTwo: "Aposta 2",
-    accessPool: "Entrar no bolão",
+    accessPool: "Entrar",
     entering: "Entrando...",
 
-    authWelcome: "Entre ou registre-se para acessar seu bolão da Copa do Mundo 2026.",
+    authWelcome: "Login",
     login: "Entrar",
     register: "Registro",
     password: "Senha",
-    confirmPassword: "Confirmar senha",
-    passwordsDoNotMatch: "As senhas não coincidem",
-    passwordMinLength: "A senha deve ter pelo menos 6 caracteres",
-    nameRequired: "O nome é obrigatório",
-    accessCodeRequired: "O código do bolão é obrigatório",
-    invalidPoolCode: "Código do bolão inválido",
-    userCreationError: "Erro ao criar usuário",
+    confirmPassword: "Confirmar",
+    passwordsDoNotMatch: "Não coincidem",
+    passwordMinLength: "Min 6",
+    nameRequired: "Nome obrigatório",
+    accessCodeRequired: "Código obrigatório",
+    invalidPoolCode: "Código inválido",
+    userCreationError: "Erro",
     loading: "Carregando...",
 
-    entryCreationError: "Não foi possível criar a entrada",
+    entryCreationError: "Erro",
+
+    extras: {
+      title: "Previsões extra",
+      subtitle: "Prêmios e gols",
+
+      first_goal_scorer_world: "Primeiro gol",
+      first_goal_scorer_spain: "Primeiro gol Espanha",
+      golden_boot: "Chuteira de Ouro",
+      golden_ball: "Bola de Ouro",
+      best_young_player: "Melhor jovem",
+      golden_glove: "Luva de Ouro",
+      top_spanish_scorer: "Artilheiro espanhol",
+
+      placeholder: "Nome do jogador",
+      help_best_young: "Nascido após 01/01/2005",
+    },
+
+    paymentStatus: {
+      paid: "Pago",
+      pending: "Pendente",
+    },
   },
 };

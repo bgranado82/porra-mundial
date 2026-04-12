@@ -13,4 +13,12 @@ export const scoreSettings: ScoreSettings = {
   semifinalQualifiedPoints: 60,
   finalQualifiedPoints: 80,
   championPoints: 120,
+
+  firstGoalScorerWorldPoints: 35,
+  firstGoalScorerSpainPoints: 25,
+  goldenBootPoints: 45,
+  goldenBallPoints: 45,
+  bestYoungPlayerPoints: 35,
+  goldenGlovePoints: 35,
+  topSpanishScorerPoints: 30,
 };

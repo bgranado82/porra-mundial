@@ -22,6 +22,8 @@ import { Locale, messages } from "@/lib/i18n";
 import { KnockoutPredictionMap, Match } from "@/types";
 import { TIMEZONE_OPTIONS, TimezoneValue } from "@/lib/timezone";
 import { createClient } from "@/utils/supabase/client";
+import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
+
 
 type PredictionMap = Record<
   string,
@@ -37,6 +39,11 @@ type OfficialGroupRow = {
 type OfficialKnockoutRow = {
   match_id: string;
   picked_team_id: string | null;
+};
+
+type ExtraPredictionRow = {
+  question_key: string;
+  predicted_value: string | null;
 };
 
 type StandingSummary = {
@@ -77,6 +84,15 @@ function getTeamsInRound(
     if (match.awayTeamId) set.add(match.awayTeamId);
   }
   return set;
+}
+
+function normalizeExtraValue(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
 
 function HeaderPill({
@@ -219,6 +235,8 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [submitMessage, setSubmitMessage] = useState("");
   const [standings, setStandings] = useState<StandingSummary[]>([]);
   const [loadingStandings, setLoadingStandings] = useState(false);
+  const [extraPredictions, setExtraPredictions] = useState<Record<string, string>>({});
+  const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid">("pending");
 
   useEffect(() => {
     const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
@@ -285,6 +303,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
             user_id,
             pool_id,
             entry_number,
+            payment_status,
             created_at,
             pools ( name, slug )
           `)
@@ -301,6 +320,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
           setEntryStatus("draft");
           setPredictions({});
           setKnockoutPredictions({});
+          setExtraPredictions({});
           setSubmitMessage("No se ha encontrado la porra seleccionada.");
           setLoadingEntry(false);
           return;
@@ -314,6 +334,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
         setPoolName(pool?.name ?? "");
         setPoolId(entry.pool_id ?? null);
         setPoolSlug(pool?.slug ?? "");
+        setPaymentStatus((entry.payment_status ?? "pending") as "pending" | "paid");
 
         const { data: groupRows, error: groupError } = await supabase
           .from("entry_group_predictions")
@@ -343,6 +364,18 @@ export default function PredictionsPageClient({ entryId }: Props) {
           nextKo[row.match_id] = row.picked_team_id;
         });
         setKnockoutPredictions(nextKo);
+
+        const { data: extraRows, error: extraError } = await supabase
+        .from("entry_extra_predictions")
+          .select("question_key, predicted_value")
+                    .eq("entry_id", entry.id);
+if (extraError) console.error(extraError);
+
+const nextExtraPredictions: Record<string, string> = {};
+(extraRows as ExtraPredictionRow[] | null)?.forEach((row) => {
+  nextExtraPredictions[row.question_key] = row.predicted_value ?? "";
+});
+setExtraPredictions(nextExtraPredictions);
 
         const { data: officialGroupRows, error: officialGroupError } =
           await supabase
@@ -450,6 +483,15 @@ export default function PredictionsPageClient({ entryId }: Props) {
     }));
   }
 
+  function updateExtraPrediction(questionKey: string, value: string) {
+  if (entryStatus === "submitted") return;
+
+  setExtraPredictions((current) => ({
+    ...current,
+    [questionKey]: value,
+  }));
+}
+
   async function refreshStandings() {
     if (!poolId) return;
 
@@ -491,6 +533,13 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
       if (deleteKoError) throw deleteKoError;
 
+      const { error: deleteExtraError } = await supabase
+  .from("entry_extra_predictions")
+  .delete()
+  .eq("entry_id", activeEntryId);
+
+if (deleteExtraError) throw deleteExtraError;
+      
       const groupRows = Object.entries(predictions).map(([matchId, value]) => ({
         entry_id: activeEntryId,
         match_id: matchId,
@@ -521,6 +570,25 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
         if (insertKoError) throw insertKoError;
       }
+
+     const extraRows = EXTRA_QUESTIONS.map((question) => {
+  const predictedValue = extraPredictions[question.key]?.trim() ?? "";
+
+  return {
+    entry_id: activeEntryId,
+    question_key: question.key,
+    predicted_value: predictedValue,
+    normalized_value: predictedValue ? normalizeExtraValue(predictedValue) : null,
+  };
+});
+
+if (extraRows.length > 0) {
+  const { error: insertExtraError } = await supabase
+    .from("entry_extra_predictions")
+    .insert(extraRows);
+
+  if (insertExtraError) throw insertExtraError;
+} 
 
       setSubmitMessage("Porra guardada correctamente.");
       await refreshStandings();
@@ -711,6 +779,21 @@ export default function PredictionsPageClient({ entryId }: Props) {
                     </p>
                   </div>
                 </div>
+
+<div className="mt-2">
+  <span
+    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
+      paymentStatus === "paid"
+        ? "bg-green-50 text-green-700"
+        : "bg-amber-50 text-amber-700"
+    }`}
+  >
+    {paymentStatus === "paid" ? "💳" : "⏳"}{" "}
+    {paymentStatus === "paid"
+      ? t.paymentStatus.paid
+      : t.paymentStatus.pending}
+  </span>
+</div>
 
                 <div className="mt-4">
                   <div className="text-sm font-semibold text-[var(--iberdrola-forest)]/65">
@@ -1101,6 +1184,59 @@ export default function PredictionsPageClient({ entryId }: Props) {
           onPick={entryStatus === "submitted" ? undefined : updateKnockoutPrediction}
           realTeamsByRound={realTeamsByRound}
         />
+<section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+  <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+    <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+      {t.extras.title}
+    </h2>
+    <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+      {t.extras.subtitle}
+    </p>
+  </div>
+
+  <div className="p-4">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {EXTRA_QUESTIONS.map((question) => {
+        const currentValue = extraPredictions[question.key] ?? "";
+
+        return (
+          <div
+            key={question.key}
+            className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4"
+          >
+            <div className="mb-2 flex items-start gap-2 text-sm font-bold text-[var(--iberdrola-forest)]">
+              <span className="text-lg leading-none">{question.icon}</span>
+              <span>{t.extras[question.key]}</span>
+            </div>
+
+            <input
+              type="text"
+              value={currentValue}
+              onChange={(e) =>
+                updateExtraPrediction(question.key, e.target.value)
+              }
+              placeholder={t.extras.placeholder}
+              disabled={entryStatus === "submitted"}
+              maxLength={60}
+              className="w-full rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)] outline-none transition focus:ring-2 focus:ring-[var(--iberdrola-green)] disabled:cursor-not-allowed disabled:opacity-70"
+            />
+
+            {question.key === "best_young_player" ? (
+              <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/60">
+                {t.extras.help_best_young}
+              </div>
+            ) : null}
+
+            <div className="mt-3 text-xs font-bold text-[var(--iberdrola-green)]">
+              +{scoreSettings[question.pointsKey]} {t.points}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>
+
       </div>
     </main>
   );
