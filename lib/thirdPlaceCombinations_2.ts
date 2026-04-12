@@ -25,7 +25,25 @@ export function buildThirdComboKey(groups: string[]): string {
   return [...groups].sort().join("");
 }
 
-export const THIRD_PLACE_COMBINATIONS: Record<string, ThirdSlotAssignment> = {
+/**
+ * IMPORTANTE
+ * ----------
+ * Este archivo está preparado para la tabla oficial de las 495 combinaciones
+ * del Mundial 2026 (Annex C / tabla pública equivalente).
+ *
+ * La clave es la concatenación alfabética de los 8 grupos cuyos terceros pasan.
+ * Ejemplo:
+ *   "EFGHIJKL"
+ *
+ * El valor es el rival de:
+ *   1E, 1I, 1A, 1L, 1D, 1G, 1B, 1K
+ * en ese orden, o sea:
+ *   third74, third77, third79, third80, third81, third82, third85, third87
+ *
+ * He dejado varias filas ya puestas como ejemplo real.
+ * Debes completar el resto hasta las 495.
+ */
+export const THIRD_PLACE_COMBINATIONS = {
   "EFGHIJKL": {
     third79: "E",
     third85: "J",

@@ -1,31 +1,4 @@
-export type ThirdSlot =
-  | "third74"
-  | "third77"
-  | "third79"
-  | "third80"
-  | "third81"
-  | "third82"
-  | "third85"
-  | "third87";
-
-export type ThirdSlotAssignment = Record<ThirdSlot, string>;
-
-export const THIRD_SLOT_ORDER: ThirdSlot[] = [
-  "third74",
-  "third77",
-  "third79",
-  "third80",
-  "third81",
-  "third82",
-  "third85",
-  "third87",
-];
-
-export function buildThirdComboKey(groups: string[]): string {
-  return [...groups].sort().join("");
-}
-
-export const THIRD_PLACE_COMBINATIONS: Record<string, ThirdSlotAssignment> = {
+export const THIRD_PLACE_COMBINATIONS = {
   "EFGHIJKL": {
     third79: "E",
     third85: "J",
