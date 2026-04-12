@@ -237,6 +237,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [loadingStandings, setLoadingStandings] = useState(false);
   const [extraPredictions, setExtraPredictions] = useState<Record<string, string>>({});
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid">("pending");
+  const [officialExtraResults, setOfficialExtraResults] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
@@ -370,6 +371,20 @@ export default function PredictionsPageClient({ entryId }: Props) {
           .select("question_key, predicted_value")
                     .eq("entry_id", entry.id);
 if (extraError) console.error(extraError);
+
+const { data: extraResults, error: extraResultsError } = await supabase
+  .from("official_extra_results")
+  .select("question_key, official_value");
+
+if (extraResultsError) console.error(extraResultsError);
+
+const officialExtraMap: Record<string, string> = {};
+
+(extraResults ?? []).forEach((row) => {
+  officialExtraMap[row.question_key] = row.official_value;
+});
+
+setOfficialExtraResults(officialExtraMap);
 
 const nextExtraPredictions: Record<string, string> = {};
 (extraRows as ExtraPredictionRow[] | null)?.forEach((row) => {
@@ -1242,38 +1257,68 @@ if (extraRows.length > 0) {
   <div className="p-4">
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {EXTRA_QUESTIONS.map((question) => {
-        const currentValue = extraPredictions[question.key] ?? "";
+  const currentValue = extraPredictions[question.key] ?? "";
+  const officialValue = officialExtraResults[question.key] ?? "";
 
-        return (
-          <div
-            key={question.key}
-            className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4"
-          >
-            <div className="mb-2 flex items-start gap-2 text-sm font-bold text-[var(--iberdrola-forest)]">
-              <span className="text-lg leading-none">{question.icon}</span>
-              <span>{t.extras[question.key]}</span>
-            </div>
+  const points =
+    (scoreSettings[
+      question.pointsKey as keyof typeof scoreSettings
+    ] as number) ?? 0;
 
-            <input
-              type="text"
-              value={currentValue}
-              onChange={(e) =>
-                updateExtraPrediction(question.key, e.target.value)
-              }
-              placeholder={t.extras.placeholder}
-              disabled={entryStatus === "submitted"}
-              maxLength={60}
-              className="w-full rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)] outline-none transition focus:ring-2 focus:ring-[var(--iberdrola-green)] disabled:cursor-not-allowed disabled:opacity-70"
-            />
+  const isCorrect =
+    !!officialValue &&
+    normalizeExtraValue(currentValue) === normalizeExtraValue(officialValue);
 
-            {question.key === "best_young_player" ? (
-              <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/60">
-                {t.extras.help_best_young}
-              </div>
-            ) : null}
+  return (
+    <div
+      key={question.key}
+      className={`rounded-2xl border px-4 py-4 ${
+        isCorrect
+          ? "border-green-400 bg-green-50"
+          : "border-[var(--iberdrola-sky)] bg-white"
+      }`}
+    >
+      <div className="mb-2 flex items-start gap-2 text-sm font-bold text-[var(--iberdrola-forest)]">
+        <span className="text-lg leading-none">{question.icon}</span>
+        <span>{t.extras[question.key as keyof typeof t.extras]}</span>
+      </div>
+
+      <input
+        type="text"
+        value={currentValue}
+        onChange={(e) => updateExtraPrediction(question.key, e.target.value)}
+        placeholder={t.extras.placeholder}
+        disabled={entryStatus === "submitted"}
+        maxLength={60}
+        className="w-full rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)] outline-none transition focus:ring-2 focus:ring-[var(--iberdrola-green)] disabled:cursor-not-allowed disabled:opacity-70"
+      />
+
+      {question.key === "best_young_player" ? (
+        <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/60">
+          {t.extras.help_best_young}
+        </div>
+      ) : null}
+
+      {officialValue ? (
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="text-xs text-[var(--iberdrola-forest)]/65">
+            Oficial: {officialValue}
           </div>
-        );
-      })}
+
+          <span
+            className={`rounded-full px-2 py-1 text-xs font-black ${
+              isCorrect
+                ? "bg-[var(--iberdrola-green)] text-white"
+                : "bg-gray-100 text-gray-500"
+            }`}
+          >
+            {isCorrect ? `+${points}` : "0"}
+          </span>
+        </div>
+      ) : null}
+    </div>
+  );
+})}
     </div>
   </div>
 </section>
