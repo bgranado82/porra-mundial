@@ -11,7 +11,7 @@ import ThirdPlaceTable from "@/components/ThirdPlaceTable";
 import { matches as initialMatches } from "@/data/matches";
 import { scoreSettings } from "@/data/settings";
 import { teams } from "@/data/teams";
-import { realKnockoutPredictions as initialRealKnoutPredictions } from "@/data/realKnockoutPredictions";
+import { realKnockoutPredictions as initialRealKnockoutPredictions } from "@/data/realKnockoutPredictions";
 import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { calculatePredictedStandings } from "@/lib/standings";
 import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
@@ -201,7 +201,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [knockoutPredictions, setKnockoutPredictions] =
     useState<KnockoutPredictionMap>({});
   const [realKnockoutPredictions, setRealKnockoutPredictions] =
-    useState(initialRealKnoutPredictions);
+    useState(initialRealKnockoutPredictions);
   const [officialMatches, setOfficialMatches] = useState<Match[]>(initialMatches);
   const [locale, setLocale] = useState<Locale>("es");
   const [timeZone, setTimeZone] = useState<TimezoneValue>("local");
@@ -212,6 +212,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [entryNumber, setEntryNumber] = useState<number | null>(null);
   const [poolName, setPoolName] = useState("");
   const [poolId, setPoolId] = useState<string | null>(null);
+  const [poolSlug, setPoolSlug] = useState("");
   const [loadingEntry, setLoadingEntry] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -312,6 +313,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
         setEntryNumber(entry.entry_number ?? null);
         setPoolName(pool?.name ?? "");
         setPoolId(entry.pool_id ?? null);
+        setPoolSlug(pool?.slug ?? "");
 
         const { data: groupRows, error: groupError } = await supabase
           .from("entry_group_predictions")
@@ -373,7 +375,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
         if (officialKnockoutError) console.error(officialKnockoutError);
 
         const nextRealKo: KnockoutPredictionMap = {
-          ...initialRealKnoutPredictions,
+          ...initialRealKnockoutPredictions,
         };
 
         (officialKnockoutRows as OfficialKnockoutRow[] | null)?.forEach((row) => {
@@ -806,9 +808,9 @@ export default function PredictionsPageClient({ entryId }: Props) {
                 </div>
               </div>
 
-              {poolId ? (
+              {poolId && activeEntryId && poolSlug ? (
                 <Link
-                  href={`/standings?poolId=${poolId}`}
+                  href={`/standings?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
                   className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
                 >
                   Ver clasificación completa
