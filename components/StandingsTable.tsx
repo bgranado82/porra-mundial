@@ -1,4 +1,3 @@
-
 "use client";
 
 type Standing = {
@@ -17,6 +16,7 @@ type Standing = {
   outcome_percent: number;
   exact_percent: number;
   position: number;
+  movement: "up" | "down" | "same";
 };
 
 type Props = {
@@ -24,9 +24,21 @@ type Props = {
   standings: Standing[];
 };
 
+function MovementBadge({ movement }: { movement: Standing["movement"] }) {
+  if (movement === "up") {
+    return <span className="ml-1 text-green-600">🔺</span>;
+  }
+
+  if (movement === "down") {
+    return <span className="ml-1 text-red-600">🔻</span>;
+  }
+
+  return <span className="ml-1 text-gray-400">=</span>;
+}
+
 export default function StandingsTable({ days, standings }: Props) {
   return (
-    <div className="overflow-x-auto rounded-2xl border border-[var(--iberdrola-green)] bg-white">
+    <div className="overflow-x-auto rounded-2xl border border-[var(--iberdrola-green)] bg-white shadow-sm">
       <table className="min-w-full text-sm">
         <thead className="bg-[var(--iberdrola-green-light)]">
           <tr>
@@ -54,9 +66,15 @@ export default function StandingsTable({ days, standings }: Props) {
 
         <tbody>
           {standings.map((row) => (
-            <tr key={row.entry_id} className="border-t border-gray-100">
-              <td className="px-3 py-3 font-bold">{row.position}</td>
-              <td className="px-3 py-3">{row.name || row.email || "Jugador"}</td>
+            <tr key={row.entry_id} className="border-t border-gray-100 hover:bg-gray-50">
+              <td className="px-3 py-3 font-bold whitespace-nowrap">
+                {row.position}
+                <MovementBadge movement={row.movement} />
+              </td>
+
+              <td className="px-3 py-3 font-medium whitespace-nowrap">
+                {row.name || row.email || "Jugador"}
+              </td>
 
               {days.map((day) => (
                 <td key={day} className="px-3 py-3 text-center">

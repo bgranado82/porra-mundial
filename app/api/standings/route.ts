@@ -18,6 +18,12 @@ type ScoreRow = {
   is_outcome: boolean | null;
 };
 
+type SnapshotRow = {
+  entry_id: string;
+  position: number;
+  captured_at: string;
+};
+
 type StandingRow = {
   entry_id: string;
   name: string;
@@ -64,8 +70,19 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: entriesError.message }, { status: 500 });
     }
 
+    const { data: snapshots, error: snapshotsError } = await supabase
+      .from("standings_snapshots")
+      .select("entry_id, position, captured_at")
+      .eq("pool_id", poolId)
+      .order("captured_at", { ascending: false });
+
+    if (snapshotsError) {
+      return NextResponse.json({ error: snapshotsError.message }, { status: 500 });
+    }
+
     const typedEntries = (entries ?? []) as EntryRow[];
     const typedScores = (scores ?? []) as ScoreRow[];
+    const typedSnapshots = (snapshots ?? []) as SnapshotRow[];
 
     const entryMap = new Map<string, EntryRow>(
       typedEntries.map((entry) => [String(entry.id), entry])
@@ -129,11 +146,44 @@ export async function GET(req: Request) {
 
     const days = Array.from(daysSet).sort((a, b) => a - b);
 
-    const standings = Array.from(grouped.values())
-      .sort((a, b) => b.total_points - a.total_points)
-      .map((row, index) => ({
+    const currentStandings = Array.from(grouped.values()).sort((a, b) => {
+      if (b.total_points !== a.total_points) {
+        return b.total_points - a.total_points;
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    // Obtenemos el snapshot anterior al último guardado
+    const snapshotTimes = Array.from(
+      new Set(typedSnapshots.map((s) => s.captured_at))
+    ).sort((a, b) => (a < b ? 1 : -1));
+
+    const previousSnapshotTime =
+      snapshotTimes.length >= 2 ? snapshotTimes[1] : null;
+
+    const previousPositionMap = new Map<string, number>();
+
+    if (previousSnapshotTime) {
+      typedSnapshots
+        .filter((s) => s.captured_at === previousSnapshotTime)
+        .forEach((s) => {
+          previousPositionMap.set(String(s.entry_id), s.position);
+        });
+    }
+
+    const standings = currentStandings.map((row, index) => {
+      const position = index + 1;
+      const previousPosition = previousPositionMap.get(row.entry_id) ?? position;
+
+      let movement: "up" | "down" | "same" = "same";
+      if (position < previousPosition) movement = "up";
+      if (position > previousPosition) movement = "down";
+
+      return {
         ...row,
-        position: index + 1,
+        position,
+        previous_position: previousPosition,
+        movement,
         outcome_percent:
           row.total_group_matches > 0
             ? Math.round((row.outcome_hits / row.total_group_matches) * 100)
@@ -142,7 +192,8 @@ export async function GET(req: Request) {
           row.total_group_matches > 0
             ? Math.round((row.exact_hits / row.total_group_matches) * 100)
             : 0,
-      }));
+      };
+    });
 
     return NextResponse.json({
       days,
