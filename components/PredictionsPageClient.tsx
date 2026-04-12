@@ -1226,10 +1226,6 @@ if (extraRows.length > 0) {
                 {t.extras.help_best_young}
               </div>
             ) : null}
-
-            <div className="mt-3 text-xs font-bold text-[var(--iberdrola-green)]">
-              +{scoreSettings[question.pointsKey]} {t.points}
-            </div>
           </div>
         );
       })}
