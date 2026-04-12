@@ -278,30 +278,35 @@ export default function StandingsTable({ days, standings }: Props) {
                       </td>
 
                       {hasGroupDays ? (
-                        <>
-                          {sortedDays.map((day) => (
-                            <td
-                              key={day}
-                              className="border-b border-l border-gray-100 bg-sky-50 px-1 py-3 text-center md:px-2"
-                            >
-                              {row.day_points[String(day)] ?? 0}
-                            </td>
-                          ))}
-                        </>
-                      ) : null}
+  <>
+    {sortedDays.map((day) => (
+      <td
+        key={day}
+        className="border-b border-l border-gray-100 bg-sky-50 px-1 py-3 text-center md:px-2"
+      >
+        {row.day_points[String(day)] ?? 0}
+      </td>
+    ))}
+  </>
+) : null}
 
-                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.extra_points.first_goal_scorer_world}
-                      </td>
-                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.extra_points.first_goal_scorer_spain}
-                      </td>
+<td className="border-b border-l border-gray-100 px-1 py-3 text-center font-semibold md:px-2">
+  {row.group_total}
+</td>
 
-                      <td
-                        className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
-                      >
-                        {row.group_total + row.extra_group_points}
-                      </td>
+<td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+  {row.extra_points.first_goal_scorer_world}
+</td>
+
+<td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+  {row.extra_points.first_goal_scorer_spain}
+</td>
+
+<td
+  className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
+>
+  {row.group_total + row.extra_group_points}
+</td>
 
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
                         {row.outcome_hits}
@@ -357,7 +362,7 @@ export default function StandingsTable({ days, standings }: Props) {
                   </th>
 
                   <th
-                    colSpan={13}
+                    colSpan={14}
                     className="top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-2 text-center font-bold text-[var(--iberdrola-forest)] md:px-2"
                   >
                     Puntos
