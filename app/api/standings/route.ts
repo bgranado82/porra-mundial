@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
@@ -93,14 +92,15 @@ export async function GET(req: Request) {
 
     typedScores.forEach((row) => {
       const entryId = String(row.entry_id);
+      const entry = entryMap.get(entryId);
 
       let current = grouped.get(entryId);
 
       if (!current) {
         current = {
           entry_id: entryId,
-          name: entryMap.get(entryId)?.name || "Jugador",
-          email: entryMap.get(entryId)?.email || "",
+          name: entry?.name?.trim() || entry?.email?.trim() || "Jugador",
+          email: entry?.email || "",
           day_points: {},
           group_total: 0,
           r32_points: 0,
@@ -153,7 +153,6 @@ export async function GET(req: Request) {
       return a.name.localeCompare(b.name);
     });
 
-    // Obtenemos el snapshot anterior al último guardado
     const snapshotTimes = Array.from(
       new Set(typedSnapshots.map((s) => s.captured_at))
     ).sort((a, b) => (a < b ? 1 : -1));

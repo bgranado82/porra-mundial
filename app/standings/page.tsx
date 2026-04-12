@@ -2,12 +2,16 @@
 import StandingsTable from "@/components/StandingsTable";
 import { headers } from "next/headers";
 
-async function getStandings() {
+type PageProps = {
+  searchParams: Promise<{
+    poolId?: string;
+  }>;
+};
+
+async function getStandings(poolId: string) {
   const host = (await headers()).get("host");
   const protocol = host?.includes("localhost") ? "http" : "https";
   const baseUrl = `${protocol}://${host}`;
-
-  const poolId = "eb10020a-f258-49c7-be10-b0350b35d54a";
 
   const res = await fetch(
     `${baseUrl}/api/standings?poolId=${poolId}`,
@@ -15,14 +19,26 @@ async function getStandings() {
   );
 
   if (!res.ok) {
-    throw new Error("Error loading standings");
+    throw new Error("Error cargando standings");
   }
 
   return res.json();
 }
 
-export default async function StandingsPage() {
-  const data = await getStandings();
+export default async function StandingsPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const poolId = params.poolId;
+
+  if (!poolId) {
+    return (
+      <main className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Clasificación</h1>
+        <p>Falta el poolId en la URL.</p>
+      </main>
+    );
+  }
+
+  const data = await getStandings(poolId);
 
   return (
     <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-4">
@@ -36,10 +52,7 @@ export default async function StandingsPage() {
           </p>
         </section>
 
-        <StandingsTable
-          days={data.days}
-          standings={data.standings}
-        />
+        <StandingsTable days={data.days} standings={data.standings} />
       </div>
     </main>
   );
