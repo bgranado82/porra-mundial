@@ -12,6 +12,20 @@ export default async function Page() {
     redirect("/");
   }
 
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profileError || !profile) {
+    redirect("/");
+  }
+
+  if (profile.role === "admin") {
+    redirect("/admin");
+  }
+
   const { data: entries } = await supabase
     .from("entries")
     .select(`

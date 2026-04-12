@@ -31,112 +31,114 @@ export default function Home() {
     setLoading(true);
     setMessage("");
 
-    if (!name.trim()) {
-      setMessage(t.nameRequired);
-      setLoading(false);
-      return;
-    }
+    try {
+      if (!name.trim()) {
+        setMessage(t.nameRequired);
+        return;
+      }
 
-    if (!accessCode.trim()) {
-      setMessage(t.accessCodeRequired);
-      setLoading(false);
-      return;
-    }
+      if (!accessCode.trim()) {
+        setMessage(t.accessCodeRequired);
+        return;
+      }
 
-    if (password.length < 6) {
-      setMessage(t.passwordMinLength);
-      setLoading(false);
-      return;
-    }
+      if (password.length < 6) {
+        setMessage(t.passwordMinLength);
+        return;
+      }
 
-    if (password !== confirmPassword) {
-      setMessage(t.passwordsDoNotMatch);
-      setLoading(false);
-      return;
-    }
+      if (password !== confirmPassword) {
+        setMessage(t.passwordsDoNotMatch);
+        return;
+      }
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedAccessCode = accessCode.trim().toUpperCase();
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedAccessCode = accessCode.trim().toUpperCase();
 
-    const { data, error } = await supabase.auth.signUp({
-      email: normalizedEmail,
-      password,
-    });
-
-    if (error || !data.user) {
-      setMessage(error?.message || t.userCreationError);
-      setLoading(false);
-      return;
-    }
-
-    const user = data.user;
-
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: user.id,
-      email: normalizedEmail,
-      full_name: name.trim(),
-      company: company.trim(),
-      country: country.trim(),
-    });
-
-    if (profileError) {
-      setMessage(profileError.message);
-      setLoading(false);
-      return;
-    }
-
-    const { data: pool, error: poolError } = await supabase
-      .from("pools")
-      .select("id, slug, access_code")
-      .eq("access_code", normalizedAccessCode)
-      .single();
-
-    if (poolError || !pool) {
-      setMessage(t.invalidPoolCode);
-      setLoading(false);
-      return;
-    }
-
-    const { data: createdEntry, error: entryError } = await supabase
-      .from("entries")
-      .insert({
-        user_id: user.id,
-        pool_id: pool.id,
-        entry_number: 1,
-        status: "draft",
+      const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
-        name: name.trim(),
+        password,
+      });
+
+      if (error || !data.user) {
+        setMessage(error?.message || t.userCreationError);
+        return;
+      }
+
+      const user = data.user;
+
+      const { error: profileError } = await supabase.from("profiles").insert({
+        id: user.id,
+        email: normalizedEmail,
+        full_name: name.trim(),
         company: company.trim(),
         country: country.trim(),
-      })
-      .select("id")
-      .single();
+        role: "user",
+      });
 
-    if (entryError || !createdEntry) {
-      setMessage(entryError?.message || t.entryCreationError);
+      if (profileError) {
+        setMessage(profileError.message);
+        return;
+      }
+
+      const { data: pool, error: poolError } = await supabase
+        .from("pools")
+        .select("id, slug, access_code")
+        .eq("access_code", normalizedAccessCode)
+        .single();
+
+      if (poolError || !pool) {
+        setMessage(t.invalidPoolCode);
+        return;
+      }
+
+      const { data: createdEntry, error: entryError } = await supabase
+        .from("entries")
+        .insert({
+          user_id: user.id,
+          pool_id: pool.id,
+          entry_number: 1,
+          status: "draft",
+          email: normalizedEmail,
+          name: name.trim(),
+          company: company.trim(),
+          country: country.trim(),
+        })
+        .select("id")
+        .single();
+
+      if (entryError || !createdEntry) {
+        setMessage(entryError?.message || t.entryCreationError);
+        return;
+      }
+
+      router.push(`/pool/${pool.slug}/entry/${createdEntry.id}`);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    router.push(`/pool/${pool.slug}/entry/${createdEntry.id}`);
   }
 
   async function handleLogin() {
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    try {
+      const normalizedEmail = email.trim().toLowerCase();
 
-    if (error) {
-      setMessage(error.message);
+      const { error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+
+      window.location.href = "/post-login";
+    } finally {
       setLoading(false);
-      return;
     }
-
-    router.push("/post-login");
   }
 
   return (
