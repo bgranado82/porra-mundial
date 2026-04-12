@@ -1,7 +1,11 @@
+
 "use client";
+
+import Link from "next/link";
 
 type Standing = {
   entry_id: string;
+  pool_id: string;
   name: string;
   email: string;
   day_points: Record<string, number>;
@@ -13,6 +17,8 @@ type Standing = {
   third_points: number;
   final_points: number;
   total_points: number;
+  outcome_hits: number;
+  exact_hits: number;
   outcome_percent: number;
   exact_percent: number;
   position: number;
@@ -59,6 +65,8 @@ export default function StandingsTable({ days, standings }: Props) {
             <th className="px-3 py-3 text-center whitespace-nowrap">3º</th>
             <th className="px-3 py-3 text-center whitespace-nowrap">Final</th>
             <th className="px-3 py-3 text-center whitespace-nowrap font-bold">Total</th>
+            <th className="px-3 py-3 text-center whitespace-nowrap">Aciertos</th>
+            <th className="px-3 py-3 text-center whitespace-nowrap">Exactos</th>
             <th className="px-3 py-3 text-center whitespace-nowrap">% signo</th>
             <th className="px-3 py-3 text-center whitespace-nowrap">% exacto</th>
           </tr>
@@ -73,7 +81,12 @@ export default function StandingsTable({ days, standings }: Props) {
               </td>
 
               <td className="px-3 py-3 font-medium whitespace-nowrap">
-                {row.name || row.email || "Jugador"}
+                <Link
+                  href={`/pool/${row.pool_id}/entry/${row.entry_id}`}
+                  className="hover:underline"
+                >
+                  {row.name || row.email}
+                </Link>
               </td>
 
               {days.map((day) => (
@@ -90,6 +103,8 @@ export default function StandingsTable({ days, standings }: Props) {
               <td className="px-3 py-3 text-center">{row.third_points}</td>
               <td className="px-3 py-3 text-center">{row.final_points}</td>
               <td className="px-3 py-3 text-center font-bold">{row.total_points}</td>
+              <td className="px-3 py-3 text-center">{row.outcome_hits}</td>
+              <td className="px-3 py-3 text-center">{row.exact_hits}</td>
               <td className="px-3 py-3 text-center">{row.outcome_percent}%</td>
               <td className="px-3 py-3 text-center">{row.exact_percent}%</td>
             </tr>

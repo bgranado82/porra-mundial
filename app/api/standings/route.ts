@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
@@ -25,6 +26,7 @@ type SnapshotRow = {
 
 type StandingRow = {
   entry_id: string;
+  pool_id: string;
   name: string;
   email: string;
   day_points: Record<string, number>;
@@ -51,15 +53,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "poolId requerido" }, { status: 400 });
     }
 
-    const { data: scores, error: scoresError } = await supabase
-      .from("entry_scores")
-      .select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome")
-      .eq("pool_id", poolId);
-
-    if (scoresError) {
-      return NextResponse.json({ error: scoresError.message }, { status: 500 });
-    }
-
     const { data: entries, error: entriesError } = await supabase
       .from("entries")
       .select("id, name, email")
@@ -67,6 +60,15 @@ export async function GET(req: Request) {
 
     if (entriesError) {
       return NextResponse.json({ error: entriesError.message }, { status: 500 });
+    }
+
+    const { data: scores, error: scoresError } = await supabase
+      .from("entry_scores")
+      .select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome")
+      .eq("pool_id", poolId);
+
+    if (scoresError) {
+      return NextResponse.json({ error: scoresError.message }, { status: 500 });
     }
 
     const { data: snapshots, error: snapshotsError } = await supabase
@@ -99,8 +101,9 @@ export async function GET(req: Request) {
       if (!current) {
         current = {
           entry_id: entryId,
-          name: entry?.name?.trim() || entry?.email?.trim() || "Jugador",
-          email: entry?.email || "",
+          pool_id: String(row.pool_id),
+          name: entry?.name ?? entry?.email ?? `Entry ${entryId.slice(0, 8)}`,
+          email: entry?.email ?? "",
           day_points: {},
           group_total: 0,
           r32_points: 0,
@@ -142,6 +145,32 @@ export async function GET(req: Request) {
       if (row.stage === "final") current.final_points += points;
 
       grouped.set(entryId, current);
+    });
+
+    // Importante: incluir también entries sin puntos todavía
+    typedEntries.forEach((entry) => {
+      const entryId = String(entry.id);
+
+      if (!grouped.has(entryId)) {
+        grouped.set(entryId, {
+          entry_id: entryId,
+          pool_id: poolId,
+          name: entry.name ?? entry.email ?? `Entry ${entryId.slice(0, 8)}`,
+          email: entry.email ?? "",
+          day_points: {},
+          group_total: 0,
+          r32_points: 0,
+          r16_points: 0,
+          qf_points: 0,
+          sf_points: 0,
+          third_points: 0,
+          final_points: 0,
+          total_points: 0,
+          outcome_hits: 0,
+          exact_hits: 0,
+          total_group_matches: 0,
+        });
+      }
     });
 
     const days = Array.from(daysSet).sort((a, b) => a - b);

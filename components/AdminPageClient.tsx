@@ -6,6 +6,8 @@ import { createClient } from "@/utils/supabase/client";
 import { matches as initialMatches } from "@/data/matches";
 import { teams } from "@/data/teams";
 import { Match } from "@/types";
+import Link from "next/link";
+
 
 type GroupResultMap = Record<
   string,
@@ -156,6 +158,12 @@ setMessage(
   if (loading) {
     return <div className="p-6">Cargando admin...</div>;
   }
+<Link
+  href="/standings?poolId=eb10020a-f258-49c7-be10-b0350b35d54a"
+  className="inline-block rounded-xl border border-[var(--iberdrola-green)] bg-white px-4 py-2 text-sm font-medium text-[var(--iberdrola-forest)]"
+>
+  Ver clasificación
+</Link>
 
  return (
     <main className="p-4 space-y-6">
