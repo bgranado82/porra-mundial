@@ -404,7 +404,16 @@ export default function KnockoutBracket({
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
             />
-            <ChampionCard champion={champion} points={champion ? 120 : 0} />
+            <ChampionCard
+  champion={champion}
+  points={
+    championId &&
+    realTeamsByRound?.champion &&
+    championId === realTeamsByRound.champion
+      ? 120
+      : 0
+  }
+/>
           </div>
         </div>
 
@@ -452,7 +461,16 @@ export default function KnockoutBracket({
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
             />
-            <ChampionCard champion={champion} points={champion ? 120 : 0} />
+            <ChampionCard
+  champion={champion}
+  points={
+    championId &&
+    realTeamsByRound?.champion &&
+    championId === realTeamsByRound.champion
+      ? 120
+      : 0
+  }
+/>
           </div>
 
           <StageColumn
