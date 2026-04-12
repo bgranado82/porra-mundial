@@ -1044,7 +1044,36 @@ if (extraRows.length > 0) {
                 value={`${scoreSettings.championPoints} ${t.points}`}
               />
             </div>
-
+<div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+  <RulePill
+    label={t.extras.first_goal_scorer_world}
+    value={`${scoreSettings.firstGoalScorerWorldPoints} ${t.points}`}
+  />
+  <RulePill
+    label={t.extras.first_goal_scorer_spain}
+    value={`${scoreSettings.firstGoalScorerSpainPoints} ${t.points}`}
+  />
+  <RulePill
+    label={t.extras.golden_boot}
+    value={`${scoreSettings.goldenBootPoints} ${t.points}`}
+  />
+  <RulePill
+    label={t.extras.golden_ball}
+    value={`${scoreSettings.goldenBallPoints} ${t.points}`}
+  />
+  <RulePill
+    label={t.extras.best_young_player}
+    value={`${scoreSettings.bestYoungPlayerPoints} ${t.points}`}
+  />
+  <RulePill
+    label={t.extras.golden_glove}
+    value={`${scoreSettings.goldenGlovePoints} ${t.points}`}
+  />
+  <RulePill
+    label={t.extras.top_spanish_scorer}
+    value={`${scoreSettings.topSpanishScorerPoints} ${t.points}`}
+  />
+</div>
             <p className="mt-3 text-sm text-[var(--iberdrola-forest)]/75">
               {t.scoringNote}
             </p>
