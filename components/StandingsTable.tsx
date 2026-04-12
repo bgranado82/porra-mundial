@@ -128,30 +128,30 @@ export default function StandingsTable({ days, standings }: Props) {
       <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white shadow-sm">
         <div className="overflow-x-hidden rounded-3xl">
           {tab === "groups" ? (
-            <table className="w-full table-fixed border-separate border-spacing-0 text-xs md:text-sm">
+            <table className="w-full table-fixed border-separate border-spacing-0 text-[11px] md:text-sm">
               <thead className="sticky top-0 z-20 bg-white shadow-sm">
                 <tr>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 w-[6%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="sticky top-0 z-30 w-[5%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     #
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 w-[16%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="sticky top-0 z-30 w-[14%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:w-[16%] md:px-2"
                   >
                     Jugador
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 w-[14%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="sticky top-0 z-30 w-[10%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:w-[11%] md:px-2"
                   >
                     Empresa
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 w-[10%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="sticky top-0 z-30 w-[8%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:w-[9%] md:px-2"
                   >
                     País
                   </th>
@@ -172,7 +172,7 @@ export default function StandingsTable({ days, standings }: Props) {
 
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 w-[10%] border-b border-l border-gray-200 bg-amber-50 px-1 py-3 text-center font-bold text-slate-700 md:px-2"
+                    className="sticky top-0 z-30 w-[9%] border-b border-l border-gray-200 bg-amber-50 px-1 py-3 text-center font-bold text-slate-700 md:w-[10%] md:px-2"
                   >
                     Variación
                   </th>
@@ -199,17 +199,17 @@ export default function StandingsTable({ days, standings }: Props) {
                     </th>
                   )}
 
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
                     Aciertos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
-                    % acierto
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
+                    %<br />acierto
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
                     Exactos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
-                    % exacto
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
+                    %<br />exacto
                   </th>
                 </tr>
               </thead>
@@ -297,31 +297,31 @@ export default function StandingsTable({ days, standings }: Props) {
               </tbody>
             </table>
           ) : (
-            <table className="w-full table-fixed border-separate border-spacing-0 text-xs md:text-sm">
+            <table className="w-full table-fixed border-separate border-spacing-0 text-[11px] md:text-sm">
               <thead className="sticky top-0 z-20 bg-white shadow-sm">
                 <tr>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 w-[6%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="sticky top-0 z-30 w-[5%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
                     #
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 w-[16%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="sticky top-0 z-30 w-[14%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:w-[16%] md:px-2"
                   >
                     Jugador
                   </th>
 
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 w-[14%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="sticky top-0 z-30 w-[10%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:w-[11%] md:px-2"
                   >
                     Empresa
                   </th>
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 w-[10%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
+                    className="sticky top-0 z-30 w-[8%] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:w-[9%] md:px-2"
                   >
                     País
                   </th>
@@ -342,7 +342,7 @@ export default function StandingsTable({ days, standings }: Props) {
 
                   <th
                     rowSpan={2}
-                    className="sticky top-0 z-30 w-[10%] border-b border-l border-gray-200 bg-amber-50 px-1 py-3 text-center font-bold text-slate-700 md:px-2"
+                    className="sticky top-0 z-30 w-[9%] border-b border-l border-gray-200 bg-amber-50 px-1 py-3 text-center font-bold text-slate-700 md:w-[10%] md:px-2"
                   >
                     Variación
                   </th>
@@ -371,17 +371,17 @@ export default function StandingsTable({ days, standings }: Props) {
                     Total
                   </th>
 
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
                     Aciertos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
-                    % acierto
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
+                    %<br />acierto
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
                     Exactos
                   </th>
-                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-3 text-center font-medium whitespace-nowrap md:px-2">
-                    % exacto
+                  <th className="sticky top-[44px] z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium leading-tight md:px-2">
+                    %<br />exacto
                   </th>
                 </tr>
               </thead>
