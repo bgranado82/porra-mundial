@@ -176,11 +176,11 @@ export default function StandingsTable({ days, standings }: Props) {
                   </th>
 
                   <th
-                    colSpan={hasGroupDays ? sortedDays.length + 4 : 4}
-                    className="top-0 z-30 border-b border-l border-gray-200 bg-green-50 px-1 py-2 text-center font-bold text-[var(--iberdrola-forest)] md:px-2"
-                  >
-                    Puntos
-                  </th>
+  colSpan={hasGroupDays ? sortedDays.length + 4 : 4}
+  className="top-0 z-30 border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-2 text-center font-bold text-white md:px-2"
+>
+  Puntos
+</th>
 
                   <th
                     colSpan={4}
@@ -205,7 +205,7 @@ export default function StandingsTable({ days, standings }: Props) {
   ) : null}
 
   {/* ✅ NUEVO: TOTAL JORNADAS */}
-  <th className="top-[44px] z-30 w-[95px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
+  <th className="top-[44px] z-30 w-[95px] border-b border-l border-gray-200 bg-sky-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
     Total<br />jornadas
   </th>
 
@@ -282,7 +282,7 @@ export default function StandingsTable({ days, standings }: Props) {
                           {sortedDays.map((day) => (
                             <td
                               key={day}
-                              className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2"
+                              className="border-b border-l border-gray-100 bg-sky-50 px-1 py-3 text-center md:px-2"
                             >
                               {row.day_points[String(day)] ?? 0}
                             </td>
