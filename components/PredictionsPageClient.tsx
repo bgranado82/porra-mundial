@@ -1044,41 +1044,57 @@ if (extraRows.length > 0) {
                 value={`${scoreSettings.championPoints} ${t.points}`}
               />
             </div>
-<div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-  <RulePill
-    label={t.extras.first_goal_scorer_world}
-    value={`${scoreSettings.firstGoalScorerWorldPoints} ${t.points}`}
-  />
-  <RulePill
-    label={t.extras.first_goal_scorer_spain}
-    value={`${scoreSettings.firstGoalScorerSpainPoints} ${t.points}`}
-  />
-  <RulePill
-    label={t.extras.golden_boot}
-    value={`${scoreSettings.goldenBootPoints} ${t.points}`}
-  />
-  <RulePill
-    label={t.extras.golden_ball}
-    value={`${scoreSettings.goldenBallPoints} ${t.points}`}
-  />
-  <RulePill
-    label={t.extras.best_young_player}
-    value={`${scoreSettings.bestYoungPlayerPoints} ${t.points}`}
-  />
-  <RulePill
-    label={t.extras.golden_glove}
-    value={`${scoreSettings.goldenGlovePoints} ${t.points}`}
-  />
-  <RulePill
-    label={t.extras.top_spanish_scorer}
-    value={`${scoreSettings.topSpanishScorerPoints} ${t.points}`}
-  />
-</div>
+
             <p className="mt-3 text-sm text-[var(--iberdrola-forest)]/75">
               {t.scoringNote}
             </p>
           </div>
         </section>
+
+
+<section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+  <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+    <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+      Preguntas extra
+    </h2>
+    <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+      Puntuación de premios individuales y goleadores.
+    </p>
+  </div>
+
+  <div className="p-4">
+    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <RulePill
+        label={t.extras.first_goal_scorer_world}
+        value={`${scoreSettings.firstGoalScorerWorldPoints} ${t.points}`}
+      />
+      <RulePill
+        label={t.extras.first_goal_scorer_spain}
+        value={`${scoreSettings.firstGoalScorerSpainPoints} ${t.points}`}
+      />
+      <RulePill
+        label={t.extras.golden_boot}
+        value={`${scoreSettings.goldenBootPoints} ${t.points}`}
+      />
+      <RulePill
+        label={t.extras.golden_ball}
+        value={`${scoreSettings.goldenBallPoints} ${t.points}`}
+      />
+      <RulePill
+        label={t.extras.best_young_player}
+        value={`${scoreSettings.bestYoungPlayerPoints} ${t.points}`}
+      />
+      <RulePill
+        label={t.extras.golden_glove}
+        value={`${scoreSettings.goldenGlovePoints} ${t.points}`}
+      />
+      <RulePill
+        label={t.extras.top_spanish_scorer}
+        value={`${scoreSettings.topSpanishScorerPoints} ${t.points}`}
+      />
+    </div>
+  </div>
+</section>
 
         <div className="space-y-4">
           {groups.map((groupCode) => {
