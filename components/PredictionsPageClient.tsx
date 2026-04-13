@@ -952,6 +952,8 @@ const extraPointsTotal = useMemo(() => {
                 </div>
                 <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
                   Consulta rápida de la clasificación general actual.
+                                  </div>
+
                   {lastStandingsUpdate ? (
   <div className="mt-2 text-xs font-medium text-[var(--iberdrola-forest)]/55">
     Última actualización:{" "}
@@ -963,7 +965,6 @@ const extraPointsTotal = useMemo(() => {
     })}
   </div>
 ) : null}
-                </div>
               </div>
 
               {poolId && activeEntryId && poolSlug ? (
