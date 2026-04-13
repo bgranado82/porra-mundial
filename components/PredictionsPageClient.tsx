@@ -23,6 +23,7 @@ import { KnockoutPredictionMap, Match } from "@/types";
 import { TIMEZONE_OPTIONS, TimezoneValue } from "@/lib/timezone";
 import { createClient } from "@/utils/supabase/client";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
+import GroupMatchCompactRow from "@/components/GroupMatchCompactRow";
 
 
 type PredictionMap = Record<
@@ -1177,52 +1178,101 @@ const extraPointsTotal = useMemo(() => {
     </div>
 
     <div className="p-4">
-      <div className="space-y-2">
-        {orderedGroupMatches.map((match) => {
-          const homeTeam = teamMap.get(match.homeTeamId ?? "");
-          const awayTeam = teamMap.get(match.awayTeamId ?? "");
+      <div className="hidden xl:block rounded-2xl border border-[var(--iberdrola-sky)] bg-white overflow-hidden">
+  <div className="grid grid-cols-[72px_64px_120px_minmax(360px,1fr)_120px_92px] gap-3 bg-[var(--iberdrola-sand)]/35 px-3 py-3 text-xs font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
+    <div>Día</div>
+    <div>Grupo</div>
+    <div>Fecha</div>
+    <div>Pronóstico</div>
+    <div>Rdo oficial</div>
+    <div className="text-right">Puntos</div>
+  </div>
 
-          if (!homeTeam || !awayTeam) return null;
+  {orderedGroupMatches.map((match) => {
+    const homeTeam = teamMap.get(match.homeTeamId ?? "");
+    const awayTeam = teamMap.get(match.awayTeamId ?? "");
 
-          const prediction = predictions[match.id] ?? {
-            homeGoals: null,
-            awayGoals: null,
-          };
+    if (!homeTeam || !awayTeam) return null;
 
-          const score = calculateMatchPredictionScore(
-            match.homeGoals,
-            match.awayGoals,
-            prediction.homeGoals,
-            prediction.awayGoals,
-            scoreSettings
-          );
+    const prediction = predictions[match.id] ?? {
+      homeGoals: null,
+      awayGoals: null,
+    };
 
-          return (
-            <GroupMatchRow
-              key={match.id}
-              matchNumber={match.matchNumber}
-              kickoff={match.kickoff ?? null}
-              timeZone={timeZone}
-              homeTeam={homeTeam}
-              awayTeam={awayTeam}
-              homePrediction={prediction.homeGoals}
-              awayPrediction={prediction.awayGoals}
-              officialHomeGoals={match.homeGoals}
-              officialAwayGoals={match.awayGoals}
-              points={score.points}
-              pointsShortLabel={t.pointsShort}
-              officialLabel={t.officialLabel}
-              officialPendingLabel={t.officialPending}
-              onChangeHome={(value) =>
-                updatePrediction(match.id, "homeGoals", value)
-              }
-              onChangeAway={(value) =>
-                updatePrediction(match.id, "awayGoals", value)
-              }
-            />
-          );
-        })}
-      </div>
+    const score = calculateMatchPredictionScore(
+      match.homeGoals,
+      match.awayGoals,
+      prediction.homeGoals,
+      prediction.awayGoals,
+      scoreSettings
+    );
+
+    return (
+      <GroupMatchCompactRow
+        key={match.id}
+        day={match.day}
+        group={match.group ?? null}
+        kickoff={match.kickoff ?? null}
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        homePrediction={prediction.homeGoals}
+        awayPrediction={prediction.awayGoals}
+        officialHomeGoals={match.homeGoals}
+        officialAwayGoals={match.awayGoals}
+        points={score.points}
+        onChangeHome={(value) => updatePrediction(match.id, "homeGoals", value)}
+        onChangeAway={(value) => updatePrediction(match.id, "awayGoals", value)}
+      />
+    );
+  })}
+</div>
+
+<div className="space-y-2 xl:hidden">
+  {orderedGroupMatches.map((match) => {
+    const homeTeam = teamMap.get(match.homeTeamId ?? "");
+    const awayTeam = teamMap.get(match.awayTeamId ?? "");
+
+    if (!homeTeam || !awayTeam) return null;
+
+    const prediction = predictions[match.id] ?? {
+      homeGoals: null,
+      awayGoals: null,
+    };
+
+    const score = calculateMatchPredictionScore(
+      match.homeGoals,
+      match.awayGoals,
+      prediction.homeGoals,
+      prediction.awayGoals,
+      scoreSettings
+    );
+
+    return (
+      <GroupMatchRow
+        key={match.id}
+        matchNumber={match.matchNumber}
+        kickoff={match.kickoff ?? null}
+        timeZone={timeZone}
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        homePrediction={prediction.homeGoals}
+        awayPrediction={prediction.awayGoals}
+        officialHomeGoals={match.homeGoals}
+        officialAwayGoals={match.awayGoals}
+        points={score.points}
+        pointsShortLabel={t.pointsShort}
+        officialLabel={t.officialLabel}
+        officialPendingLabel={t.officialPending}
+        onChangeHome={(value) =>
+          updatePrediction(match.id, "homeGoals", value)
+        }
+        onChangeAway={(value) =>
+          updatePrediction(match.id, "awayGoals", value)
+        }
+      />
+    );
+  })}
+</div>
     </div>
   </section>
 
