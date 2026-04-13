@@ -1165,18 +1165,18 @@ const extraPointsTotal = useMemo(() => {
   </div>
 </section>
 
-       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-  <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-    <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-      Fase de grupos
-    </h2>
-    <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-      Partidos en orden cronológico y clasificaciones actualizadas por grupo.
-    </p>
-  </div>
+   <div className="grid gap-4 xl:grid-cols-[1.65fr_0.95fr]">
+  <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+    <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+      <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+        Fase de grupos
+      </h2>
+      <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+        Partidos en orden cronológico.
+      </p>
+    </div>
 
-  <div className="p-4">
-    <div className="grid gap-4 xl:grid-cols-[1.65fr_0.95fr]">
+    <div className="p-4">
       <div className="space-y-2">
         {orderedGroupMatches.map((match) => {
           const homeTeam = teamMap.get(match.homeTeamId ?? "");
@@ -1223,34 +1223,45 @@ const extraPointsTotal = useMemo(() => {
           );
         })}
       </div>
-
-      <div className="space-y-3 xl:sticky xl:top-4 self-start">
-        {standingsByGroup.map(({ groupCode, rows }) => (
-          <div
-            key={groupCode}
-            className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
-          >
-            <GroupStandingsTable
-              title={`${t.group} ${groupCode}`}
-              rows={rows}
-              labels={{
-                team: t.team,
-                played: t.played,
-                won: t.won,
-                drawn: t.drawn,
-                lost: t.lost,
-                goalsFor: t.goalsFor,
-                goalsAgainst: t.goalsAgainst,
-                goalDifference: t.goalDifference,
-                pointsShort: t.pointsShort,
-              }}
-            />
-          </div>
-        ))}
-      </div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm xl:sticky xl:top-4 self-start">
+    <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+      <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+        Clasificaciones
+      </h2>
+      <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+        Clasificación actualizada por grupo.
+      </p>
+    </div>
+
+    <div className="p-4 space-y-3">
+      {standingsByGroup.map(({ groupCode, rows }) => (
+        <div
+          key={groupCode}
+          className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
+        >
+          <GroupStandingsTable
+            title={`${t.group} ${groupCode}`}
+            rows={rows}
+            labels={{
+              team: t.team,
+              played: t.played,
+              won: t.won,
+              drawn: t.drawn,
+              lost: t.lost,
+              goalsFor: t.goalsFor,
+              goalsAgainst: t.goalsAgainst,
+              goalDifference: t.goalDifference,
+              pointsShort: t.pointsShort,
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  </section>
+</div>
 
         <ThirdPlaceTable
           title={`${t.bestThirdPlaced}`}
