@@ -167,6 +167,38 @@ export default function AdminPageClient() {
     [officialMatches, groups, knockoutResults]
   );
 
+  useEffect(() => {
+  const allMatches = [
+    ...realBracket.round32,
+    ...realBracket.round16,
+    ...realBracket.quarterfinals,
+    ...realBracket.semifinals,
+    ...realBracket.finals,
+  ];
+
+  setKnockoutResults((prev) => {
+    const next = { ...prev };
+    let changed = false;
+
+    for (const match of allMatches) {
+      const validTeamIds = [match.homeTeamId, match.awayTeamId].filter(
+        Boolean
+      ) as string[];
+
+      const currentPick = next[match.id];
+
+      if (!currentPick) continue;
+
+      if (!validTeamIds.includes(currentPick)) {
+        delete next[match.id];
+        changed = true;
+      }
+    }
+
+    return changed ? next : prev;
+  });
+}, [realBracket]);
+
   const loadOfficialResults = useCallback(async () => {
     setLoading(true);
     setMessage("");
