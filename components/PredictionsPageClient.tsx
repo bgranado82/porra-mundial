@@ -709,6 +709,33 @@ if (extraRows.length > 0) {
     [predictedGroupMatches, groups]
   );
 
+const orderedGroupMatches = useMemo(
+  () =>
+    officialMatches
+      .filter((match) => match.stage === "group")
+      .sort((a, b) => {
+        if ((a.order ?? 0) !== (b.order ?? 0)) {
+          return (a.order ?? 0) - (b.order ?? 0);
+        }
+        return (a.matchNumber ?? 0) - (b.matchNumber ?? 0);
+      }),
+  [officialMatches]
+);
+
+const standingsByGroup = useMemo(
+  () =>
+    groups.map((groupCode) => ({
+      groupCode,
+      rows: calculatePredictedStandings(
+        teams,
+        officialMatches,
+        predictions,
+        groupCode
+      ),
+    })),
+  [groups, officialMatches, predictions]
+);
+
   const userBracket = useMemo(
     () =>
       buildUserKnockoutBracket(
@@ -1137,102 +1164,92 @@ const extraPointsTotal = useMemo(() => {
   </div>
 </section>
 
-        <div className="space-y-4">
-          {groups.map((groupCode) => {
-            const groupMatches = officialMatches.filter(
-              (match) => match.stage === "group" && match.group === groupCode
-            );
+       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+  <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+    <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+      Fase de grupos
+    </h2>
+    <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+      Partidos en orden cronológico y clasificaciones actualizadas por grupo.
+    </p>
+  </div>
 
-            const predictedStandings = calculatePredictedStandings(
-              teams,
-              officialMatches,
-              predictions,
-              groupCode
-            );
+  <div className="p-4">
+    <div className="grid gap-4 xl:grid-cols-[1.65fr_0.95fr]">
+      <div className="space-y-2">
+        {orderedGroupMatches.map((match) => {
+          const homeTeam = teamMap.get(match.homeTeamId ?? "");
+          const awayTeam = teamMap.get(match.awayTeamId ?? "");
 
-            return (
-              <section
-                key={groupCode}
-                className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm"
-              >
-                <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-                  <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-                    {t.group} {groupCode}
-                  </h2>
-                </div>
+          if (!homeTeam || !awayTeam) return null;
 
-                <div className="p-4">
-                  <div className="grid gap-4 2xl:grid-cols-[1.2fr_0.8fr]">
-                    <div className="space-y-2">
-                      {groupMatches.map((match) => {
-                        const homeTeam = teamMap.get(match.homeTeamId ?? "");
-                        const awayTeam = teamMap.get(match.awayTeamId ?? "");
+          const prediction = predictions[match.id] ?? {
+            homeGoals: null,
+            awayGoals: null,
+          };
 
-                        if (!homeTeam || !awayTeam) return null;
+          const score = calculateMatchPredictionScore(
+            match.homeGoals,
+            match.awayGoals,
+            prediction.homeGoals,
+            prediction.awayGoals,
+            scoreSettings
+          );
 
-                        const prediction = predictions[match.id] ?? {
-                          homeGoals: null,
-                          awayGoals: null,
-                        };
+          return (
+            <GroupMatchRow
+              key={match.id}
+              matchNumber={match.matchNumber}
+              kickoff={match.kickoff ?? null}
+              timeZone={timeZone}
+              homeTeam={homeTeam}
+              awayTeam={awayTeam}
+              homePrediction={prediction.homeGoals}
+              awayPrediction={prediction.awayGoals}
+              officialHomeGoals={match.homeGoals}
+              officialAwayGoals={match.awayGoals}
+              points={score.points}
+              pointsShortLabel={t.pointsShort}
+              officialLabel={t.officialLabel}
+              officialPendingLabel={t.officialPending}
+              onChangeHome={(value) =>
+                updatePrediction(match.id, "homeGoals", value)
+              }
+              onChangeAway={(value) =>
+                updatePrediction(match.id, "awayGoals", value)
+              }
+            />
+          );
+        })}
+      </div>
 
-                        const score = calculateMatchPredictionScore(
-                          match.homeGoals,
-                          match.awayGoals,
-                          prediction.homeGoals,
-                          prediction.awayGoals,
-                          scoreSettings
-                        );
-
-                        return (
-                          <GroupMatchRow
-                            key={match.id}
-                            matchNumber={match.matchNumber}
-                            kickoff={match.kickoff ?? null}
-                            timeZone={timeZone}
-                            homeTeam={homeTeam}
-                            awayTeam={awayTeam}
-                            homePrediction={prediction.homeGoals}
-                            awayPrediction={prediction.awayGoals}
-                            officialHomeGoals={match.homeGoals}
-                            officialAwayGoals={match.awayGoals}
-                            points={score.points}
-                            pointsShortLabel={t.pointsShort}
-                            officialLabel={t.officialLabel}
-                            officialPendingLabel={t.officialPending}
-                            onChangeHome={(value) =>
-                              updatePrediction(match.id, "homeGoals", value)
-                            }
-                            onChangeAway={(value) =>
-                              updatePrediction(match.id, "awayGoals", value)
-                            }
-                          />
-                        );
-                      })}
-                    </div>
-
-                    <div className="min-w-0">
-                      <GroupStandingsTable
-                        title={t.predictedStandings}
-                        rows={predictedStandings}
-                        labels={{
-                          team: t.team,
-                          played: t.played,
-                          won: t.won,
-                          drawn: t.drawn,
-                          lost: t.lost,
-                          goalsFor: t.goalsFor,
-                          goalsAgainst: t.goalsAgainst,
-                          goalDifference: t.goalDifference,
-                          pointsShort: t.pointsShort,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </section>
-            );
-          })}
-        </div>
+      <div className="space-y-3 xl:sticky xl:top-4 self-start">
+        {standingsByGroup.map(({ groupCode, rows }) => (
+          <div
+            key={groupCode}
+            className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
+          >
+            <GroupStandingsTable
+              title={`${t.group} ${groupCode}`}
+              rows={rows}
+              labels={{
+                team: t.team,
+                played: t.played,
+                won: t.won,
+                drawn: t.drawn,
+                lost: t.lost,
+                goalsFor: t.goalsFor,
+                goalsAgainst: t.goalsAgainst,
+                goalDifference: t.goalDifference,
+                pointsShort: t.pointsShort,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
 
         <ThirdPlaceTable
           title={`${t.bestThirdPlaced}`}

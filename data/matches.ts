@@ -2,101 +2,93 @@ import { Match } from "@/types";
 import { getKickoff } from "@/lib/getKickoff";
 
 const baseMatches: Match[] = [
-  // ===== GRUPO A =====
+  // ===== FASE DE GRUPOS · ORDEN CRONOLÓGICO =====
   { id: "a1", stage: "group", group: "A", day: 1, order: 1, homeTeamId: "mex", awayTeamId: "rsa", homeGoals: null, awayGoals: null },
-  { id: "a2", stage: "group", group: "A", day: 1, order: 2, homeTeamId: "kor", awayTeamId: "cze", homeGoals: null, awayGoals: null },
-  { id: "a3", stage: "group", group: "A", day: 8, order: 3, homeTeamId: "cze", awayTeamId: "rsa", homeGoals: null, awayGoals: null },
-  { id: "a4", stage: "group", group: "A", day: 8, order: 4, homeTeamId: "mex", awayTeamId: "kor", homeGoals: null, awayGoals: null },
-  { id: "a5", stage: "group", group: "A", day: 14, order: 5, homeTeamId: "cze", awayTeamId: "mex", homeGoals: null, awayGoals: null },
-  { id: "a6", stage: "group", group: "A", day: 14, order: 6, homeTeamId: "rsa", awayTeamId: "kor", homeGoals: null, awayGoals: null },
+  { id: "a2", stage: "group", group: "A", day: 2, order: 2, homeTeamId: "kor", awayTeamId: "cze", homeGoals: null, awayGoals: null },
+  { id: "b1", stage: "group", group: "B", day: 2, order: 3, homeTeamId: "can", awayTeamId: "bih", homeGoals: null, awayGoals: null },
+  { id: "d1", stage: "group", group: "D", day: 3, order: 4, homeTeamId: "usa", awayTeamId: "par", homeGoals: null, awayGoals: null },
+  { id: "b2", stage: "group", group: "B", day: 3, order: 5, homeTeamId: "qat", awayTeamId: "sui", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO B =====
-  { id: "b1", stage: "group", group: "B", day: 2, order: 7, homeTeamId: "can", awayTeamId: "bih", homeGoals: null, awayGoals: null },
-  { id: "b2", stage: "group", group: "B", day: 2, order: 8, homeTeamId: "qat", awayTeamId: "sui", homeGoals: null, awayGoals: null },
-  { id: "b3", stage: "group", group: "B", day: 8, order: 9, homeTeamId: "sui", awayTeamId: "bih", homeGoals: null, awayGoals: null },
-  { id: "b4", stage: "group", group: "B", day: 8, order: 10, homeTeamId: "can", awayTeamId: "qat", homeGoals: null, awayGoals: null },
-  { id: "b5", stage: "group", group: "B", day: 14, order: 11, homeTeamId: "sui", awayTeamId: "can", homeGoals: null, awayGoals: null },
-  { id: "b6", stage: "group", group: "B", day: 14, order: 12, homeTeamId: "bih", awayTeamId: "qat", homeGoals: null, awayGoals: null },
+  { id: "c1", stage: "group", group: "C", day: 4, order: 6, homeTeamId: "bra", awayTeamId: "mar", homeGoals: null, awayGoals: null },
+  { id: "c2", stage: "group", group: "C", day: 4, order: 7, homeTeamId: "hai", awayTeamId: "sco", homeGoals: null, awayGoals: null },
+  { id: "d2", stage: "group", group: "D", day: 4, order: 8, homeTeamId: "aus", awayTeamId: "tur", homeGoals: null, awayGoals: null },
+  { id: "e1", stage: "group", group: "E", day: 4, order: 9, homeTeamId: "ger", awayTeamId: "cuw", homeGoals: null, awayGoals: null },
+  { id: "f1", stage: "group", group: "F", day: 4, order: 10, homeTeamId: "ned", awayTeamId: "jpn", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO C =====
-  { id: "c1", stage: "group", group: "C", day: 3, order: 13, homeTeamId: "bra", awayTeamId: "mar", homeGoals: null, awayGoals: null },
-  { id: "c2", stage: "group", group: "C", day: 3, order: 14, homeTeamId: "hai", awayTeamId: "sco", homeGoals: null, awayGoals: null },
-  { id: "c3", stage: "group", group: "C", day: 9, order: 15, homeTeamId: "bra", awayTeamId: "hai", homeGoals: null, awayGoals: null },
-  { id: "c4", stage: "group", group: "C", day: 9, order: 16, homeTeamId: "sco", awayTeamId: "mar", homeGoals: null, awayGoals: null },
-  { id: "c5", stage: "group", group: "C", day: 14, order: 17, homeTeamId: "sco", awayTeamId: "bra", homeGoals: null, awayGoals: null },
-  { id: "c6", stage: "group", group: "C", day: 14, order: 18, homeTeamId: "mar", awayTeamId: "hai", homeGoals: null, awayGoals: null },
+  { id: "e2", stage: "group", group: "E", day: 5, order: 11, homeTeamId: "civ", awayTeamId: "ecu", homeGoals: null, awayGoals: null },
+  { id: "f2", stage: "group", group: "F", day: 5, order: 12, homeTeamId: "swe", awayTeamId: "tun", homeGoals: null, awayGoals: null },
+  { id: "h1", stage: "group", group: "H", day: 5, order: 13, homeTeamId: "esp", awayTeamId: "cpv", homeGoals: null, awayGoals: null },
+  { id: "g1", stage: "group", group: "G", day: 5, order: 14, homeTeamId: "bel", awayTeamId: "egy", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO D =====
-  { id: "d1", stage: "group", group: "D", day: 2, order: 19, homeTeamId: "usa", awayTeamId: "par", homeGoals: null, awayGoals: null },
-  { id: "d2", stage: "group", group: "D", day: 2, order: 20, homeTeamId: "aus", awayTeamId: "tur", homeGoals: null, awayGoals: null },
-  { id: "d3", stage: "group", group: "D", day: 9, order: 21, homeTeamId: "tur", awayTeamId: "par", homeGoals: null, awayGoals: null },
-  { id: "d4", stage: "group", group: "D", day: 9, order: 22, homeTeamId: "usa", awayTeamId: "aus", homeGoals: null, awayGoals: null },
-  { id: "d5", stage: "group", group: "D", day: 15, order: 23, homeTeamId: "tur", awayTeamId: "usa", homeGoals: null, awayGoals: null },
-  { id: "d6", stage: "group", group: "D", day: 15, order: 24, homeTeamId: "par", awayTeamId: "aus", homeGoals: null, awayGoals: null },
+  { id: "h2", stage: "group", group: "H", day: 6, order: 15, homeTeamId: "ksa", awayTeamId: "uru", homeGoals: null, awayGoals: null },
+  { id: "g2", stage: "group", group: "G", day: 6, order: 16, homeTeamId: "irn", awayTeamId: "nzl", homeGoals: null, awayGoals: null },
+  { id: "i1", stage: "group", group: "I", day: 6, order: 17, homeTeamId: "fra", awayTeamId: "sen", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO E =====
-  { id: "e1", stage: "group", group: "E", day: 4, order: 25, homeTeamId: "ger", awayTeamId: "cuw", homeGoals: null, awayGoals: null },
-  { id: "e2", stage: "group", group: "E", day: 4, order: 26, homeTeamId: "civ", awayTeamId: "ecu", homeGoals: null, awayGoals: null },
-  { id: "e3", stage: "group", group: "E", day: 10, order: 27, homeTeamId: "ger", awayTeamId: "civ", homeGoals: null, awayGoals: null },
-  { id: "e4", stage: "group", group: "E", day: 10, order: 28, homeTeamId: "ecu", awayTeamId: "cuw", homeGoals: null, awayGoals: null },
-  { id: "e5", stage: "group", group: "E", day: 15, order: 29, homeTeamId: "ecu", awayTeamId: "ger", homeGoals: null, awayGoals: null },
-  { id: "e6", stage: "group", group: "E", day: 15, order: 30, homeTeamId: "cuw", awayTeamId: "civ", homeGoals: null, awayGoals: null },
+  { id: "i2", stage: "group", group: "I", day: 7, order: 18, homeTeamId: "irq", awayTeamId: "nor", homeGoals: null, awayGoals: null },
+  { id: "j1", stage: "group", group: "J", day: 7, order: 19, homeTeamId: "arg", awayTeamId: "alg", homeGoals: null, awayGoals: null },
+  { id: "j2", stage: "group", group: "J", day: 7, order: 20, homeTeamId: "aut", awayTeamId: "jor", homeGoals: null, awayGoals: null },
+  { id: "k1", stage: "group", group: "K", day: 7, order: 21, homeTeamId: "por", awayTeamId: "cod", homeGoals: null, awayGoals: null },
+  { id: "l1", stage: "group", group: "L", day: 7, order: 22, homeTeamId: "eng", awayTeamId: "cro", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO F =====
-  { id: "f1", stage: "group", group: "F", day: 4, order: 31, homeTeamId: "ned", awayTeamId: "jpn", homeGoals: null, awayGoals: null },
-  { id: "f2", stage: "group", group: "F", day: 4, order: 32, homeTeamId: "swe", awayTeamId: "tun", homeGoals: null, awayGoals: null },
-  { id: "f3", stage: "group", group: "F", day: 10, order: 33, homeTeamId: "ned", awayTeamId: "swe", homeGoals: null, awayGoals: null },
-  { id: "f4", stage: "group", group: "F", day: 10, order: 34, homeTeamId: "tun", awayTeamId: "jpn", homeGoals: null, awayGoals: null },
-  { id: "f5", stage: "group", group: "F", day: 15, order: 35, homeTeamId: "tun", awayTeamId: "ned", homeGoals: null, awayGoals: null },
-  { id: "f6", stage: "group", group: "F", day: 15, order: 36, homeTeamId: "jpn", awayTeamId: "swe", homeGoals: null, awayGoals: null },
+  { id: "k2", stage: "group", group: "K", day: 8, order: 23, homeTeamId: "uzb", awayTeamId: "col", homeGoals: null, awayGoals: null },
+  { id: "l2", stage: "group", group: "L", day: 8, order: 24, homeTeamId: "gha", awayTeamId: "pan", homeGoals: null, awayGoals: null },
+  { id: "a3", stage: "group", group: "A", day: 8, order: 25, homeTeamId: "cze", awayTeamId: "rsa", homeGoals: null, awayGoals: null },
+  { id: "a4", stage: "group", group: "A", day: 8, order: 26, homeTeamId: "mex", awayTeamId: "kor", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO G =====
-  { id: "g1", stage: "group", group: "G", day: 5, order: 37, homeTeamId: "bel", awayTeamId: "egy", homeGoals: null, awayGoals: null },
-  { id: "g2", stage: "group", group: "G", day: 5, order: 38, homeTeamId: "irn", awayTeamId: "nzl", homeGoals: null, awayGoals: null },
-  { id: "g3", stage: "group", group: "G", day: 11, order: 39, homeTeamId: "bel", awayTeamId: "irn", homeGoals: null, awayGoals: null },
+  { id: "b3", stage: "group", group: "B", day: 9, order: 27, homeTeamId: "sui", awayTeamId: "bih", homeGoals: null, awayGoals: null },
+  { id: "b4", stage: "group", group: "B", day: 9, order: 28, homeTeamId: "can", awayTeamId: "qat", homeGoals: null, awayGoals: null },
+  { id: "c3", stage: "group", group: "C", day: 9, order: 29, homeTeamId: "bra", awayTeamId: "hai", homeGoals: null, awayGoals: null },
+  { id: "c4", stage: "group", group: "C", day: 9, order: 30, homeTeamId: "sco", awayTeamId: "mar", homeGoals: null, awayGoals: null },
+  { id: "d3", stage: "group", group: "D", day: 9, order: 31, homeTeamId: "tur", awayTeamId: "par", homeGoals: null, awayGoals: null },
+  { id: "d4", stage: "group", group: "D", day: 9, order: 32, homeTeamId: "usa", awayTeamId: "aus", homeGoals: null, awayGoals: null },
+
+  { id: "e3", stage: "group", group: "E", day: 10, order: 33, homeTeamId: "ger", awayTeamId: "civ", homeGoals: null, awayGoals: null },
+  { id: "e4", stage: "group", group: "E", day: 10, order: 34, homeTeamId: "ecu", awayTeamId: "cuw", homeGoals: null, awayGoals: null },
+  { id: "f3", stage: "group", group: "F", day: 10, order: 35, homeTeamId: "ned", awayTeamId: "swe", homeGoals: null, awayGoals: null },
+  { id: "f4", stage: "group", group: "F", day: 10, order: 36, homeTeamId: "tun", awayTeamId: "jpn", homeGoals: null, awayGoals: null },
+
+  { id: "h3", stage: "group", group: "H", day: 11, order: 37, homeTeamId: "esp", awayTeamId: "ksa", homeGoals: null, awayGoals: null },
+  { id: "g3", stage: "group", group: "G", day: 11, order: 38, homeTeamId: "bel", awayTeamId: "irn", homeGoals: null, awayGoals: null },
+  { id: "h4", stage: "group", group: "H", day: 11, order: 39, homeTeamId: "uru", awayTeamId: "cpv", homeGoals: null, awayGoals: null },
   { id: "g4", stage: "group", group: "G", day: 11, order: 40, homeTeamId: "nzl", awayTeamId: "egy", homeGoals: null, awayGoals: null },
-  { id: "g5", stage: "group", group: "G", day: 16, order: 41, homeTeamId: "nzl", awayTeamId: "bel", homeGoals: null, awayGoals: null },
-  { id: "g6", stage: "group", group: "G", day: 16, order: 42, homeTeamId: "egy", awayTeamId: "irn", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO H =====
-  { id: "h1", stage: "group", group: "H", day: 5, order: 43, homeTeamId: "esp", awayTeamId: "cpv", homeGoals: null, awayGoals: null },
-  { id: "h2", stage: "group", group: "H", day: 5, order: 44, homeTeamId: "ksa", awayTeamId: "uru", homeGoals: null, awayGoals: null },
-  { id: "h3", stage: "group", group: "H", day: 11, order: 45, homeTeamId: "esp", awayTeamId: "ksa", homeGoals: null, awayGoals: null },
-  { id: "h4", stage: "group", group: "H", day: 11, order: 46, homeTeamId: "uru", awayTeamId: "cpv", homeGoals: null, awayGoals: null },
-  { id: "h5", stage: "group", group: "H", day: 16, order: 47, homeTeamId: "uru", awayTeamId: "esp", homeGoals: null, awayGoals: null },
-  { id: "h6", stage: "group", group: "H", day: 16, order: 48, homeTeamId: "cpv", awayTeamId: "ksa", homeGoals: null, awayGoals: null },
+  { id: "i3", stage: "group", group: "I", day: 12, order: 41, homeTeamId: "fra", awayTeamId: "irq", homeGoals: null, awayGoals: null },
+  { id: "i4", stage: "group", group: "I", day: 12, order: 42, homeTeamId: "nor", awayTeamId: "sen", homeGoals: null, awayGoals: null },
+  { id: "j3", stage: "group", group: "J", day: 12, order: 43, homeTeamId: "arg", awayTeamId: "aut", homeGoals: null, awayGoals: null },
+  { id: "j4", stage: "group", group: "J", day: 12, order: 44, homeTeamId: "jor", awayTeamId: "alg", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO I =====
-  { id: "i1", stage: "group", group: "I", day: 6, order: 49, homeTeamId: "fra", awayTeamId: "sen", homeGoals: null, awayGoals: null },
-  { id: "i2", stage: "group", group: "I", day: 6, order: 50, homeTeamId: "irq", awayTeamId: "nor", homeGoals: null, awayGoals: null },
-  { id: "i3", stage: "group", group: "I", day: 12, order: 51, homeTeamId: "fra", awayTeamId: "irq", homeGoals: null, awayGoals: null },
-  { id: "i4", stage: "group", group: "I", day: 12, order: 52, homeTeamId: "nor", awayTeamId: "sen", homeGoals: null, awayGoals: null },
-  { id: "i5", stage: "group", group: "I", day: 16, order: 53, homeTeamId: "nor", awayTeamId: "fra", homeGoals: null, awayGoals: null },
-  { id: "i6", stage: "group", group: "I", day: 16, order: 54, homeTeamId: "sen", awayTeamId: "irq", homeGoals: null, awayGoals: null },
+  { id: "k3", stage: "group", group: "K", day: 13, order: 45, homeTeamId: "por", awayTeamId: "uzb", homeGoals: null, awayGoals: null },
+  { id: "l3", stage: "group", group: "L", day: 13, order: 46, homeTeamId: "eng", awayTeamId: "gha", homeGoals: null, awayGoals: null },
+  { id: "k4", stage: "group", group: "K", day: 13, order: 47, homeTeamId: "col", awayTeamId: "cod", homeGoals: null, awayGoals: null },
+  { id: "l4", stage: "group", group: "L", day: 13, order: 48, homeTeamId: "pan", awayTeamId: "cro", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO J =====
-  { id: "j1", stage: "group", group: "J", day: 6, order: 55, homeTeamId: "arg", awayTeamId: "alg", homeGoals: null, awayGoals: null },
-  { id: "j2", stage: "group", group: "J", day: 6, order: 56, homeTeamId: "aut", awayTeamId: "jor", homeGoals: null, awayGoals: null },
-  { id: "j3", stage: "group", group: "J", day: 12, order: 57, homeTeamId: "arg", awayTeamId: "aut", homeGoals: null, awayGoals: null },
-  { id: "j4", stage: "group", group: "J", day: 12, order: 58, homeTeamId: "jor", awayTeamId: "alg", homeGoals: null, awayGoals: null },
-  { id: "j5", stage: "group", group: "J", day: 17, order: 59, homeTeamId: "jor", awayTeamId: "arg", homeGoals: null, awayGoals: null },
-  { id: "j6", stage: "group", group: "J", day: 17, order: 60, homeTeamId: "alg", awayTeamId: "aut", homeGoals: null, awayGoals: null },
+  { id: "a5", stage: "group", group: "A", day: 14, order: 49, homeTeamId: "cze", awayTeamId: "mex", homeGoals: null, awayGoals: null },
+  { id: "a6", stage: "group", group: "A", day: 14, order: 50, homeTeamId: "rsa", awayTeamId: "kor", homeGoals: null, awayGoals: null },
+  { id: "c5", stage: "group", group: "C", day: 14, order: 51, homeTeamId: "sco", awayTeamId: "bra", homeGoals: null, awayGoals: null },
+  { id: "c6", stage: "group", group: "C", day: 14, order: 52, homeTeamId: "mar", awayTeamId: "hai", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO K =====
-  { id: "k1", stage: "group", group: "K", day: 7, order: 61, homeTeamId: "por", awayTeamId: "cod", homeGoals: null, awayGoals: null },
-  { id: "k2", stage: "group", group: "K", day: 7, order: 62, homeTeamId: "uzb", awayTeamId: "col", homeGoals: null, awayGoals: null },
-  { id: "k3", stage: "group", group: "K", day: 13, order: 63, homeTeamId: "por", awayTeamId: "uzb", homeGoals: null, awayGoals: null },
-  { id: "k4", stage: "group", group: "K", day: 13, order: 64, homeTeamId: "col", awayTeamId: "cod", homeGoals: null, awayGoals: null },
-  { id: "k5", stage: "group", group: "K", day: 17, order: 65, homeTeamId: "col", awayTeamId: "por", homeGoals: null, awayGoals: null },
-  { id: "k6", stage: "group", group: "K", day: 17, order: 66, homeTeamId: "cod", awayTeamId: "uzb", homeGoals: null, awayGoals: null },
+  { id: "b5", stage: "group", group: "B", day: 15, order: 53, homeTeamId: "sui", awayTeamId: "can", homeGoals: null, awayGoals: null },
+  { id: "b6", stage: "group", group: "B", day: 15, order: 54, homeTeamId: "bih", awayTeamId: "qat", homeGoals: null, awayGoals: null },
+  { id: "d5", stage: "group", group: "D", day: 15, order: 55, homeTeamId: "tur", awayTeamId: "usa", homeGoals: null, awayGoals: null },
+  { id: "d6", stage: "group", group: "D", day: 15, order: 56, homeTeamId: "par", awayTeamId: "aus", homeGoals: null, awayGoals: null },
+  { id: "e5", stage: "group", group: "E", day: 15, order: 57, homeTeamId: "ecu", awayTeamId: "ger", homeGoals: null, awayGoals: null },
+  { id: "e6", stage: "group", group: "E", day: 15, order: 58, homeTeamId: "cuw", awayTeamId: "civ", homeGoals: null, awayGoals: null },
+  { id: "f5", stage: "group", group: "F", day: 15, order: 59, homeTeamId: "tun", awayTeamId: "ned", homeGoals: null, awayGoals: null },
+  { id: "f6", stage: "group", group: "F", day: 15, order: 60, homeTeamId: "jpn", awayTeamId: "swe", homeGoals: null, awayGoals: null },
 
-  // ===== GRUPO L =====
-  { id: "l1", stage: "group", group: "L", day: 7, order: 67, homeTeamId: "eng", awayTeamId: "cro", homeGoals: null, awayGoals: null },
-  { id: "l2", stage: "group", group: "L", day: 7, order: 68, homeTeamId: "gha", awayTeamId: "pan", homeGoals: null, awayGoals: null },
-  { id: "l3", stage: "group", group: "L", day: 13, order: 69, homeTeamId: "eng", awayTeamId: "gha", homeGoals: null, awayGoals: null },
-  { id: "l4", stage: "group", group: "L", day: 13, order: 70, homeTeamId: "pan", awayTeamId: "cro", homeGoals: null, awayGoals: null },
-  { id: "l5", stage: "group", group: "L", day: 17, order: 71, homeTeamId: "pan", awayTeamId: "eng", homeGoals: null, awayGoals: null },
-  { id: "l6", stage: "group", group: "L", day: 17, order: 72, homeTeamId: "cro", awayTeamId: "gha", homeGoals: null, awayGoals: null },
+  { id: "i5", stage: "group", group: "I", day: 16, order: 61, homeTeamId: "nor", awayTeamId: "fra", homeGoals: null, awayGoals: null },
+  { id: "i6", stage: "group", group: "I", day: 16, order: 62, homeTeamId: "sen", awayTeamId: "irq", homeGoals: null, awayGoals: null },
+  { id: "h6", stage: "group", group: "H", day: 17, order: 63, homeTeamId: "cpv", awayTeamId: "ksa", homeGoals: null, awayGoals: null },
+  { id: "h5", stage: "group", group: "H", day: 17, order: 64, homeTeamId: "uru", awayTeamId: "esp", homeGoals: null, awayGoals: null },
+  { id: "g6", stage: "group", group: "G", day: 17, order: 65, homeTeamId: "egy", awayTeamId: "irn", homeGoals: null, awayGoals: null },
+  { id: "g5", stage: "group", group: "G", day: 17, order: 66, homeTeamId: "nzl", awayTeamId: "bel", homeGoals: null, awayGoals: null },
+  { id: "l5", stage: "group", group: "L", day: 17, order: 67, homeTeamId: "pan", awayTeamId: "eng", homeGoals: null, awayGoals: null },
+  { id: "l6", stage: "group", group: "L", day: 17, order: 68, homeTeamId: "cro", awayTeamId: "gha", homeGoals: null, awayGoals: null },
+
+  { id: "k5", stage: "group", group: "K", day: 18, order: 69, homeTeamId: "col", awayTeamId: "por", homeGoals: null, awayGoals: null },
+  { id: "k6", stage: "group", group: "K", day: 18, order: 70, homeTeamId: "cod", awayTeamId: "uzb", homeGoals: null, awayGoals: null },
+  { id: "j6", stage: "group", group: "J", day: 18, order: 71, homeTeamId: "alg", awayTeamId: "aut", homeGoals: null, awayGoals: null },
+  { id: "j5", stage: "group", group: "J", day: 18, order: 72, homeTeamId: "jor", awayTeamId: "arg", homeGoals: null, awayGoals: null },
 
   // ===== ROUND OF 32 PREPARADA =====
   { id: "r32-1", stage: "round32", group: null, day: 18, order: 73, homeTeamId: null, awayTeamId: null, homeGoals: null, awayGoals: null },
@@ -116,7 +108,7 @@ const baseMatches: Match[] = [
   { id: "r32-15", stage: "round32", group: null, day: 23, order: 87, homeTeamId: null, awayTeamId: null, homeGoals: null, awayGoals: null },
   { id: "r32-16", stage: "round32", group: null, day: 23, order: 88, homeTeamId: null, awayTeamId: null, homeGoals: null, awayGoals: null },
 
- // ===== ROUND OF 16 PREPARADA =====
+  // ===== ROUND OF 16 PREPARADA =====
   { id: "r16-1", stage: "round16", group: null, day: 24, order: 89, homeTeamId: null, awayTeamId: null, homeGoals: null, awayGoals: null },
   { id: "r16-2", stage: "round16", group: null, day: 24, order: 90, homeTeamId: null, awayTeamId: null, homeGoals: null, awayGoals: null },
   { id: "r16-3", stage: "round16", group: null, day: 24, order: 91, homeTeamId: null, awayTeamId: null, homeGoals: null, awayGoals: null },
