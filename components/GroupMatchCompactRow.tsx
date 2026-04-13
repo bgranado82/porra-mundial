@@ -50,18 +50,19 @@ export default function GroupMatchCompactRow({
   onChangeAway,
 }: Props) {
   return (
-    <div className="grid grid-cols-[72px_44px_96px_minmax(520px,1fr)_78px_92px] items-center gap-2 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
-      <div className="font-bold text-[var(--iberdrola-forest)]">
-        J{day}
-      </div>
+    <div className="grid grid-cols-[64px_34px_82px_minmax(540px,1fr)_62px_88px] items-center gap-2 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
+      <div className="text-[13px] font-bold text-[var(--iberdrola-forest)]">
+  J{day}
+</div>
 
-      <div className="font-bold text-[var(--iberdrola-forest)]">
-        {group ?? "-"}
-      </div>
+      <div className="text-[13px] font-bold text-[var(--iberdrola-forest)]">
+  {group ?? "-"}
+</div>
 
-      <div className="whitespace-nowrap text-xs font-medium text-[var(--iberdrola-forest)]/70">
-        {formatKickoff(kickoff)}
-      </div>
+
+      <div className="whitespace-nowrap text-[11px] font-medium text-[var(--iberdrola-forest)]/65">
+  {formatKickoff(kickoff)}
+</div>
 
       <div className="grid grid-cols-[minmax(180px,1fr)_auto_minmax(180px,1fr)] items-center gap-3">
         <div className="flex min-w-0 items-center justify-start gap-2">
@@ -103,8 +104,7 @@ export default function GroupMatchCompactRow({
         </div>
       </div>
 
-      <div className="whitespace-nowrap text-[11px] font-semibold text-[var(--iberdrola-forest)]/60">
-        {officialHomeGoals !== null && officialAwayGoals !== null
+<div className="whitespace-nowrap text-[10px] font-semibold text-[var(--iberdrola-forest)]/55">        {officialHomeGoals !== null && officialAwayGoals !== null
           ? `${officialHomeGoals}-${officialAwayGoals}`
           : "-"}
       </div>

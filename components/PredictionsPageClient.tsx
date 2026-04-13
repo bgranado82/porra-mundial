@@ -1179,7 +1179,7 @@ const extraPointsTotal = useMemo(() => {
 
     <div className="p-4">
       <div className="hidden xl:block rounded-2xl border border-[var(--iberdrola-sky)] bg-white overflow-hidden">
-  <div className="grid grid-cols-[72px_44px_96px_minmax(520px,1fr)_78px_92px] gap-3 bg-[var(--iberdrola-sand)]/35 px-3 py-3 text-xs font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
+  <div className="grid grid-cols-[64px_34px_82px_minmax(540px,1fr)_62px_88px] gap-2 bg-[var(--iberdrola-sand)]/35 px-3 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
     <div>Día</div>
     <div>Grupo</div>
     <div>Fecha</div>
