@@ -230,6 +230,7 @@ export async function GET(req: Request) {
     const snapshotTimes = Array.from(
       new Set((snapshots ?? []).map((s: SnapshotRow) => s.captured_at))
     ).sort((a, b) => (a < b ? 1 : -1));
+    const lastUpdate = snapshotTimes[0] ?? null;
 
     const prevTime = snapshotTimes[1];
     const prevMap = new Map<string, number>();
@@ -273,7 +274,7 @@ export async function GET(req: Request) {
       };
     });
 
-    return NextResponse.json({ days, standings });
+    return NextResponse.json({ days, standings, lastUpdate});
   } catch (error) {
     console.error(error);
     return NextResponse.json(

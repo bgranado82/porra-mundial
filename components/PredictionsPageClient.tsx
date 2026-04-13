@@ -235,6 +235,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [submitMessage, setSubmitMessage] = useState("");
   const [standings, setStandings] = useState<StandingSummary[]>([]);
   const [loadingStandings, setLoadingStandings] = useState(false);
+  const [lastStandingsUpdate, setLastStandingsUpdate] = useState<string | null>(null);
   const [extraPredictions, setExtraPredictions] = useState<Record<string, string>>({});
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid">("pending");
   const [officialExtraResults, setOfficialExtraResults] = useState<Record<string, string>>({});
@@ -445,32 +446,34 @@ setExtraPredictions(nextExtraPredictions);
   }, [entryId, supabase]);
 
   useEffect(() => {
-    async function loadStandings() {
-      if (!poolId) return;
+  async function loadStandings() {
+    if (!poolId) return;
 
-      setLoadingStandings(true);
+    setLoadingStandings(true);
 
-      try {
-        const res = await fetch(`/api/standings?poolId=${poolId}`, {
-          cache: "no-store",
-        });
+    try {
+      const res = await fetch(`/api/standings?poolId=${poolId}`, {
+        cache: "no-store",
+      });
 
-        if (!res.ok) {
-          throw new Error("Error cargando clasificación");
-        }
-
-        const data = await res.json();
-        setStandings((data?.standings ?? []) as StandingSummary[]);
-      } catch (err) {
-        console.error(err);
-        setStandings([]);
-      } finally {
-        setLoadingStandings(false);
+      if (!res.ok) {
+        throw new Error("Error cargando clasificación");
       }
-    }
 
-    loadStandings();
-  }, [poolId]);
+      const data = await res.json();
+      setStandings((data?.standings ?? []) as StandingSummary[]);
+      setLastStandingsUpdate(data?.lastUpdate ?? null);
+    } catch (err) {
+      console.error(err);
+      setStandings([]);
+      setLastStandingsUpdate(null);
+    } finally {
+      setLoadingStandings(false);
+    }
+  }
+
+  loadStandings();
+}, [poolId]);
 
   function updatePrediction(
     matchId: string,
@@ -508,21 +511,22 @@ setExtraPredictions(nextExtraPredictions);
 }
 
   async function refreshStandings() {
-    if (!poolId) return;
+  if (!poolId) return;
 
-    try {
-      const res = await fetch(`/api/standings?poolId=${poolId}`, {
-        cache: "no-store",
-      });
+  try {
+    const res = await fetch(`/api/standings?poolId=${poolId}`, {
+      cache: "no-store",
+    });
 
-      if (!res.ok) return;
+    if (!res.ok) return;
 
-      const data = await res.json();
-      setStandings((data?.standings ?? []) as StandingSummary[]);
-    } catch (err) {
-      console.error(err);
-    }
+    const data = await res.json();
+    setStandings((data?.standings ?? []) as StandingSummary[]);
+    setLastStandingsUpdate(data?.lastUpdate ?? null);
+  } catch (err) {
+    console.error(err);
   }
+}
 
   async function handleSaveEntry() {
     if (!activeEntryId) {
@@ -921,6 +925,17 @@ const extraPointsTotal = useMemo(() => {
                 </div>
                 <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
                   Consulta rápida de la clasificación general actual.
+                  {lastStandingsUpdate ? (
+  <div className="mt-2 text-xs font-medium text-[var(--iberdrola-forest)]/55">
+    Última actualización:{" "}
+    {new Date(lastStandingsUpdate).toLocaleString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    })}
+  </div>
+) : null}
                 </div>
               </div>
 
