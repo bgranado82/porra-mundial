@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -55,53 +56,62 @@ export async function POST(req: Request) {
     const groupResults = (body.groupResults ?? []) as GroupResultRow[];
     const knockoutResults = (body.knockoutResults ?? []) as KnockoutResultRow[];
 
-    const { error: deleteGroupOfficialError } = await adminSupabase
-  .from("official_group_results")
-  .delete()
-  .not("match_id", "is", null);
+    // 1. Limpiar resultados oficiales actuales
+    const { error: deleteGroupError } = await adminSupabase
+      .from("official_group_results")
+      .delete()
+      .not("match_id", "is", null);
 
-if (deleteGroupOfficialError) {
-  return NextResponse.json(
-    { error: deleteGroupOfficialError.message },
-    { status: 500 }
-  );
-}
+    if (deleteGroupError) {
+      return NextResponse.json(
+        { error: deleteGroupError.message },
+        { status: 500 }
+      );
+    }
 
-const { error: deleteKnockoutOfficialError } = await adminSupabase
-  .from("official_knockout_results")
-  .delete()
-  .not("match_id", "is", null);
+    const { error: deleteKnockoutError } = await adminSupabase
+      .from("official_knockout_results")
+      .delete()
+      .not("match_id", "is", null);
 
-if (deleteKnockoutOfficialError) {
-  return NextResponse.json(
-    { error: deleteKnockoutOfficialError.message },
-    { status: 500 }
-  );
-}
+    if (deleteKnockoutError) {
+      return NextResponse.json(
+        { error: deleteKnockoutError.message },
+        { status: 500 }
+      );
+    }
 
-if (groupResults.length > 0) {
-  const { error: groupError } = await adminSupabase
-    .from("official_group_results")
-    .insert(groupResults);
+    // 2. Insertar solo lo que venga ahora
+    if (groupResults.length > 0) {
+      const { error: insertGroupError } = await adminSupabase
+        .from("official_group_results")
+        .insert(groupResults);
 
-  if (groupError) {
-    return NextResponse.json({ error: groupError.message }, { status: 500 });
-  }
-}
+      if (insertGroupError) {
+        return NextResponse.json(
+          { error: insertGroupError.message },
+          { status: 500 }
+        );
+      }
+    }
 
-if (knockoutResults.length > 0) {
-  const { error: knockoutError } = await adminSupabase
-    .from("official_knockout_results")
-    .insert(knockoutResults);
+    if (knockoutResults.length > 0) {
+      const { error: insertKnockoutError } = await adminSupabase
+        .from("official_knockout_results")
+        .insert(knockoutResults);
 
-  if (knockoutError) {
-    return NextResponse.json({ error: knockoutError.message }, { status: 500 });
-  }
-}
+      if (insertKnockoutError) {
+        return NextResponse.json(
+          { error: insertKnockoutError.message },
+          { status: 500 }
+        );
+      }
+    }
 
+    // 3. Recalcular puntuaciones desde cero
     const debug = await recalculateScoresAll();
 
-    // Crear snapshot de clasificación tras recalcular
+    // 4. Crear snapshot de clasificación tras recalcular
     const { data: entries, error: entriesError } = await adminSupabase
       .from("entries")
       .select("id, pool_id, name, email");
@@ -188,7 +198,10 @@ if (knockoutResults.length > 0) {
         .insert(snapshotRows);
 
       if (snapshotError) {
-        return NextResponse.json({ error: snapshotError.message }, { status: 500 });
+        return NextResponse.json(
+          { error: snapshotError.message },
+          { status: 500 }
+        );
       }
     }
 

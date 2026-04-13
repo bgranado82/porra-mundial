@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { matches as initialMatches } from "@/data/matches";
@@ -167,60 +167,60 @@ export default function AdminPageClient() {
     [officialMatches, groups, knockoutResults]
   );
 
-  useEffect(() => {
-    async function loadOfficialResults() {
-      setLoading(true);
-      setMessage("");
+  const loadOfficialResults = useCallback(async () => {
+    setLoading(true);
+    setMessage("");
 
-      try {
-        const { data: groupRows, error: groupError } = await supabase
-          .from("official_group_results")
-          .select("match_id, home_goals, away_goals");
+    try {
+      const { data: groupRows, error: groupError } = await supabase
+        .from("official_group_results")
+        .select("match_id, home_goals, away_goals");
 
-        if (groupError) throw groupError;
+      if (groupError) throw groupError;
 
-        const nextGroup: GroupResultMap = {};
-        (groupRows ?? []).forEach((row) => {
-          nextGroup[row.match_id] = {
-            homeGoals: row.home_goals !== null ? String(row.home_goals) : "",
-            awayGoals: row.away_goals !== null ? String(row.away_goals) : "",
-          };
-        });
-        setGroupResults(nextGroup);
+      const nextGroup: GroupResultMap = {};
+      (groupRows ?? []).forEach((row) => {
+        nextGroup[row.match_id] = {
+          homeGoals: row.home_goals !== null ? String(row.home_goals) : "",
+          awayGoals: row.away_goals !== null ? String(row.away_goals) : "",
+        };
+      });
+      setGroupResults(nextGroup);
 
-        const { data: koRows, error: koError } = await supabase
-          .from("official_knockout_results")
-          .select("match_id, picked_team_id");
+      const { data: koRows, error: koError } = await supabase
+        .from("official_knockout_results")
+        .select("match_id, picked_team_id");
 
-        if (koError) throw koError;
+      if (koError) throw koError;
 
-        const nextKO: KnockoutPredictionMap = {};
-        (koRows ?? []).forEach((row) => {
-          nextKO[row.match_id] = row.picked_team_id ?? "";
-        });
-        setKnockoutResults(nextKO);
+      const nextKO: KnockoutPredictionMap = {};
+      (koRows ?? []).forEach((row) => {
+        nextKO[row.match_id] = row.picked_team_id ?? "";
+      });
+      setKnockoutResults(nextKO);
 
-        const { data: extraRows, error: extraError } = await supabase
-          .from("official_extra_results")
-          .select("question_key, official_value");
+      const { data: extraRows, error: extraError } = await supabase
+        .from("official_extra_results")
+        .select("question_key, official_value");
 
-        if (extraError) throw extraError;
+      if (extraError) throw extraError;
 
-        const nextExtras: OfficialExtraResultMap = {};
-        (extraRows ?? []).forEach((row) => {
-          nextExtras[row.question_key] = row.official_value ?? "";
-        });
-        setOfficialExtras(nextExtras);
-      } catch (err) {
-        console.error(err);
-        setMessage("Error cargando resultados.");
-      } finally {
-        setLoading(false);
-      }
+      const nextExtras: OfficialExtraResultMap = {};
+      (extraRows ?? []).forEach((row) => {
+        nextExtras[row.question_key] = row.official_value ?? "";
+      });
+      setOfficialExtras(nextExtras);
+    } catch (err) {
+      console.error(err);
+      setMessage("Error cargando resultados.");
+    } finally {
+      setLoading(false);
     }
-
-    loadOfficialResults();
   }, [supabase]);
+
+  useEffect(() => {
+    loadOfficialResults();
+  }, [loadOfficialResults]);
 
   function updateGroupResult(
     matchId: string,
@@ -281,16 +281,32 @@ export default function AdminPageClient() {
               official_value: value,
             }
           : null;
-      }).filter(Boolean);
+      }).filter(Boolean) as Array<{
+        question_key: string;
+        official_value: string;
+      }>;
 
-      const { error: extrasError } = await supabase
+      const { error: deleteExtrasError } = await supabase
         .from("official_extra_results")
-        .upsert(extraRows, { onConflict: "question_key" });
+        .delete()
+        .not("question_key", "is", null);
 
-      if (extrasError) {
-        console.error(extrasError);
-        setMessage("Error guardando resultados extra.");
+      if (deleteExtrasError) {
+        console.error(deleteExtrasError);
+        setMessage("Error limpiando resultados extra.");
         return;
+      }
+
+      if (extraRows.length > 0) {
+        const { error: extrasError } = await supabase
+          .from("official_extra_results")
+          .insert(extraRows);
+
+        if (extrasError) {
+          console.error(extrasError);
+          setMessage("Error guardando resultados extra.");
+          return;
+        }
       }
 
       const res = await fetch("/api/admin/update-results", {
@@ -312,6 +328,7 @@ export default function AdminPageClient() {
         return;
       }
 
+      await loadOfficialResults();
       setMessage("Resultados y preguntas extra guardados correctamente.");
     } catch (err) {
       console.error(err);
