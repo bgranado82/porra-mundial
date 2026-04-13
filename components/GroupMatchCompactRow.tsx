@@ -1,4 +1,3 @@
-
 "use client";
 
 type Team = {
@@ -51,7 +50,7 @@ export default function GroupMatchCompactRow({
   onChangeAway,
 }: Props) {
   return (
-    <div className="grid grid-cols-[72px_64px_120px_minmax(360px,1fr)_120px_92px] items-center gap-3 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
+    <div className="grid grid-cols-[72px_44px_96px_minmax(520px,1fr)_78px_92px] items-center gap-2 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
       <div className="font-bold text-[var(--iberdrola-forest)]">
         J{day}
       </div>
@@ -60,19 +59,19 @@ export default function GroupMatchCompactRow({
         {group ?? "-"}
       </div>
 
-      <div className="text-xs font-medium text-[var(--iberdrola-forest)]/70">
+      <div className="whitespace-nowrap text-xs font-medium text-[var(--iberdrola-forest)]/70">
         {formatKickoff(kickoff)}
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
+      <div className="grid grid-cols-[minmax(180px,1fr)_auto_minmax(180px,1fr)] items-center gap-3">
+        <div className="flex min-w-0 items-center justify-start gap-2">
           <span className="shrink-0 text-xs">{homeTeam.flag}</span>
-          <span className="truncate font-semibold text-[var(--iberdrola-forest)]">
+          <span className="truncate text-left font-semibold text-[var(--iberdrola-forest)]">
             {homeTeam.name}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <input
             type="number"
             min={0}
@@ -96,7 +95,7 @@ export default function GroupMatchCompactRow({
           />
         </div>
 
-        <div className="flex min-w-0 items-center gap-2 justify-end">
+        <div className="flex min-w-0 items-center justify-end gap-2">
           <span className="truncate text-right font-semibold text-[var(--iberdrola-forest)]">
             {awayTeam.name}
           </span>
@@ -104,7 +103,7 @@ export default function GroupMatchCompactRow({
         </div>
       </div>
 
-      <div className="text-xs font-semibold text-[var(--iberdrola-forest)]/70">
+      <div className="whitespace-nowrap text-[11px] font-semibold text-[var(--iberdrola-forest)]/60">
         {officialHomeGoals !== null && officialAwayGoals !== null
           ? `${officialHomeGoals}-${officialAwayGoals}`
           : "-"}
