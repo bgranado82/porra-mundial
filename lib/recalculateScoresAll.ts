@@ -331,98 +331,102 @@ export async function recalculateScoresAll() {
     officialKnockoutMap
   );
 
-  for (const [entryId, picks] of knockoutPredictionsByEntry.entries()) {
-    const entry = entryById.get(normalize(entryId));
-    if (!entry) {
-      skippedKnockoutNoEntry += 1;
-      continue;
-    }
+  for (const entry of entries ?? []) {
+  const entryId = String(entry.id);
+  const mappedEntry = entryById.get(normalize(entryId));
 
-    const userGroupPredictions = (predictions ?? []).filter(
-      (row) => String(row.entry_id) === entryId
-    );
-
-    const groupPredictionMap: Record<
-      string,
-      { homeGoals: number | null; awayGoals: number | null }
-    > = {};
-
-    userGroupPredictions.forEach((row) => {
-      groupPredictionMap[row.match_id] = {
-        homeGoals: row.home_goals,
-        awayGoals: row.away_goals,
-      };
-    });
-
-    const userBracket = buildUserKnockoutBracket(
-      teams,
-      officialMatchesWithResults,
-      groups,
-      groupPredictionMap,
-      picks
-    );
-
-    const knockoutScore = calculateKnockoutScore(
-      scoreSettings,
-      userBracket,
-      realBracket
-    );
-
-    rowsToInsert.push(
-      {
-        entry_id: entryId,
-        pool_id: entry.pool_id,
-        match_id: null,
-        matchday: null,
-        stage: "r32",
-        points: knockoutScore.round32,
-        is_exact: false,
-        is_outcome: false,
-      },
-      {
-        entry_id: entryId,
-        pool_id: entry.pool_id,
-        match_id: null,
-        matchday: null,
-        stage: "r16",
-        points: knockoutScore.round16,
-        is_exact: false,
-        is_outcome: false,
-      },
-      {
-        entry_id: entryId,
-        pool_id: entry.pool_id,
-        match_id: null,
-        matchday: null,
-        stage: "qf",
-        points: knockoutScore.quarterfinals,
-        is_exact: false,
-        is_outcome: false,
-      },
-      {
-        entry_id: entryId,
-        pool_id: entry.pool_id,
-        match_id: null,
-        matchday: null,
-        stage: "sf",
-        points: knockoutScore.semifinals,
-        is_exact: false,
-        is_outcome: false,
-      },
-      {
-        entry_id: entryId,
-        pool_id: entry.pool_id,
-        match_id: null,
-        matchday: null,
-        stage: "final",
-        points: knockoutScore.final + knockoutScore.champion,
-        is_exact: false,
-        is_outcome: false,
-      }
-    );
-
-    pushedKnockoutScores += 5;
+  if (!mappedEntry) {
+    skippedKnockoutNoEntry += 1;
+    continue;
   }
+
+  const picks = knockoutPredictionsByEntry.get(entryId) ?? {};
+
+  const userGroupPredictions = (predictions ?? []).filter(
+    (row) => String(row.entry_id) === entryId
+  );
+
+  const groupPredictionMap: Record<
+    string,
+    { homeGoals: number | null; awayGoals: number | null }
+  > = {};
+
+  userGroupPredictions.forEach((row) => {
+    groupPredictionMap[row.match_id] = {
+      homeGoals: row.home_goals,
+      awayGoals: row.away_goals,
+    };
+  });
+
+  const userBracket = buildUserKnockoutBracket(
+    teams,
+    officialMatchesWithResults,
+    groups,
+    groupPredictionMap,
+    picks
+  );
+
+  const knockoutScore = calculateKnockoutScore(
+    scoreSettings,
+    userBracket,
+    realBracket
+  );
+
+  rowsToInsert.push(
+    {
+      entry_id: entryId,
+      pool_id: mappedEntry.pool_id,
+      match_id: null,
+      matchday: null,
+      stage: "r32",
+      points: knockoutScore.round32,
+      is_exact: false,
+      is_outcome: false,
+    },
+    {
+      entry_id: entryId,
+      pool_id: mappedEntry.pool_id,
+      match_id: null,
+      matchday: null,
+      stage: "r16",
+      points: knockoutScore.round16,
+      is_exact: false,
+      is_outcome: false,
+    },
+    {
+      entry_id: entryId,
+      pool_id: mappedEntry.pool_id,
+      match_id: null,
+      matchday: null,
+      stage: "qf",
+      points: knockoutScore.quarterfinals,
+      is_exact: false,
+      is_outcome: false,
+    },
+    {
+      entry_id: entryId,
+      pool_id: mappedEntry.pool_id,
+      match_id: null,
+      matchday: null,
+      stage: "sf",
+      points: knockoutScore.semifinals,
+      is_exact: false,
+      is_outcome: false,
+    },
+    {
+      entry_id: entryId,
+      pool_id: mappedEntry.pool_id,
+      match_id: null,
+      matchday: null,
+      stage: "final",
+      points: knockoutScore.final + knockoutScore.champion,
+      is_exact: false,
+      is_outcome: false,
+    }
+  );
+
+  pushedKnockoutScores += 5;
+}
 
   if (rowsToInsert.length > 0) {
     const { error: insertError } = await supabase

@@ -55,25 +55,49 @@ export async function POST(req: Request) {
     const groupResults = (body.groupResults ?? []) as GroupResultRow[];
     const knockoutResults = (body.knockoutResults ?? []) as KnockoutResultRow[];
 
-    if (groupResults.length > 0) {
-      const { error: groupError } = await adminSupabase
-        .from("official_group_results")
-        .upsert(groupResults, { onConflict: "match_id" });
+    const { error: deleteGroupOfficialError } = await adminSupabase
+  .from("official_group_results")
+  .delete()
+  .not("match_id", "is", null);
 
-      if (groupError) {
-        return NextResponse.json({ error: groupError.message }, { status: 500 });
-      }
-    }
+if (deleteGroupOfficialError) {
+  return NextResponse.json(
+    { error: deleteGroupOfficialError.message },
+    { status: 500 }
+  );
+}
 
-    if (knockoutResults.length > 0) {
-      const { error: knockoutError } = await adminSupabase
-        .from("official_knockout_results")
-        .upsert(knockoutResults, { onConflict: "match_id" });
+const { error: deleteKnockoutOfficialError } = await adminSupabase
+  .from("official_knockout_results")
+  .delete()
+  .not("match_id", "is", null);
 
-      if (knockoutError) {
-        return NextResponse.json({ error: knockoutError.message }, { status: 500 });
-      }
-    }
+if (deleteKnockoutOfficialError) {
+  return NextResponse.json(
+    { error: deleteKnockoutOfficialError.message },
+    { status: 500 }
+  );
+}
+
+if (groupResults.length > 0) {
+  const { error: groupError } = await adminSupabase
+    .from("official_group_results")
+    .insert(groupResults);
+
+  if (groupError) {
+    return NextResponse.json({ error: groupError.message }, { status: 500 });
+  }
+}
+
+if (knockoutResults.length > 0) {
+  const { error: knockoutError } = await adminSupabase
+    .from("official_knockout_results")
+    .insert(knockoutResults);
+
+  if (knockoutError) {
+    return NextResponse.json({ error: knockoutError.message }, { status: 500 });
+  }
+}
 
     const debug = await recalculateScoresAll();
 
