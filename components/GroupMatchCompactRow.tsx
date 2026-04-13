@@ -51,7 +51,7 @@ export default function GroupMatchCompactRow({
   onChangeAway,
 }: Props) {
   return (
-    <div className="grid h-[52px] grid-cols-[140px_minmax(0,1fr)_82px] items-center gap-2 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
+    <div className="grid h-[52px] grid-cols-[132px_minmax(0,1fr)_82px] items-center gap-2 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
       <div className="flex flex-col justify-center leading-tight">
         <span className="text-[12px] font-bold text-[var(--iberdrola-forest)]">
           J{day} · {group ?? "-"}
@@ -72,7 +72,7 @@ export default function GroupMatchCompactRow({
       <div className="grid grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)] items-center gap-2">
         <div className="flex min-w-0 items-center justify-start gap-1.5">
           <span className="shrink-0 text-[11px]">{homeTeam.flag}</span>
-          <span className="truncate text-left text-[12px] font-semibold text-[var(--iberdrola-forest)]">
+          <span className="truncate text-left text-[13px] font-semibold text-[var(--iberdrola-forest)]">
             {homeTeam.name}
           </span>
         </div>
@@ -102,7 +102,7 @@ export default function GroupMatchCompactRow({
         </div>
 
         <div className="flex min-w-0 items-center justify-end gap-1.5">
-          <span className="truncate text-right text-[12px] font-semibold text-[var(--iberdrola-forest)]">
+          <span className="truncate text-right text-[13px] font-semibold text-[var(--iberdrola-forest)]">
             {awayTeam.name}
           </span>
           <span className="shrink-0 text-[11px]">{awayTeam.flag}</span>
