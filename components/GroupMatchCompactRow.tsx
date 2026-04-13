@@ -69,15 +69,15 @@ export default function GroupMatchCompactRow({
         </span>
       </div>
 
-      <div className="grid grid-cols-[minmax(120px,0,9fr)_auto_minmax(150px,1,1fr)] items-center gap-1,5">
-        <div className="flex min-w-0 items-center justify-start gap-1 plo-0">
+      <div className="grid grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)] items-center gap-2">
+        <div className="flex min-w-0 items-center justify-start gap-1.5">
           <span className="shrink-0 text-[11px]">{homeTeam.flag}</span>
           <span className="truncate text-left text-[12px] font-semibold text-[var(--iberdrola-forest)]">
             {homeTeam.name}
           </span>
         </div>
 
-        <div className="flex items-center justify-center gap-1,5">
+        <div className="flex items-center justify-center gap-2">
           <input
             type="number"
             min={0}
