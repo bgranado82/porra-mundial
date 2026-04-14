@@ -28,7 +28,12 @@ function getDateKeyFromKickoff(kickoff: string | null | undefined) {
   const date = new Date(kickoff);
   if (Number.isNaN(date.getTime())) return null;
 
-  return date.toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 }
 
 function getExtraQuestionPoints(questionKey: string) {
