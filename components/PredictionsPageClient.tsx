@@ -73,6 +73,20 @@ type StandingSummary = {
   movement_value: number;
 };
 
+type VisibilityMode = "hidden" | "after_submit" | "always";
+
+type PoolSettings = {
+  name: string;
+  slug: string;
+  is_registration_open: boolean;
+  is_predictions_editable: boolean;
+  is_submission_enabled: boolean;
+  classification_visibility: VisibilityMode;
+  statistics_visibility: VisibilityMode;
+  transparency_visibility: VisibilityMode;
+  submission_deadline: string | null;
+};
+
 const LOCALE_KEY = "porra-mundial-locale";
 const TIMEZONE_KEY = "porra-mundial-timezone";
 
@@ -230,6 +244,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [poolName, setPoolName] = useState("");
   const [poolId, setPoolId] = useState<string | null>(null);
   const [poolSlug, setPoolSlug] = useState("");
+  const [poolSettings, setPoolSettings] = useState<PoolSettings | null>(null);
   const [loadingEntry, setLoadingEntry] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -298,18 +313,28 @@ export default function PredictionsPageClient({ entryId }: Props) {
             ""
         );
 
-        const { data: rawEntry, error: entryError } = await supabase
-          .from("entries")
-          .select(`
-            id,
-            status,
-            user_id,
-            pool_id,
-            entry_number,
-            payment_status,
-            created_at,
-            pools ( name, slug )
-          `)
+       const { data: rawEntry, error: entryError } = await supabase
+  .from("entries")
+  .select(`
+    id,
+    status,
+    user_id,
+    pool_id,
+    entry_number,
+    payment_status,
+    created_at,
+    pools (
+      name,
+      slug,
+      is_registration_open,
+      is_predictions_editable,
+      is_submission_enabled,
+      classification_visibility,
+      statistics_visibility,
+      transparency_visibility,
+      submission_deadline
+    )
+  `)
           .eq("id", entryId)
           .eq("user_id", user.id)
           .maybeSingle();
@@ -338,7 +363,22 @@ export default function PredictionsPageClient({ entryId }: Props) {
         setPoolId(entry.pool_id ?? null);
         setPoolSlug(pool?.slug ?? "");
         setPaymentStatus((entry.payment_status ?? "pending") as "pending" | "paid");
-
+setPoolSettings(
+  pool
+    ? {
+        name: pool.name ?? "",
+        slug: pool.slug ?? "",
+        is_registration_open: pool.is_registration_open ?? true,
+        is_predictions_editable: pool.is_predictions_editable ?? true,
+        is_submission_enabled: pool.is_submission_enabled ?? true,
+        classification_visibility:
+          pool.classification_visibility ?? "after_submit",
+        statistics_visibility: pool.statistics_visibility ?? "hidden",
+        transparency_visibility: pool.transparency_visibility ?? "hidden",
+        submission_deadline: pool.submission_deadline ?? null,
+      }
+    : null
+);
         const { data: groupRows, error: groupError } = await supabase
           .from("entry_group_predictions")
           .select("entry_id, match_id, home_goals, away_goals")
@@ -481,7 +521,7 @@ setExtraPredictions(nextExtraPredictions);
     side: "homeGoals" | "awayGoals",
     value: number | null
   ) {
-    if (entryStatus === "submitted") return;
+    if (!canEditPredictions) return;
 
     setPredictions((current) => ({
       ...current,
@@ -494,7 +534,7 @@ setExtraPredictions(nextExtraPredictions);
   }
 
   function updateKnockoutPrediction(matchId: string, teamId: string | null) {
-    if (entryStatus === "submitted") return;
+    if (!canEditPredictions) return;
 
     setKnockoutPredictions((current) => ({
       ...current,
@@ -503,7 +543,7 @@ setExtraPredictions(nextExtraPredictions);
   }
 
   function updateExtraPrediction(questionKey: string, value: string) {
-  if (entryStatus === "submitted") return;
+  if (!canEditPredictions) return;
 
   setExtraPredictions((current) => ({
     ...current,
@@ -797,7 +837,42 @@ const extraPointsTotal = useMemo(() => {
 
   const totalPoints = groupPointsTotal + knockoutScore.total + extraPointsTotal;
   const greetingName = authUserName?.trim() || authUserEmail?.trim() || "Jugador";
+const now = new Date();
 
+const submissionDeadlineDate =
+  poolSettings?.submission_deadline
+    ? new Date(poolSettings.submission_deadline)
+    : null;
+
+const isDeadlinePassed =
+  !!submissionDeadlineDate &&
+  !Number.isNaN(submissionDeadlineDate.getTime()) &&
+  now > submissionDeadlineDate;
+
+const canEditPredictions =
+  entryStatus !== "submitted" &&
+  !!poolSettings?.is_predictions_editable &&
+  !isDeadlinePassed;
+
+const canSubmitPredictions =
+  entryStatus !== "submitted" &&
+  !!poolSettings?.is_submission_enabled &&
+  !isDeadlinePassed;
+
+const canSeeClassification =
+  poolSettings?.classification_visibility === "always" ||
+  (poolSettings?.classification_visibility === "after_submit" &&
+    entryStatus === "submitted");
+
+const canSeeStatistics =
+  poolSettings?.statistics_visibility === "always" ||
+  (poolSettings?.statistics_visibility === "after_submit" &&
+    entryStatus === "submitted");
+
+const canSeeTransparency =
+  poolSettings?.transparency_visibility === "always" ||
+  (poolSettings?.transparency_visibility === "after_submit" &&
+    entryStatus === "submitted");
   const currentUserStanding = useMemo(
     () => standings.find((row) => row.entry_id === activeEntryId) ?? null,
     [standings, activeEntryId]
@@ -904,7 +979,7 @@ const extraPointsTotal = useMemo(() => {
                 <button
                   type="button"
                   onClick={handleSaveEntry}
-                  disabled={saveLoading || entryStatus === "submitted"}
+                  disabled={saveLoading || !canEditPredictions}
                   className="rounded-2xl border border-[var(--iberdrola-forest)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saveLoading ? "Guardando..." : "Guardar porra"}
@@ -913,7 +988,7 @@ const extraPointsTotal = useMemo(() => {
                 <button
                   type="button"
                   onClick={handleSubmitEntry}
-                  disabled={submitLoading || entryStatus === "submitted"}
+                  disabled={submitLoading || !canSubmitPredictions}
                   className="rounded-2xl bg-[var(--iberdrola-green)] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {entryStatus === "submitted"
@@ -938,9 +1013,20 @@ const extraPointsTotal = useMemo(() => {
                 {submitMessage}
               </div>
             ) : null}
+            {isDeadlinePassed ? (
+  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+    El plazo de envío de esta porra ha terminado.
+  </div>
+) : null}
+
+{!canEditPredictions && entryStatus !== "submitted" && !isDeadlinePassed ? (
+  <div className="mt-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
+    La edición de la porra está desactivada.
+  </div>
+) : null}
           </div>
         </section>
-
+{canSeeClassification ? (
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="p-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -1060,9 +1146,10 @@ const extraPointsTotal = useMemo(() => {
             </div>
           </div>
         </section>
+        ) : null}
 
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+          <div className="border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/30 px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
               {t.scoringRules}
             </h2>
@@ -1343,7 +1430,7 @@ const extraPointsTotal = useMemo(() => {
           championId={userBracket.championId}
           teams={teams}
           picks={knockoutPredictions}
-          onPick={entryStatus === "submitted" ? undefined : updateKnockoutPrediction}
+          onPick={canEditPredictions ? updateKnockoutPrediction : undefined}
           realTeamsByRound={realTeamsByRound}
         />
 <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
@@ -1390,7 +1477,7 @@ const extraPointsTotal = useMemo(() => {
         value={currentValue}
         onChange={(e) => updateExtraPrediction(question.key, e.target.value)}
         placeholder={t.extras.placeholder}
-        disabled={entryStatus === "submitted"}
+        disabled={!canEditPredictions}
         maxLength={60}
         className="w-full rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)] outline-none transition focus:ring-2 focus:ring-[var(--iberdrola-green)] disabled:cursor-not-allowed disabled:opacity-70"
       />
