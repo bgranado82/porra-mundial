@@ -110,3 +110,22 @@ export type DailyPointsRow = {
 };
 
 export type TimezoneValue = "local" | "est" | "cet" | "utc";
+
+type VisibilityMode = "hidden" | "after_submit" | "always";
+
+type PoolSettingsRow = {
+  id: string;
+  name: string;
+  slug: string;
+  is_registration_open: boolean;
+  is_predictions_editable: boolean;
+  is_submission_enabled: boolean;
+  is_pool_visible: boolean;
+  classification_visibility: VisibilityMode;
+  statistics_visibility: VisibilityMode;
+  transparency_visibility: VisibilityMode;
+  submission_deadline: string | null;
+  admin_note: string | null;
+};
+
+type PaymentStatus = "pending" | "paid";

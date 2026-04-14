@@ -21,11 +21,24 @@ type GroupResultMap = Record<
 
 type OfficialExtraResultMap = Record<string, string>;
 
-type PoolRow = {
+type VisibilityMode = "hidden" | "after_submit" | "always";
+
+type PoolSettingsRow = {
   id: string;
   name: string;
   slug: string;
+  is_registration_open: boolean;
+  is_predictions_editable: boolean;
+  is_submission_enabled: boolean;
+  is_pool_visible: boolean;
+  classification_visibility: VisibilityMode;
+  statistics_visibility: VisibilityMode;
+  transparency_visibility: VisibilityMode;
+  submission_deadline: string | null;
+  admin_note: string | null;
 };
+
+type PoolRow = PoolSettingsRow;
 
 const EXTRA_LABELS: Record<string, string> = {
   first_goal_scorer_world: "🥇 Primer goleador del Mundial",
@@ -162,6 +175,30 @@ export default function AdminPageClient() {
   const [pools, setPools] = useState<PoolRow[]>([]);
   const [selectedPoolId, setSelectedPoolId] = useState("");
   const [selectedPoolSlug, setSelectedPoolSlug] = useState("");
+const [savingPoolSettings, setSavingPoolSettings] = useState(false);
+const [poolSettingsMessage, setPoolSettingsMessage] = useState("");
+
+const [poolSettings, setPoolSettings] = useState<{
+  is_registration_open: boolean;
+  is_predictions_editable: boolean;
+  is_submission_enabled: boolean;
+  is_pool_visible: boolean;
+  classification_visibility: VisibilityMode;
+  statistics_visibility: VisibilityMode;
+  transparency_visibility: VisibilityMode;
+  submission_deadline: string;
+  admin_note: string;
+}>({
+  is_registration_open: true,
+  is_predictions_editable: true,
+  is_submission_enabled: true,
+  is_pool_visible: true,
+  classification_visibility: "after_submit",
+  statistics_visibility: "hidden",
+  transparency_visibility: "hidden",
+  submission_deadline: "",
+  admin_note: "",
+});
 
   const [groupResults, setGroupResults] = useState<GroupResultMap>({});
   const [knockoutResults, setKnockoutResults] =
@@ -252,10 +289,23 @@ export default function AdminPageClient() {
       setMessage("");
 
       try {
-        const { data: poolRows, error: poolError } = await supabase
-          .from("pools")
-          .select("id, name, slug")
-          .order("name", { ascending: true });
+       const { data: poolRows, error: poolError } = await supabase
+  .from("pools")
+  .select(`
+    id,
+    name,
+    slug,
+    is_registration_open,
+    is_predictions_editable,
+    is_submission_enabled,
+    is_pool_visible,
+    classification_visibility,
+    statistics_visibility,
+    transparency_visibility,
+    submission_deadline,
+    admin_note
+  `)
+  .order("name", { ascending: true });
 
         if (poolError) throw poolError;
 
@@ -321,6 +371,25 @@ export default function AdminPageClient() {
     setSelectedPoolSlug(currentPool?.slug ?? "");
   }, [selectedPoolId, pools]);
 
+  useEffect(() => {
+  const currentPool = pools.find((pool) => pool.id === selectedPoolId);
+  if (!currentPool) return;
+
+  setPoolSettings({
+    is_registration_open: currentPool.is_registration_open,
+    is_predictions_editable: currentPool.is_predictions_editable,
+    is_submission_enabled: currentPool.is_submission_enabled,
+    is_pool_visible: currentPool.is_pool_visible,
+    classification_visibility: currentPool.classification_visibility,
+    statistics_visibility: currentPool.statistics_visibility,
+    transparency_visibility: currentPool.transparency_visibility,
+    submission_deadline: currentPool.submission_deadline
+      ? currentPool.submission_deadline.slice(0, 16)
+      : "",
+    admin_note: currentPool.admin_note ?? "",
+  });
+}, [selectedPoolId, pools]);
+
   function updateGroupResult(
     matchId: string,
     side: "homeGoals" | "awayGoals",
@@ -351,6 +420,71 @@ export default function AdminPageClient() {
       [questionKey]: value,
     }));
   }
+
+  function updatePoolSetting<K extends keyof typeof poolSettings>(
+  key: K,
+  value: (typeof poolSettings)[K]
+) {
+  setPoolSettings((prev) => ({
+    ...prev,
+    [key]: value,
+  }));
+}
+
+async function handleSavePoolSettings() {
+  if (!selectedPoolId) return;
+
+  setSavingPoolSettings(true);
+  setPoolSettingsMessage("");
+
+  try {
+    const payload = {
+      is_registration_open: poolSettings.is_registration_open,
+      is_predictions_editable: poolSettings.is_predictions_editable,
+      is_submission_enabled: poolSettings.is_submission_enabled,
+      is_pool_visible: poolSettings.is_pool_visible,
+      classification_visibility: poolSettings.classification_visibility,
+      statistics_visibility: poolSettings.statistics_visibility,
+      transparency_visibility: poolSettings.transparency_visibility,
+      submission_deadline: poolSettings.submission_deadline
+  ? `${poolSettings.submission_deadline}:00+02:00`
+  : null,
+      admin_note: poolSettings.admin_note.trim() || null,
+    };
+
+    const { error } = await supabase
+      .from("pools")
+      .update(payload)
+      .eq("id", selectedPoolId);
+
+    if (error) {
+      setPoolSettingsMessage("Error guardando configuración del pool.");
+      console.error(error);
+      return;
+    }
+
+    setPools((prev) =>
+      prev.map((pool) =>
+        pool.id === selectedPoolId
+          ? {
+              ...pool,
+              ...payload,
+              submission_deadline:
+                payload.submission_deadline ?? null,
+              admin_note: payload.admin_note ?? null,
+            }
+          : pool
+      )
+    );
+
+    setPoolSettingsMessage("Configuración del pool guardada.");
+  } catch (err) {
+    console.error(err);
+    setPoolSettingsMessage("Error guardando configuración del pool.");
+  } finally {
+    setSavingPoolSettings(false);
+  }
+}
 
   async function handleSaveAllResults() {
     setSavingAll(true);
@@ -489,6 +623,183 @@ export default function AdminPageClient() {
         </div>
       </section>
 
+<section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+  <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+    <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+      Configuración del pool
+    </h2>
+    <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+      Controla inscripción, edición, envío final y visibilidad.
+    </p>
+  </div>
+
+  <div className="space-y-5 p-4">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <label className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
+        <span className="text-sm font-bold text-[var(--iberdrola-forest)]">
+          Inscripción abierta
+        </span>
+        <input
+          type="checkbox"
+          checked={poolSettings.is_registration_open}
+          onChange={(e) =>
+            updatePoolSetting("is_registration_open", e.target.checked)
+          }
+        />
+      </label>
+
+      <label className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
+        <span className="text-sm font-bold text-[var(--iberdrola-forest)]">
+          Predicciones editables
+        </span>
+        <input
+          type="checkbox"
+          checked={poolSettings.is_predictions_editable}
+          onChange={(e) =>
+            updatePoolSetting("is_predictions_editable", e.target.checked)
+          }
+        />
+      </label>
+
+      <label className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
+        <span className="text-sm font-bold text-[var(--iberdrola-forest)]">
+          Envío final habilitado
+        </span>
+        <input
+          type="checkbox"
+          checked={poolSettings.is_submission_enabled}
+          onChange={(e) =>
+            updatePoolSetting("is_submission_enabled", e.target.checked)
+          }
+        />
+      </label>
+
+      <label className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
+        <span className="text-sm font-bold text-[var(--iberdrola-forest)]">
+          Pool visible
+        </span>
+        <input
+          type="checkbox"
+          checked={poolSettings.is_pool_visible}
+          onChange={(e) =>
+            updatePoolSetting("is_pool_visible", e.target.checked)
+          }
+        />
+      </label>
+    </div>
+
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="rounded-2xl border border-[var(--iberdrola-sky)] p-4">
+        <label className="mb-2 block text-sm font-bold text-[var(--iberdrola-forest)]">
+          Visibilidad clasificación
+        </label>
+        <select
+          value={poolSettings.classification_visibility}
+          onChange={(e) =>
+            updatePoolSetting(
+              "classification_visibility",
+              e.target.value as VisibilityMode
+            )
+          }
+          className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+        >
+          <option value="hidden">Oculta</option>
+          <option value="after_submit">Visible tras enviar</option>
+          <option value="always">Visible siempre</option>
+        </select>
+      </div>
+
+      <div className="rounded-2xl border border-[var(--iberdrola-sky)] p-4">
+        <label className="mb-2 block text-sm font-bold text-[var(--iberdrola-forest)]">
+          Visibilidad estadísticas
+        </label>
+        <select
+          value={poolSettings.statistics_visibility}
+          onChange={(e) =>
+            updatePoolSetting(
+              "statistics_visibility",
+              e.target.value as VisibilityMode
+            )
+          }
+          className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+        >
+          <option value="hidden">Ocultas</option>
+          <option value="after_submit">Visibles tras enviar</option>
+          <option value="always">Visibles siempre</option>
+        </select>
+      </div>
+
+      <div className="rounded-2xl border border-[var(--iberdrola-sky)] p-4">
+        <label className="mb-2 block text-sm font-bold text-[var(--iberdrola-forest)]">
+          Visibilidad transparencia
+        </label>
+        <select
+          value={poolSettings.transparency_visibility}
+          onChange={(e) =>
+            updatePoolSetting(
+              "transparency_visibility",
+              e.target.value as VisibilityMode
+            )
+          }
+          className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+        >
+          <option value="hidden">Oculta</option>
+          <option value="after_submit">Visible tras enviar</option>
+          <option value="always">Visible siempre</option>
+        </select>
+      </div>
+
+      <div className="rounded-2xl border border-[var(--iberdrola-sky)] p-4">
+        <label className="mb-2 block text-sm font-bold text-[var(--iberdrola-forest)]">
+          Fecha límite de envío
+        </label>
+        <input
+          type="datetime-local"
+          value={poolSettings.submission_deadline}
+          onChange={(e) =>
+            updatePoolSetting("submission_deadline", e.target.value)
+          }
+          className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+        />
+      </div>
+    </div>
+
+    <div className="rounded-2xl border border-[var(--iberdrola-sky)] p-4">
+      <label className="mb-2 block text-sm font-bold text-[var(--iberdrola-forest)]">
+        Nota interna del admin
+      </label>
+      <textarea
+        value={poolSettings.admin_note}
+        onChange={(e) => updatePoolSetting("admin_note", e.target.value)}
+        rows={3}
+        className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+        placeholder="Notas internas sobre el estado del pool, pagos, pruebas, etc."
+      />
+    </div>
+
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-sm text-[var(--iberdrola-forest)]/65">
+        Estas opciones afectan al pool seleccionado y luego se usarán para condicionar el frontend.
+      </div>
+
+      <button
+        type="button"
+        onClick={handleSavePoolSettings}
+        disabled={savingPoolSettings || !selectedPoolId}
+        className="rounded-2xl bg-[var(--iberdrola-green)] px-5 py-3 text-sm font-bold text-white shadow-sm disabled:opacity-50"
+      >
+        {savingPoolSettings ? "Guardando..." : "Guardar configuración del pool"}
+      </button>
+    </div>
+
+    {poolSettingsMessage ? (
+      <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
+        {poolSettingsMessage}
+      </div>
+    ) : null}
+  </div>
+</section>
+
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
@@ -522,7 +833,6 @@ export default function AdminPageClient() {
                     <div>Hora (ES)</div>
                     <div>Partido</div>
                     <div className="text-center">Resultado</div>
-                    <div className="text-center">Oficial</div>
                   </div>
 
                   {block.matches.map((match) => {
@@ -532,54 +842,48 @@ export default function AdminPageClient() {
                     if (!home || !away) return null;
 
                     return (
-                      <div
-                        key={match.id}
-                        className="grid grid-cols-[70px_70px_130px_minmax(280px,1fr)_120px_120px] items-center gap-3 border-b border-[var(--iberdrola-sky)]/60 px-4 py-3"
-                      >
-                        <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
-                          J{block.matchday}
-                        </div>
+                     <div
+  key={match.id}
+  className="grid grid-cols-[70px_70px_130px_minmax(280px,1fr)_120px] items-center gap-3 border-b border-[var(--iberdrola-sky)]/60 px-4 py-3"
+>
+  <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
+    J{block.matchday}
+  </div>
 
-                        <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
-                          {match.group}
-                        </div>
+  <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
+    {match.group}
+  </div>
 
-                        <div className="text-sm font-medium text-[var(--iberdrola-forest)]/70">
-                          {formatKickoffSpain(match.kickoff)}
-                        </div>
+  <div className="text-sm font-medium text-[var(--iberdrola-forest)]/70">
+    {formatKickoffSpain(match.kickoff)}
+  </div>
 
-                        <div className="min-w-0 text-sm font-semibold text-[var(--iberdrola-forest)]">
-                          <span>{home.flag} {home.name}</span>
-                          <span className="mx-2 text-[var(--iberdrola-forest)]/45">vs</span>
-                          <span>{away.flag} {away.name}</span>
-                        </div>
+  <div className="min-w-0 text-sm font-semibold text-[var(--iberdrola-forest)]">
+    <span>{home.flag} {home.name}</span>
+    <span className="mx-2 text-[var(--iberdrola-forest)]/45">vs</span>
+    <span>{away.flag} {away.name}</span>
+  </div>
 
-                        <div className="flex items-center justify-center gap-2">
-                          <input
-                            value={groupResults[match.id]?.homeGoals ?? ""}
-                            onChange={(e) =>
-                              updateGroupResult(match.id, "homeGoals", e.target.value)
-                            }
-                            className="w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
-                          />
+  <div className="flex items-center justify-center gap-2">
+    <input
+      value={groupResults[match.id]?.homeGoals ?? ""}
+      onChange={(e) =>
+        updateGroupResult(match.id, "homeGoals", e.target.value)
+      }
+      className="w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+    />
 
-                          <span className="font-bold text-[var(--iberdrola-forest)]/60">
-                            -
-                          </span>
+    <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
 
-                          <input
-                            value={groupResults[match.id]?.awayGoals ?? ""}
-                            onChange={(e) =>
-                              updateGroupResult(match.id, "awayGoals", e.target.value)
-                            }
-                            className="w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
-                          />
-                        </div>
-
-                        <div className="text-center text-xs font-semibold text-[var(--iberdrola-forest)]/45">
-                          ID: {match.id}
-                        </div>
-                      </div>
+    <input
+      value={groupResults[match.id]?.awayGoals ?? ""}
+      onChange={(e) =>
+        updateGroupResult(match.id, "awayGoals", e.target.value)
+      }
+      className="w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+    />
+  </div>
+</div>
                     );
                   })}
                 </div>
