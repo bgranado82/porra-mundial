@@ -410,7 +410,7 @@ export default function AdminResultsPageClient() {
   }
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-4 sm:px-6">
+    <main className="mx-auto max-w-[1600px] space-y-6 overflow-x-hidden px-4 py-4 sm:px-6">
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="p-4 sm:p-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -530,43 +530,35 @@ export default function AdminResultsPageClient() {
 
                   return (
                     <div key={match.id} className="px-4 py-3">
-                      <div className="hidden md:flex md:flex-col md:gap-2">
-  <div className="flex items-center justify-between gap-3">
-    <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
-      J{block.matchday} · {match.group}
-    </div>
-
-    <div className="text-sm font-medium text-[var(--iberdrola-forest)]/70">
-      {formatKickoffAdminCompact(match.kickoff)}
-    </div>
+                     <div className="space-y-2">
+  <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+    J{block.matchday} · Grupo {match.group} · {formatKickoffAdminCompact(match.kickoff)}
   </div>
 
-  <div className="flex items-center justify-between gap-3">
-    <div className="min-w-0 text-sm font-semibold text-[var(--iberdrola-forest)]">
-      <span className="break-words">{home.flag} {home.name}</span>
-      <span className="mx-2 text-[var(--iberdrola-forest)]/45">vs</span>
-      <span className="break-words">{away.flag} {away.name}</span>
-    </div>
+  <div className="text-sm font-semibold leading-snug text-[var(--iberdrola-forest)]">
+    {home.flag} {home.name}
+    <span className="mx-2 text-[var(--iberdrola-forest)]/45">vs</span>
+    {away.flag} {away.name}
+  </div>
 
-    <div className="flex items-center gap-2">
-      <input
-        value={groupResults[match.id]?.homeGoals ?? ""}
-        onChange={(e) =>
-          updateGroupResult(match.id, "homeGoals", e.target.value)
-        }
-        className="w-10 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
-      />
+  <div className="flex items-center gap-2">
+    <input
+      value={groupResults[match.id]?.homeGoals ?? ""}
+      onChange={(e) =>
+        updateGroupResult(match.id, "homeGoals", e.target.value)
+      }
+      className="w-14 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-base font-bold text-[var(--iberdrola-forest)]"
+    />
 
-      <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
+    <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
 
-      <input
-        value={groupResults[match.id]?.awayGoals ?? ""}
-        onChange={(e) =>
-          updateGroupResult(match.id, "awayGoals", e.target.value)
-        }
-        className="w-10 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
-      />
-    </div>
+    <input
+      value={groupResults[match.id]?.awayGoals ?? ""}
+      onChange={(e) =>
+        updateGroupResult(match.id, "awayGoals", e.target.value)
+      }
+      className="w-14 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-base font-bold text-[var(--iberdrola-forest)]"
+    />
   </div>
 </div>
                     </div>
