@@ -929,7 +929,7 @@ async function handleSavePoolSettings() {
         />
 
         <RoundSection
-          title="Octavos"
+          title="Round of 16"
           matches={realBracket.round16}
           picks={knockoutResults}
           onPick={updateKnockoutResult}
