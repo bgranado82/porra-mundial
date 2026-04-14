@@ -955,23 +955,6 @@ const canSeeTransparency =
                   onChange={setLocale}
                   label={t.language}
                 />
-
-                <div className="flex flex-col gap-2 sm:flex-row xl:flex-col">
-                  <label className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
-                    Huso horario
-                  </label>
-                  <select
-                    value={timeZone}
-                    onChange={(e) => setTimeZone(e.target.value as TimezoneValue)}
-                    className="rounded-full border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
-                  >
-                    {TIMEZONE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
             </div>
 

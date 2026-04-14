@@ -1,4 +1,5 @@
-import { formatKickoff } from "@/lib/timezone";
+
+"use client";
 
 type TeamDisplay = {
   name: string;
@@ -8,7 +9,6 @@ type TeamDisplay = {
 type Props = {
   matchNumber?: number | null;
   kickoff?: string | null;
-  timeZone: string;
   homeTeam: TeamDisplay;
   awayTeam: TeamDisplay;
   homePrediction: number | null;
@@ -23,10 +23,25 @@ type Props = {
   onChangeAway: (value: number | null) => void;
 };
 
+function formatKickoff(kickoff?: string | null) {
+  if (!kickoff) return { short: "" };
+
+  const date = new Date(kickoff);
+  if (Number.isNaN(date.getTime())) return { short: "" };
+
+  return {
+    short: date.toLocaleString("es-ES", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }),
+  };
+}
+
 export default function GroupMatchRow({
   matchNumber,
   kickoff,
-  timeZone,
   homeTeam,
   awayTeam,
   homePrediction,
@@ -40,12 +55,20 @@ export default function GroupMatchRow({
   onChangeHome,
   onChangeAway,
 }: Props) {
-  const kickoffInfo = formatKickoff(kickoff, timeZone);
+  const kickoffInfo = formatKickoff(kickoff);
 
-  const officialText =
-    officialHomeGoals !== null && officialAwayGoals !== null
-      ? `${officialHomeGoals}-${officialAwayGoals}`
-      : officialPendingLabel;
+  const hasOfficialResult =
+    officialHomeGoals !== null && officialAwayGoals !== null;
+
+  const officialText = hasOfficialResult
+    ? `${officialHomeGoals}-${officialAwayGoals}`
+    : officialPendingLabel;
+
+  const pointsBadgeClass = !hasOfficialResult
+    ? "bg-gray-100 text-gray-500"
+    : points > 0
+      ? "bg-[var(--iberdrola-green)] text-white"
+      : "bg-gray-100 text-gray-500";
 
   return (
     <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3 shadow-sm">
@@ -55,8 +78,10 @@ export default function GroupMatchRow({
           {kickoffInfo.short ? ` · ${kickoffInfo.short}` : ""}
         </div>
 
-        <div className="rounded-full bg-[var(--iberdrola-green)] px-3 py-1 text-sm font-black text-white">
-          {points} {pointsShortLabel}
+        <div
+          className={`rounded-full px-3 py-1 text-sm font-black ${pointsBadgeClass}`}
+        >
+          {hasOfficialResult ? `${points} ${pointsShortLabel}` : "-"}
         </div>
       </div>
 
@@ -72,7 +97,7 @@ export default function GroupMatchRow({
           onChange={(e) =>
             onChangeHome(e.target.value === "" ? null : Number(e.target.value))
           }
-          className="h-10 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
+          className="h-10 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
         />
 
         <div className="text-center text-sm font-black text-[var(--iberdrola-forest)]">
@@ -86,7 +111,7 @@ export default function GroupMatchRow({
           onChange={(e) =>
             onChangeAway(e.target.value === "" ? null : Number(e.target.value))
           }
-          className="h-10 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
+          className="h-10 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
         />
 
         <div className="truncate text-left text-[15px] font-bold text-[var(--iberdrola-forest)]">
@@ -106,7 +131,7 @@ export default function GroupMatchRow({
             onChange={(e) =>
               onChangeHome(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
+            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
           />
         </div>
 
@@ -121,7 +146,7 @@ export default function GroupMatchRow({
             onChange={(e) =>
               onChangeAway(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-base font-black text-[var(--iberdrola-forest)]"
+            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
           />
         </div>
       </div>
