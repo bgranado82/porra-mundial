@@ -529,45 +529,47 @@ export default function AdminResultsPageClient() {
                   if (!home || !away) return null;
 
                   return (
-                    <div key={match.id} className="px-4 py-3">
-                     <div className="space-y-2">
-  <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-    J{block.matchday} · Grupo {match.group} · {formatKickoffAdminCompact(match.kickoff)}
-  </div>
+                   <div key={match.id} className="px-3 py-2">
+  <div className="grid grid-cols-[58px_minmax(0,1fr)] gap-3">
+    <div className="text-[11px] font-bold uppercase leading-tight text-[var(--iberdrola-forest)]/60">
+      <div>J{block.matchday}</div>
+      <div>G {match.group}</div>
+      <div className="mt-1 normal-case">
+        {formatKickoffAdminCompact(match.kickoff)}
+      </div>
+    </div>
 
- <div className="space-y-1 text-sm font-semibold leading-snug text-[var(--iberdrola-forest)]">
-  <div className="break-words">
-    {home.flag} {home.name}
-  </div>
-  <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/45">
-    vs
-  </div>
-  <div className="break-words">
-    {away.flag} {away.name}
+    <div className="min-w-0">
+      <div className="truncate text-sm font-semibold text-[var(--iberdrola-forest)]">
+        {home.flag} {home.name}
+      </div>
+      <div className="truncate text-sm font-semibold text-[var(--iberdrola-forest)]">
+        {away.flag} {away.name}
+      </div>
+
+      <div className="mt-2 flex items-center gap-2">
+        <input
+          value={groupResults[match.id]?.homeGoals ?? ""}
+          onChange={(e) =>
+            updateGroupResult(match.id, "homeGoals", e.target.value)
+          }
+          className="h-10 w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 text-center text-base font-bold text-[var(--iberdrola-forest)]"
+        />
+
+        <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
+
+        <input
+          value={groupResults[match.id]?.awayGoals ?? ""}
+          onChange={(e) =>
+            updateGroupResult(match.id, "awayGoals", e.target.value)
+          }
+          className="h-10 w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 text-center text-base font-bold text-[var(--iberdrola-forest)]"
+        />
+      </div>
+    </div>
   </div>
 </div>
 
-  <div className="flex items-center gap-2">
-    <input
-      value={groupResults[match.id]?.homeGoals ?? ""}
-      onChange={(e) =>
-        updateGroupResult(match.id, "homeGoals", e.target.value)
-      }
-      className="w-14 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-base font-bold text-[var(--iberdrola-forest)]"
-    />
-
-    <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
-
-    <input
-      value={groupResults[match.id]?.awayGoals ?? ""}
-      onChange={(e) =>
-        updateGroupResult(match.id, "awayGoals", e.target.value)
-      }
-      className="w-14 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-base font-bold text-[var(--iberdrola-forest)]"
-    />
-  </div>
-</div>
-                    </div>
                   );
                 })}
               </div>
