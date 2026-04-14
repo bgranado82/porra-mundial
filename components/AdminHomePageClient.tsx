@@ -42,18 +42,6 @@ export default function AdminHomePageClient() {
             Revisión de pagos, estado de porras y reapertura.
           </div>
         </Link>
-
-        <Link
-          href="/admin/settings"
-          className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 shadow-sm transition hover:bg-[var(--iberdrola-sand)]/30"
-        >
-          <div className="text-lg font-black text-[var(--iberdrola-forest)]">
-            Configuración
-          </div>
-          <div className="mt-2 text-sm text-[var(--iberdrola-forest)]/70">
-            Inscripción, visibilidad y cierre por pool.
-          </div>
-        </Link>
       </div>
     </main>
   );
