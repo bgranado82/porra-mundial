@@ -20,7 +20,6 @@ import { calculateKnockoutScore } from "@/lib/knockoutScoring";
 import { getBestThirdPlacedTeams } from "@/lib/thirdPlace";
 import { Locale, messages } from "@/lib/i18n";
 import { KnockoutPredictionMap, Match } from "@/types";
-import { TIMEZONE_OPTIONS, TimezoneValue } from "@/lib/timezone";
 import { createClient } from "@/utils/supabase/client";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import GroupMatchCompactRow from "@/components/GroupMatchCompactRow";
@@ -88,7 +87,6 @@ type PoolSettings = {
 };
 
 const LOCALE_KEY = "porra-mundial-locale";
-const TIMEZONE_KEY = "porra-mundial-timezone";
 
 function getTeamsInRound(
   matches: { homeTeamId: string | null; awayTeamId: string | null }[]
@@ -239,7 +237,6 @@ export default function PredictionsPageClient({ entryId }: Props) {
     useState(initialRealKnockoutPredictions);
   const [officialMatches, setOfficialMatches] = useState<Match[]>(initialMatches);
   const [locale, setLocale] = useState<Locale>("es");
-  const [timeZone, setTimeZone] = useState<TimezoneValue>("local");
   const [authUserEmail, setAuthUserEmail] = useState("");
   const [authUserName, setAuthUserName] = useState("");
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
@@ -260,28 +257,16 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid">("pending");
   const [officialExtraResults, setOfficialExtraResults] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
-    if (savedLocale === "es" || savedLocale === "en" || savedLocale === "pt") {
-      setLocale(savedLocale);
-    }
-
-    const savedTimeZone = localStorage.getItem(
-      TIMEZONE_KEY
-    ) as TimezoneValue | null;
-
-    if (savedTimeZone) {
-      setTimeZone(savedTimeZone);
-    }
-  }, []);
+useEffect(() => {
+  const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
+  if (savedLocale === "es" || savedLocale === "en" || savedLocale === "pt") {
+    setLocale(savedLocale);
+  }
+}, []);
 
   useEffect(() => {
     localStorage.setItem(LOCALE_KEY, locale);
   }, [locale]);
-
-  useEffect(() => {
-    localStorage.setItem(TIMEZONE_KEY, timeZone);
-  }, [timeZone]);
 
   useEffect(() => {
     async function loadFromSupabase() {
@@ -1329,7 +1314,6 @@ const canSeeTransparency =
         key={match.id}
         matchNumber={match.matchNumber}
         kickoff={match.kickoff ?? null}
-        timeZone={timeZone}
         homeTeam={homeTeam}
         awayTeam={awayTeam}
         homePrediction={prediction.homeGoals}
