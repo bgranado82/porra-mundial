@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import { matches as initialMatches } from "@/data/matches";
@@ -21,7 +21,11 @@ type GroupResultMap = Record<
 
 type OfficialExtraResultMap = Record<string, string>;
 
-const STANDINGS_POOL_ID = "eb10020a-f258-49c7-be10-b0350b35d54a";
+type PoolRow = {
+  id: string;
+  name: string;
+  slug: string;
+};
 
 const EXTRA_LABELS: Record<string, string> = {
   first_goal_scorer_world: "🥇 Primer goleador del Mundial",
@@ -32,6 +36,47 @@ const EXTRA_LABELS: Record<string, string> = {
   golden_glove: "🧤 Guante de Oro",
   top_spanish_scorer: "🇪🇸 Máximo goleador de España",
 };
+
+function getDateKeySpain(kickoff: string | null | undefined) {
+  if (!kickoff) return null;
+
+  const date = new Date(kickoff);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function formatKickoffSpain(kickoff: string | null | undefined) {
+  if (!kickoff) return "-";
+
+  const date = new Date(kickoff);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("es-ES", {
+    timeZone: "Europe/Madrid",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function formatDateHeaderSpain(dateKey: string) {
+  const [year, month, day] = dateKey.split("-");
+  const date = new Date(`${year}-${month}-${day}T12:00:00+02:00`);
+
+  return new Intl.DateTimeFormat("es-ES", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    timeZone: "Europe/Madrid",
+  }).format(date);
+}
 
 function RoundSection({
   title,
@@ -49,59 +94,63 @@ function RoundSection({
   if (matches.length === 0) return null;
 
   return (
-    <section>
-      <h3 className="mb-3 text-lg font-semibold">{title}</h3>
+    <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+        <h3 className="text-lg font-black text-[var(--iberdrola-forest)]">
+          {title}
+        </h3>
+      </div>
 
-      <div className="space-y-3">
-        {matches.map((match) => {
-          const home = match.homeTeamId ? teamMap.get(match.homeTeamId) : null;
-          const away = match.awayTeamId ? teamMap.get(match.awayTeamId) : null;
+      <div className="p-4">
+        <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+          {matches.map((match) => {
+            const home = match.homeTeamId ? teamMap.get(match.homeTeamId) : null;
+            const away = match.awayTeamId ? teamMap.get(match.awayTeamId) : null;
 
-          const homeLabel =
-            home?.name || match.homeLabel || "Pendiente de definir";
-          const awayLabel =
-            away?.name || match.awayLabel || "Pendiente de definir";
+            const homeLabel =
+              home?.name || match.homeLabel || "Pendiente de definir";
+            const awayLabel =
+              away?.name || match.awayLabel || "Pendiente de definir";
 
-          const hasOptions = !!home || !!away;
+            const hasOptions = !!home || !!away;
 
-          return (
-            <div
-              key={match.id}
-              className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4"
-            >
-              <div className="mb-2 text-sm font-semibold text-[var(--iberdrola-forest)]/70">
-                {match.id}
-              </div>
-
-              <div className="mb-3 text-sm text-[var(--iberdrola-forest)]">
-                <div>{home ? `${home.flag} ${homeLabel}` : homeLabel}</div>
-                <div className="my-1 text-xs text-[var(--iberdrola-forest)]/55">
-                  vs
-                </div>
-                <div>{away ? `${away.flag} ${awayLabel}` : awayLabel}</div>
-              </div>
-
-              <select
-                value={picks[match.id] ?? ""}
-                onChange={(e) => onPick(match.id, e.target.value)}
-                disabled={!hasOptions}
-                className="w-full rounded-xl border px-3 py-2 disabled:cursor-not-allowed disabled:opacity-60"
+            return (
+              <div
+                key={match.id}
+                className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4"
               >
-                <option value="">Selecciona ganador</option>
-                {home ? (
-                  <option value={home.id}>
-                    {home.flag} {home.name}
-                  </option>
-                ) : null}
-                {away ? (
-                  <option value={away.id}>
-                    {away.flag} {away.name}
-                  </option>
-                ) : null}
-              </select>
-            </div>
-          );
-        })}
+                <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                  {match.id}
+                </div>
+
+                <div className="mb-3 space-y-1 text-sm font-semibold text-[var(--iberdrola-forest)]">
+                  <div>{home ? `${home.flag} ${homeLabel}` : homeLabel}</div>
+                  <div className="text-xs text-[var(--iberdrola-forest)]/45">vs</div>
+                  <div>{away ? `${away.flag} ${awayLabel}` : awayLabel}</div>
+                </div>
+
+                <select
+                  value={picks[match.id] ?? ""}
+                  onChange={(e) => onPick(match.id, e.target.value)}
+                  disabled={!hasOptions}
+                  className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <option value="">Selecciona ganador</option>
+                  {home ? (
+                    <option value={home.id}>
+                      {home.flag} {home.name}
+                    </option>
+                  ) : null}
+                  {away ? (
+                    <option value={away.id}>
+                      {away.flag} {away.name}
+                    </option>
+                  ) : null}
+                </select>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
@@ -110,12 +159,17 @@ function RoundSection({
 export default function AdminPageClient() {
   const supabase = createClient();
 
+  const [pools, setPools] = useState<PoolRow[]>([]);
+  const [selectedPoolId, setSelectedPoolId] = useState("");
+  const [selectedPoolSlug, setSelectedPoolSlug] = useState("");
+
   const [groupResults, setGroupResults] = useState<GroupResultMap>({});
   const [knockoutResults, setKnockoutResults] =
     useState<KnockoutPredictionMap>({});
   const [officialExtras, setOfficialExtras] = useState<OfficialExtraResultMap>(
     {}
   );
+
   const [loading, setLoading] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
   const [message, setMessage] = useState("");
@@ -132,9 +186,34 @@ export default function AdminPageClient() {
   );
 
   const groupMatches = useMemo(
-    () => initialMatches.filter((match) => match.stage === "group"),
+    () =>
+      initialMatches
+        .filter((match) => match.stage === "group")
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     []
   );
+
+  const groupedMatchesByDate = useMemo(() => {
+    const map = new Map<string, Match[]>();
+
+    groupMatches.forEach((match) => {
+      const key = getDateKeySpain(match.kickoff);
+      if (!key) return;
+
+      const current = map.get(key) ?? [];
+      current.push(match);
+      map.set(key, current);
+    });
+
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([dateKey, matches], index) => ({
+        dateKey,
+        matchday: index + 1,
+        label: formatDateHeaderSpain(dateKey),
+        matches,
+      }));
+  }, [groupMatches]);
 
   const officialMatches = useMemo<Match[]>(() => {
     return initialMatches.map((match) => {
@@ -168,91 +247,79 @@ export default function AdminPageClient() {
   );
 
   useEffect(() => {
-  const allMatches = [
-    ...realBracket.round32,
-    ...realBracket.round16,
-    ...realBracket.quarterfinals,
-    ...realBracket.semifinals,
-    ...realBracket.finals,
-  ];
+    async function loadInitialData() {
+      setLoading(true);
+      setMessage("");
 
-  setKnockoutResults((prev) => {
-    const next = { ...prev };
-    let changed = false;
+      try {
+        const { data: poolRows, error: poolError } = await supabase
+          .from("pools")
+          .select("id, name, slug")
+          .order("name", { ascending: true });
 
-    for (const match of allMatches) {
-      const validTeamIds = [match.homeTeamId, match.awayTeamId].filter(
-        Boolean
-      ) as string[];
+        if (poolError) throw poolError;
 
-      const currentPick = next[match.id];
+        const nextPools = (poolRows ?? []) as PoolRow[];
+        setPools(nextPools);
 
-      if (!currentPick) continue;
+        if (nextPools.length > 0) {
+          setSelectedPoolId((current) => current || nextPools[0].id);
+          setSelectedPoolSlug((current) => current || nextPools[0].slug);
+        }
 
-      if (!validTeamIds.includes(currentPick)) {
-        delete next[match.id];
-        changed = true;
+        const { data: groupRows, error: groupError } = await supabase
+          .from("official_group_results")
+          .select("match_id, home_goals, away_goals");
+
+        if (groupError) throw groupError;
+
+        const nextGroup: GroupResultMap = {};
+        (groupRows ?? []).forEach((row) => {
+          nextGroup[row.match_id] = {
+            homeGoals: row.home_goals !== null ? String(row.home_goals) : "",
+            awayGoals: row.away_goals !== null ? String(row.away_goals) : "",
+          };
+        });
+        setGroupResults(nextGroup);
+
+        const { data: koRows, error: koError } = await supabase
+          .from("official_knockout_results")
+          .select("match_id, picked_team_id");
+
+        if (koError) throw koError;
+
+        const nextKO: KnockoutPredictionMap = {};
+        (koRows ?? []).forEach((row) => {
+          nextKO[row.match_id] = row.picked_team_id ?? "";
+        });
+        setKnockoutResults(nextKO);
+
+        const { data: extraRows, error: extraError } = await supabase
+          .from("official_extra_results")
+          .select("question_key, official_value");
+
+        if (extraError) throw extraError;
+
+        const nextExtras: OfficialExtraResultMap = {};
+        (extraRows ?? []).forEach((row) => {
+          nextExtras[row.question_key] = row.official_value ?? "";
+        });
+        setOfficialExtras(nextExtras);
+      } catch (err) {
+        console.error(err);
+        setMessage("Error cargando resultados.");
+      } finally {
+        setLoading(false);
       }
     }
 
-    return changed ? next : prev;
-  });
-}, [realBracket]);
-
-  const loadOfficialResults = useCallback(async () => {
-    setLoading(true);
-    setMessage("");
-
-    try {
-      const { data: groupRows, error: groupError } = await supabase
-        .from("official_group_results")
-        .select("match_id, home_goals, away_goals");
-
-      if (groupError) throw groupError;
-
-      const nextGroup: GroupResultMap = {};
-      (groupRows ?? []).forEach((row) => {
-        nextGroup[row.match_id] = {
-          homeGoals: row.home_goals !== null ? String(row.home_goals) : "",
-          awayGoals: row.away_goals !== null ? String(row.away_goals) : "",
-        };
-      });
-      setGroupResults(nextGroup);
-
-      const { data: koRows, error: koError } = await supabase
-        .from("official_knockout_results")
-        .select("match_id, picked_team_id");
-
-      if (koError) throw koError;
-
-      const nextKO: KnockoutPredictionMap = {};
-      (koRows ?? []).forEach((row) => {
-        nextKO[row.match_id] = row.picked_team_id ?? "";
-      });
-      setKnockoutResults(nextKO);
-
-      const { data: extraRows, error: extraError } = await supabase
-        .from("official_extra_results")
-        .select("question_key, official_value");
-
-      if (extraError) throw extraError;
-
-      const nextExtras: OfficialExtraResultMap = {};
-      (extraRows ?? []).forEach((row) => {
-        nextExtras[row.question_key] = row.official_value ?? "";
-      });
-      setOfficialExtras(nextExtras);
-    } catch (err) {
-      console.error(err);
-      setMessage("Error cargando resultados.");
-    } finally {
-      setLoading(false);
-    }
+    loadInitialData();
   }, [supabase]);
 
   useEffect(() => {
-    loadOfficialResults();
-  }, [loadOfficialResults]);
+    const currentPool = pools.find((pool) => pool.id === selectedPoolId);
+    setSelectedPoolSlug(currentPool?.slug ?? "");
+  }, [selectedPoolId, pools]);
 
   function updateGroupResult(
     matchId: string,
@@ -313,32 +380,16 @@ export default function AdminPageClient() {
               official_value: value,
             }
           : null;
-      }).filter(Boolean) as Array<{
-        question_key: string;
-        official_value: string;
-      }>;
+      }).filter(Boolean);
 
-      const { error: deleteExtrasError } = await supabase
+      const { error: extrasError } = await supabase
         .from("official_extra_results")
-        .delete()
-        .not("question_key", "is", null);
+        .upsert(extraRows, { onConflict: "question_key" });
 
-      if (deleteExtrasError) {
-        console.error(deleteExtrasError);
-        setMessage("Error limpiando resultados extra.");
+      if (extrasError) {
+        console.error(extrasError);
+        setMessage("Error guardando resultados extra.");
         return;
-      }
-
-      if (extraRows.length > 0) {
-        const { error: extrasError } = await supabase
-          .from("official_extra_results")
-          .insert(extraRows);
-
-        if (extrasError) {
-          console.error(extrasError);
-          setMessage("Error guardando resultados extra.");
-          return;
-        }
       }
 
       const res = await fetch("/api/admin/update-results", {
@@ -353,15 +404,13 @@ export default function AdminPageClient() {
       });
 
       const data = await res.json();
-      console.log("UPDATE RESULTS RESPONSE:", data);
 
       if (!res.ok) {
         setMessage(data.error || "Error guardando resultados.");
         return;
       }
 
-      await loadOfficialResults();
-      setMessage("Resultados y preguntas extra guardados correctamente.");
+      setMessage("Resultados guardados y clasificación recalculada.");
     } catch (err) {
       console.error(err);
       setMessage("Error guardando resultados.");
@@ -375,76 +424,172 @@ export default function AdminPageClient() {
   }
 
   return (
-    <main className="space-y-8 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">ADMIN · Resultados</h1>
-
-        <Link
-          href={`/standings?poolId=${STANDINGS_POOL_ID}`}
-          className="inline-block rounded-xl border border-[var(--iberdrola-green)] bg-white px-4 py-2 text-sm font-medium text-[var(--iberdrola-forest)]"
-        >
-          Ver clasificación
-        </Link>
-      </div>
-
-      {message ? <p>{message}</p> : null}
-
-      <div>
-        <button
-          onClick={handleSaveAllResults}
-          disabled={savingAll}
-          className="rounded-xl bg-[var(--iberdrola-green)] px-5 py-3 font-semibold text-white disabled:opacity-50"
-        >
-          {savingAll ? "Guardando..." : "Guardar y recalcular todo"}
-        </button>
-      </div>
-
-      <section>
-        <h2 className="mb-3 text-xl font-semibold">Grupos</h2>
-
-        <div className="mt-4 space-y-2">
-          {groupMatches.map((match: Match) => {
-            const home = teamMap.get(match.homeTeamId ?? "");
-            const away = teamMap.get(match.awayTeamId ?? "");
-
-            if (!home || !away) return null;
-
-            return (
-              <div key={match.id} className="flex items-center gap-2">
-                <span className="min-w-[140px]">
-                  {home.flag} {home.name}
-                </span>
-
-                <input
-                  value={groupResults[match.id]?.homeGoals ?? ""}
-                  onChange={(e) =>
-                    updateGroupResult(match.id, "homeGoals", e.target.value)
-                  }
-                  className="w-12 rounded border px-2 py-1"
-                />
-
-                <span>-</span>
-
-                <input
-                  value={groupResults[match.id]?.awayGoals ?? ""}
-                  onChange={(e) =>
-                    updateGroupResult(match.id, "awayGoals", e.target.value)
-                  }
-                  className="w-12 rounded border px-2 py-1"
-                />
-
-                <span className="min-w-[140px]">
-                  {away.flag} {away.name}
-                </span>
+    <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-4 sm:px-6">
+      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+        <div className="p-4 sm:p-5">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                Administración
               </div>
-            );
-          })}
+              <h1 className="text-2xl font-black text-[var(--iberdrola-forest)]">
+                Panel de resultados del Mundial
+              </h1>
+              <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+                Gestiona pools, resultados oficiales, knockout y preguntas extra.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="min-w-[260px]">
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                  Pool para clasificación
+                </label>
+                <select
+                  value={selectedPoolId}
+                  onChange={(e) => setSelectedPoolId(e.target.value)}
+                  className="w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+                >
+                  {pools.map((pool) => (
+                    <option key={pool.id} value={pool.id}>
+                      {pool.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedPoolId ? (
+                <Link
+                  href={
+                    selectedPoolSlug
+                      ? `/standings?poolId=${selectedPoolId}&poolSlug=${selectedPoolSlug}`
+                      : `/standings?poolId=${selectedPoolId}`
+                  }
+                  className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+                >
+                  Ver clasificación del pool
+                </Link>
+              ) : null}
+
+              <button
+                onClick={handleSaveAllResults}
+                disabled={savingAll}
+                className="rounded-2xl bg-[var(--iberdrola-green)] px-5 py-3 text-sm font-bold text-white shadow-sm disabled:opacity-50"
+              >
+                {savingAll ? "Guardando..." : "Guardar y recalcular todo"}
+              </button>
+            </div>
+          </div>
+
+          {message ? (
+            <div className="mt-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
+              {message}
+            </div>
+          ) : null}
         </div>
       </section>
 
-      <section className="space-y-8">
-        <h2 className="text-xl font-semibold">Eliminatorias</h2>
+      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+        <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+          <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+            Resultados de la fase de grupos
+          </h2>
+          <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+            Partidos ordenados cronológicamente y agrupados por jornada lógica de España.
+          </p>
+        </div>
 
+        <div className="p-4 space-y-5">
+          {groupedMatchesByDate.map((block) => (
+            <section
+              key={block.dateKey}
+              className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white"
+            >
+              <div className="flex flex-col gap-1 border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm font-black capitalize text-[var(--iberdrola-forest)]">
+                  {block.label}
+                </div>
+                <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                  Jornada {block.matchday}
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <div className="min-w-[980px]">
+                  <div className="grid grid-cols-[70px_70px_130px_minmax(280px,1fr)_120px_120px] gap-3 border-b border-[var(--iberdrola-sky)] px-4 py-3 text-xs font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                    <div>Jornada</div>
+                    <div>Grupo</div>
+                    <div>Hora (ES)</div>
+                    <div>Partido</div>
+                    <div className="text-center">Resultado</div>
+                    <div className="text-center">Oficial</div>
+                  </div>
+
+                  {block.matches.map((match) => {
+                    const home = teamMap.get(match.homeTeamId ?? "");
+                    const away = teamMap.get(match.awayTeamId ?? "");
+
+                    if (!home || !away) return null;
+
+                    return (
+                      <div
+                        key={match.id}
+                        className="grid grid-cols-[70px_70px_130px_minmax(280px,1fr)_120px_120px] items-center gap-3 border-b border-[var(--iberdrola-sky)]/60 px-4 py-3"
+                      >
+                        <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
+                          J{block.matchday}
+                        </div>
+
+                        <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
+                          {match.group}
+                        </div>
+
+                        <div className="text-sm font-medium text-[var(--iberdrola-forest)]/70">
+                          {formatKickoffSpain(match.kickoff)}
+                        </div>
+
+                        <div className="min-w-0 text-sm font-semibold text-[var(--iberdrola-forest)]">
+                          <span>{home.flag} {home.name}</span>
+                          <span className="mx-2 text-[var(--iberdrola-forest)]/45">vs</span>
+                          <span>{away.flag} {away.name}</span>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-2">
+                          <input
+                            value={groupResults[match.id]?.homeGoals ?? ""}
+                            onChange={(e) =>
+                              updateGroupResult(match.id, "homeGoals", e.target.value)
+                            }
+                            className="w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+                          />
+
+                          <span className="font-bold text-[var(--iberdrola-forest)]/60">
+                            -
+                          </span>
+
+                          <input
+                            value={groupResults[match.id]?.awayGoals ?? ""}
+                            onChange={(e) =>
+                              updateGroupResult(match.id, "awayGoals", e.target.value)
+                            }
+                            className="w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+                          />
+                        </div>
+
+                        <div className="text-center text-xs font-semibold text-[var(--iberdrola-forest)]/45">
+                          ID: {match.id}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          ))}
+        </div>
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-2">
         <RoundSection
           title="Round of 32"
           matches={realBracket.round32}
@@ -470,29 +615,33 @@ export default function AdminPageClient() {
         />
 
         <RoundSection
-          title="Semis"
+          title="Semifinales"
           matches={realBracket.semifinals}
           picks={knockoutResults}
           onPick={updateKnockoutResult}
           teamMap={teamMap}
         />
+      </div>
 
-        <RoundSection
-          title="Final"
-          matches={realBracket.finals}
-          picks={knockoutResults}
-          onPick={updateKnockoutResult}
-          teamMap={teamMap}
-        />
-      </section>
+      <RoundSection
+        title="Final"
+        matches={realBracket.finals}
+        picks={knockoutResults}
+        onPick={updateKnockoutResult}
+        teamMap={teamMap}
+      />
 
-      <section>
-        <h2 className="mb-3 text-xl font-semibold">Preguntas extra</h2>
+      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+        <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+          <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+            Preguntas extra
+          </h2>
+        </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
           {EXTRA_QUESTIONS.map((question) => (
-            <div key={question.key} className="rounded-xl border p-3">
-              <label className="mb-2 block text-sm font-medium">
+            <div key={question.key} className="rounded-2xl border border-[var(--iberdrola-sky)] p-4">
+              <label className="mb-2 block text-sm font-bold text-[var(--iberdrola-forest)]">
                 {EXTRA_LABELS[question.key] ?? question.key}
               </label>
 
@@ -503,7 +652,7 @@ export default function AdminPageClient() {
                   updateOfficialExtra(question.key, e.target.value)
                 }
                 placeholder="Resultado oficial"
-                className="w-full rounded border px-3 py-2"
+                className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
               />
             </div>
           ))}

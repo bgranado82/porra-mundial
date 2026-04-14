@@ -68,7 +68,7 @@ const uniqueGroupDates = Array.from(
   new Set(
     groupMatches
       .map((match) => getDateKeyFromKickoff(match.kickoff))
-      .filter(Boolean)
+      .filter((value): value is string => Boolean(value))
   )
 ).sort();
 
