@@ -1159,7 +1159,7 @@ const canSeeTransparency =
         ) : null}
 
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-          <div className="border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/30 px-4 py-3">
+          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
               {t.scoringRules}
             </h2>
