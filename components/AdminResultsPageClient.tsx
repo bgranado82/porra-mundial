@@ -535,11 +535,17 @@ export default function AdminResultsPageClient() {
     J{block.matchday} · Grupo {match.group} · {formatKickoffAdminCompact(match.kickoff)}
   </div>
 
-  <div className="text-sm font-semibold leading-snug text-[var(--iberdrola-forest)]">
+ <div className="space-y-1 text-sm font-semibold leading-snug text-[var(--iberdrola-forest)]">
+  <div className="break-words">
     {home.flag} {home.name}
-    <span className="mx-2 text-[var(--iberdrola-forest)]/45">vs</span>
+  </div>
+  <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/45">
+    vs
+  </div>
+  <div className="break-words">
     {away.flag} {away.name}
   </div>
+</div>
 
   <div className="flex items-center gap-2">
     <input
