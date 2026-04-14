@@ -83,6 +83,8 @@ export default function AdminParticipantsPageClient() {
         const nextPools = (data ?? []) as PoolRow[];
         setPools(nextPools);
 
+        console.log("POOLS 👉", nextPools);
+        
         if (nextPools.length > 0) {
           setSelectedPoolId(nextPools[0].id);
         }
