@@ -627,6 +627,22 @@ export default function AdminPageClient() {
         </div>
 
         <div className="space-y-5 p-4">
+          <div className="max-w-[320px]">
+  <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+    Pool seleccionado
+  </label>
+  <select
+    value={selectedPoolId}
+    onChange={(e) => setSelectedPoolId(e.target.value)}
+    className="w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+  >
+    {pools.map((pool) => (
+      <option key={pool.id} value={pool.id}>
+        {pool.name}
+      </option>
+    ))}
+  </select>
+</div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <label className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
               <span className="text-sm font-bold text-[var(--iberdrola-forest)]">
