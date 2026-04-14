@@ -1,3 +1,4 @@
+
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import AdminSettingsPageClient from "@/components/AdminSettingsPageClient";
@@ -19,11 +20,7 @@ export default async function AdminSettingsPage() {
     .eq("id", user.id)
     .single();
 
-  if (error || !profile) {
-    redirect("/");
-  }
-
-  if (profile.role !== "admin") {
+  if (error || !profile || profile.role !== "admin") {
     redirect("/");
   }
 

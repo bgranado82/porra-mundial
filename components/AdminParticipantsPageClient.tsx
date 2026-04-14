@@ -11,35 +11,36 @@ type PoolRow = {
   slug: string;
 };
 
-type EntryAdminRow = {
+type EntryRow = {
   id: string;
   pool_id: string;
-  user_id: string;
+  user_id: string | null;
   entry_number: number | null;
   name: string | null;
   email: string | null;
   company: string | null;
   country: string | null;
-  status: "draft" | "submitted";
+  status: "draft" | "submitted" | string;
   submitted_at: string | null;
-  created_at: string | null;
-  payment_status: "pending" | "paid";
+  created_at: string;
+  payment_status: "pending" | "paid" | string | null;
   payment_method: string | null;
   payment_note: string | null;
 };
 
-function formatCreatedAt(value: string | null | undefined) {
+function formatDate(value: string | null) {
   if (!value) return "-";
 
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
 
-  return date.toLocaleString("es-ES", {
+  return new Intl.DateTimeFormat("es-ES", {
     day: "2-digit",
     month: "2-digit",
+    year: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  });
+  }).format(date);
 }
 
 export default function AdminParticipantsPageClient() {
@@ -47,26 +48,22 @@ export default function AdminParticipantsPageClient() {
 
   const [pools, setPools] = useState<PoolRow[]>([]);
   const [selectedPoolId, setSelectedPoolId] = useState("");
-  const [entries, setEntries] = useState<EntryAdminRow[]>([]);
+  const [entries, setEntries] = useState<EntryRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [entriesMessage, setEntriesMessage] = useState("");
-  const [updatingEntryId, setUpdatingEntryId] = useState<string | null>(null);
+  const [loadingEntries, setLoadingEntries] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const paidEntriesCount = useMemo(
-    () => entries.filter((entry) => entry.payment_status === "paid").length,
-    [entries]
-  );
+  const [savingEntryId, setSavingEntryId] = useState<string | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
-  const pendingEntriesCount = useMemo(
-    () => entries.filter((entry) => entry.payment_status !== "paid").length,
-    [entries]
-  );
-
-  const estimatedRevenue = paidEntriesCount * 10;
+  const [paymentDrafts, setPaymentDrafts] = useState<
+    Record<string, { payment_status: string; payment_method: string; payment_note: string }>
+  >({});
 
   useEffect(() => {
     async function loadPools() {
       setLoading(true);
+      setMessage("");
 
       try {
         const { data, error } = await supabase
@@ -74,23 +71,17 @@ export default function AdminParticipantsPageClient() {
           .select("id, name, slug")
           .order("name", { ascending: true });
 
-        if (error) {
-          console.error(error);
-          setEntriesMessage("Error cargando pools.");
-          return;
-        }
+        if (error) throw error;
 
         const nextPools = (data ?? []) as PoolRow[];
         setPools(nextPools);
 
-        console.log("POOLS 👉", nextPools);
-        
         if (nextPools.length > 0) {
           setSelectedPoolId(nextPools[0].id);
         }
       } catch (err) {
         console.error(err);
-        setEntriesMessage("Error cargando pools.");
+        setMessage("Error cargando pools.");
       } finally {
         setLoading(false);
       }
@@ -99,167 +90,216 @@ export default function AdminParticipantsPageClient() {
     loadPools();
   }, [supabase]);
 
-  useEffect(() => {
-    if (!selectedPoolId) return;
-    loadEntries(selectedPoolId);
-  }, [selectedPoolId]);
-
   async function loadEntries(poolId: string) {
-    setLoading(true);
-    setEntriesMessage("");
+    if (!poolId) return;
+
+    setLoadingEntries(true);
+    setMessage("");
 
     try {
-      const { data, error } = await supabase
-        .from("entries")
-        .select(`
-          id,
-          pool_id,
-          user_id,
-          entry_number,
-          name,
-          email,
-          company,
-          country,
-          status,
-          submitted_at,
-          created_at,
-          payment_status,
-          payment_method,
-          payment_note
-        `)
-        .eq("pool_id", poolId)
-        .order("entry_number", { ascending: true })
-        .order("created_at", { ascending: true });
+      const res = await fetch(`/api/admin/entries?poolId=${poolId}`, {
+        cache: "no-store",
+      });
 
-      if (error) {
-        console.error(error);
-        setEntriesMessage("Error cargando participantes.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.error || "Error cargando participantes.");
         setEntries([]);
         return;
       }
 
-      setEntries((data ?? []) as EntryAdminRow[]);
+      const nextEntries = (data.entries ?? []) as EntryRow[];
+      setEntries(nextEntries);
+
+      const drafts: Record<
+        string,
+        { payment_status: string; payment_method: string; payment_note: string }
+      > = {};
+
+      nextEntries.forEach((entry) => {
+        drafts[entry.id] = {
+          payment_status: entry.payment_status ?? "pending",
+          payment_method: entry.payment_method ?? "",
+          payment_note: entry.payment_note ?? "",
+        };
+      });
+
+      setPaymentDrafts(drafts);
     } catch (err) {
       console.error(err);
-      setEntriesMessage("Error cargando participantes.");
+      setMessage("Error cargando participantes.");
       setEntries([]);
     } finally {
-      setLoading(false);
+      setLoadingEntries(false);
     }
   }
 
-  async function updateEntryPaymentStatus(
+  useEffect(() => {
+    if (selectedPoolId) {
+      loadEntries(selectedPoolId);
+    }
+  }, [selectedPoolId]);
+
+  const selectedPool = useMemo(
+    () => pools.find((pool) => pool.id === selectedPoolId) ?? null,
+    [pools, selectedPoolId]
+  );
+
+  const participantsCount = entries.length;
+  const paidCount = entries.filter((entry) => entry.payment_status === "paid").length;
+  const totalRevenue = paidCount * 10;
+
+  function updatePaymentDraft(
     entryId: string,
-    paymentStatus: "pending" | "paid"
+    field: "payment_status" | "payment_method" | "payment_note",
+    value: string
   ) {
-    setUpdatingEntryId(entryId);
-    setEntriesMessage("");
+    setPaymentDrafts((prev) => ({
+      ...prev,
+      [entryId]: {
+        payment_status: prev[entryId]?.payment_status ?? "pending",
+        payment_method: prev[entryId]?.payment_method ?? "",
+        payment_note: prev[entryId]?.payment_note ?? "",
+        [field]: value,
+      },
+    }));
+  }
+
+  async function handleSavePayment(entryId: string) {
+    const draft = paymentDrafts[entryId];
+    if (!draft) return;
+
+    setSavingEntryId(entryId);
+    setMessage("");
 
     try {
-      const { error } = await supabase
-        .from("entries")
-        .update({ payment_status: paymentStatus })
-        .eq("id", entryId);
+      const res = await fetch("/api/admin/entries/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          entryId,
+          payment_status: draft.payment_status,
+          payment_method: draft.payment_method,
+          payment_note: draft.payment_note,
+        }),
+      });
 
-      if (error) {
-        console.error(error);
-        setEntriesMessage("Error actualizando el pago.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.error || "Error guardando pago.");
         return;
       }
 
-      setEntries((current) =>
-        current.map((entry) =>
+      setEntries((prev) =>
+        prev.map((entry) =>
           entry.id === entryId
-            ? { ...entry, payment_status: paymentStatus }
+            ? {
+                ...entry,
+                payment_status: draft.payment_status,
+                payment_method: draft.payment_method || null,
+                payment_note: draft.payment_note || null,
+              }
             : entry
         )
       );
+
+      setMessage("Pago actualizado.");
     } catch (err) {
       console.error(err);
-      setEntriesMessage("Error actualizando el pago.");
+      setMessage("Error guardando pago.");
     } finally {
-      setUpdatingEntryId(null);
+      setSavingEntryId(null);
     }
   }
 
-  async function reopenEntry(entryId: string) {
-    const confirmed = window.confirm(
-      "¿Seguro que quieres reabrir esta porra? Volverá a estado borrador."
-    );
-    if (!confirmed) return;
-
-    setUpdatingEntryId(entryId);
-    setEntriesMessage("");
+  async function handleReopen(entryId: string) {
+    setActionLoadingId(entryId);
+    setMessage("");
 
     try {
-      const { error } = await supabase
-        .from("entries")
-        .update({
-          status: "draft",
-          submitted_at: null,
-        })
-        .eq("id", entryId);
+      const res = await fetch("/api/admin/entries/reopen", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ entryId }),
+      });
 
-      if (error) {
-        console.error(error);
-        setEntriesMessage("Error reabriendo la porra.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.error || "Error reabriendo porra.");
         return;
       }
 
-      setEntries((current) =>
-        current.map((entry) =>
+      setEntries((prev) =>
+        prev.map((entry) =>
           entry.id === entryId
-            ? { ...entry, status: "draft", submitted_at: null }
+            ? {
+                ...entry,
+                status: "draft",
+                submitted_at: null,
+              }
             : entry
         )
       );
+
+      setMessage("Porra reabierta.");
     } catch (err) {
       console.error(err);
-      setEntriesMessage("Error reabriendo la porra.");
+      setMessage("Error reabriendo porra.");
     } finally {
-      setUpdatingEntryId(null);
+      setActionLoadingId(null);
     }
   }
 
-  async function lockEntry(entryId: string) {
-    const confirmed = window.confirm(
-      "¿Seguro que quieres marcar esta porra como enviada?"
-    );
-    if (!confirmed) return;
-
-    const submittedAt = new Date().toISOString();
-
-    setUpdatingEntryId(entryId);
-    setEntriesMessage("");
+  async function handleForceSubmit(entryId: string) {
+    setActionLoadingId(entryId);
+    setMessage("");
 
     try {
-      const { error } = await supabase
-        .from("entries")
-        .update({
-          status: "submitted",
-          submitted_at: submittedAt,
-        })
-        .eq("id", entryId);
+      const res = await fetch("/api/admin/entries/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ entryId }),
+      });
 
-      if (error) {
-        console.error(error);
-        setEntriesMessage("Error marcando la porra como enviada.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessage(data.error || "Error forzando envío.");
         return;
       }
 
-      setEntries((current) =>
-        current.map((entry) =>
+      setEntries((prev) =>
+        prev.map((entry) =>
           entry.id === entryId
-            ? { ...entry, status: "submitted", submitted_at: submittedAt }
+            ? {
+                ...entry,
+                status: "submitted",
+                submitted_at: new Date().toISOString(),
+              }
             : entry
         )
       );
+
+      setMessage("Porra marcada como enviada.");
     } catch (err) {
       console.error(err);
-      setEntriesMessage("Error marcando la porra como enviada.");
+      setMessage("Error forzando envío.");
     } finally {
-      setUpdatingEntryId(null);
+      setActionLoadingId(null);
     }
+  }
+
+  if (loading) {
+    return <div className="p-6">Cargando participantes...</div>;
   }
 
   return (
@@ -282,19 +322,19 @@ export default function AdminParticipantsPageClient() {
             <div className="flex flex-wrap gap-2">
               <Link
                 href="/admin"
-                className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
+                className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
               >
                 Inicio admin
               </Link>
               <Link
                 href="/admin/results"
-                className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
+                className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
               >
                 Resultados
               </Link>
               <Link
                 href="/admin/settings"
-                className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
+                className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
               >
                 Configuración
               </Link>
@@ -310,9 +350,9 @@ export default function AdminParticipantsPageClient() {
           </h2>
         </div>
 
-        <div className="space-y-4 p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div className="min-w-[260px]">
+        <div className="space-y-5 p-4">
+          <div className="grid gap-4 xl:grid-cols-[320px_1fr] xl:items-end">
+            <div>
               <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
                 Pool
               </label>
@@ -330,169 +370,201 @@ export default function AdminParticipantsPageClient() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3">
-                <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+              <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
+                <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
                   Participantes
                 </div>
-                <div className="mt-1 text-2xl font-black text-[var(--iberdrola-green)]">
-                  {entries.length}
+                <div className="text-4xl font-black text-[var(--iberdrola-green)]">
+                  {participantsCount}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3">
-                <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+              <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
+                <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
                   Pagados
                 </div>
-                <div className="mt-1 text-2xl font-black text-[var(--iberdrola-green)]">
-                  {paidEntriesCount}
+                <div className="text-4xl font-black text-[var(--iberdrola-green)]">
+                  {paidCount}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3">
-                <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+              <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
+                <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
                   Recaudación
                 </div>
-                <div className="mt-1 text-2xl font-black text-[var(--iberdrola-green)]">
-                  {estimatedRevenue}€
+                <div className="text-4xl font-black text-[var(--iberdrola-green)]">
+                  {totalRevenue}€
                 </div>
               </div>
             </div>
           </div>
 
-          {entriesMessage ? (
+          {message ? (
             <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
-              {entriesMessage}
+              {message}
             </div>
           ) : null}
 
-          {loading ? (
-            <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
+          {loadingEntries ? (
+            <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
               Cargando participantes...
             </div>
           ) : entries.length === 0 ? (
-            <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
+            <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
               No hay participantes en este pool.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <div className="min-w-[1320px]">
-                <div className="grid grid-cols-[80px_180px_240px_160px_120px_120px_120px_120px_300px] gap-3 border-b border-[var(--iberdrola-sky)] px-4 py-3 text-xs font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                  <div>Porra</div>
-                  <div>Nombre</div>
-                  <div>Email</div>
-                  <div>Empresa</div>
-                  <div>País</div>
-                  <div>Estado</div>
-                  <div>Pago</div>
-                  <div>Alta</div>
-                  <div>Acciones</div>
-                </div>
+            <div className="space-y-3">
+              {entries.map((entry) => {
+                const draft = paymentDrafts[entry.id] ?? {
+                  payment_status: entry.payment_status ?? "pending",
+                  payment_method: entry.payment_method ?? "",
+                  payment_note: entry.payment_note ?? "",
+                };
 
-                {entries.map((entry) => {
-                  const isUpdating = updatingEntryId === entry.id;
+                return (
+                  <div
+                    key={entry.id}
+                    className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4"
+                  >
+                    <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr_auto] xl:items-start">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-lg font-black text-[var(--iberdrola-forest)]">
+                            {entry.name || entry.email || "Participante"}
+                          </h3>
 
-                  return (
-                    <div
-                      key={entry.id}
-                      className="grid grid-cols-[80px_180px_240px_160px_120px_120px_120px_120px_300px] items-center gap-3 border-b border-[var(--iberdrola-sky)]/60 px-4 py-3"
-                    >
-                      <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
-                        {entry.entry_number ?? "-"}
-                      </div>
-
-                      <div className="truncate text-sm font-semibold text-[var(--iberdrola-forest)]">
-                        {entry.name || "-"}
-                      </div>
-
-                      <div className="truncate text-sm text-[var(--iberdrola-forest)]/75">
-                        {entry.email || "-"}
-                      </div>
-
-                      <div className="truncate text-sm text-[var(--iberdrola-forest)]/75">
-                        {entry.company || "-"}
-                      </div>
-
-                      <div className="truncate text-sm text-[var(--iberdrola-forest)]/75">
-                        {entry.country || "-"}
-                      </div>
-
-                      <div>
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
-                            entry.status === "submitted"
-                              ? "bg-[var(--iberdrola-green-light)] text-[var(--iberdrola-forest)]"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {entry.status === "submitted" ? "Enviada" : "Borrador"}
-                        </span>
-                      </div>
-
-                      <div>
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
-                            entry.payment_status === "paid"
-                              ? "bg-green-50 text-green-700"
-                              : "bg-amber-50 text-amber-700"
-                          }`}
-                        >
-                          {entry.payment_status === "paid" ? "Pagado" : "Pendiente"}
-                        </span>
-                      </div>
-
-                      <div className="text-sm text-[var(--iberdrola-forest)]/75">
-                        {formatCreatedAt(entry.created_at)}
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        {entry.payment_status === "paid" ? (
-                          <button
-                            type="button"
-                            disabled={isUpdating}
-                            onClick={() =>
-                              updateEntryPaymentStatus(entry.id, "pending")
-                            }
-                            className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-bold text-amber-700 disabled:opacity-50"
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs font-bold ${
+                              entry.status === "submitted"
+                                ? "bg-green-50 text-green-700"
+                                : "bg-amber-50 text-amber-700"
+                            }`}
                           >
-                            Marcar pendiente
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={isUpdating}
-                            onClick={() =>
-                              updateEntryPaymentStatus(entry.id, "paid")
-                            }
-                            className="rounded-xl border border-green-200 bg-white px-3 py-2 text-xs font-bold text-green-700 disabled:opacity-50"
+                            {entry.status === "submitted" ? "Enviada" : "Borrador"}
+                          </span>
+
+                          <span
+                            className={`rounded-full px-2 py-1 text-xs font-bold ${
+                              draft.payment_status === "paid"
+                                ? "bg-green-50 text-green-700"
+                                : "bg-amber-50 text-amber-700"
+                            }`}
                           >
-                            Marcar pagado
-                          </button>
-                        )}
+                            {draft.payment_status === "paid" ? "Pagado" : "Pendiente"}
+                          </span>
+                        </div>
+
+                        <div className="mt-2 space-y-1 text-sm text-[var(--iberdrola-forest)]/75">
+                          <div>
+                            <span className="font-bold">Email:</span> {entry.email || "-"}
+                          </div>
+                          <div>
+                            <span className="font-bold">Empresa:</span> {entry.company || "-"}
+                          </div>
+                          <div>
+                            <span className="font-bold">País:</span> {entry.country || "-"}
+                          </div>
+                          <div>
+                            <span className="font-bold">Pool:</span> {selectedPool?.name || "-"}
+                          </div>
+                          <div>
+                            <span className="font-bold">Porra:</span>{" "}
+                            {entry.entry_number ?? "-"}
+                          </div>
+                          <div>
+                            <span className="font-bold">Creada:</span>{" "}
+                            {formatDate(entry.created_at)}
+                          </div>
+                          <div>
+                            <span className="font-bold">Enviada:</span>{" "}
+                            {formatDate(entry.submitted_at)}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                        <div>
+                          <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                            Estado pago
+                          </label>
+                          <select
+                            value={draft.payment_status}
+                            onChange={(e) =>
+                              updatePaymentDraft(entry.id, "payment_status", e.target.value)
+                            }
+                            className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+                          >
+                            <option value="pending">Pendiente</option>
+                            <option value="paid">Pagado</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                            Método
+                          </label>
+                          <input
+                            type="text"
+                            value={draft.payment_method}
+                            onChange={(e) =>
+                              updatePaymentDraft(entry.id, "payment_method", e.target.value)
+                            }
+                            placeholder="Bizum, metálico..."
+                            className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                            Nota
+                          </label>
+                          <input
+                            type="text"
+                            value={draft.payment_note}
+                            onChange={(e) =>
+                              updatePaymentDraft(entry.id, "payment_note", e.target.value)
+                            }
+                            placeholder="Observación"
+                            className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 xl:w-[190px]">
+                        <button
+                          type="button"
+                          onClick={() => handleSavePayment(entry.id)}
+                          disabled={savingEntryId === entry.id}
+                          className="rounded-2xl bg-[var(--iberdrola-green)] px-4 py-3 text-sm font-bold text-white shadow-sm disabled:opacity-50"
+                        >
+                          {savingEntryId === entry.id ? "Guardando..." : "Guardar pago"}
+                        </button>
 
                         {entry.status === "submitted" ? (
                           <button
                             type="button"
-                            disabled={isUpdating}
-                            onClick={() => reopenEntry(entry.id)}
-                            className="rounded-xl border border-amber-200 bg-white px-3 py-2 text-xs font-bold text-amber-700 disabled:opacity-50"
+                            onClick={() => handleReopen(entry.id)}
+                            disabled={actionLoadingId === entry.id}
+                            className="rounded-2xl border border-amber-300 bg-white px-4 py-3 text-sm font-bold text-amber-700 shadow-sm disabled:opacity-50"
                           >
-                            Reabrir porra
+                            {actionLoadingId === entry.id ? "Procesando..." : "Reabrir porra"}
                           </button>
                         ) : (
                           <button
                             type="button"
-                            disabled={isUpdating}
-                            onClick={() => lockEntry(entry.id)}
-                            className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] disabled:opacity-50"
+                            onClick={() => handleForceSubmit(entry.id)}
+                            disabled={actionLoadingId === entry.id}
+                            className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm disabled:opacity-50"
                           >
-                            Marcar enviada
+                            {actionLoadingId === entry.id ? "Procesando..." : "Marcar enviada"}
                           </button>
                         )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

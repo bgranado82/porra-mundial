@@ -1,6 +1,7 @@
+
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import AdminResultsPageClient from "@/components/AdminResultsPageClient";
+import AdminPageClient from "@/components/AdminPageClient";
 
 export default async function AdminResultsPage() {
   const supabase = await createClient();
@@ -19,13 +20,9 @@ export default async function AdminResultsPage() {
     .eq("id", user.id)
     .single();
 
-  if (error || !profile) {
+  if (error || !profile || profile.role !== "admin") {
     redirect("/");
   }
 
-  if (profile.role !== "admin") {
-    redirect("/");
-  }
-
-  return <AdminResultsPageClient />;
+  return <AdminPageClient />;
 }
