@@ -214,8 +214,12 @@ function ClassificationHeaderCard({
             </div>
           </>
         ) : (
-          <div className="text-3xl font-black text-[var(--iberdrola-green)]">-</div>
-        )}
+<div className="flex flex-col items-center">
+  <div className="text-3xl font-black text-[var(--iberdrola-green)]">-</div>
+  <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/50">
+    Pendiente de inicio
+  </div>
+</div>        )}
       </div>
     </div>
   );
@@ -972,8 +976,14 @@ const canSeeTransparency =
             </div>
 
             <div className="mt-5 grid gap-3 lg:grid-cols-[1.3fr_0.8fr_auto]">
-              <HeaderPill label={t.totalPoints} value={totalPoints} big />
-              <ClassificationHeaderCard currentUserStanding={currentUserStanding} />
+              <HeaderPill
+  label={t.totalPoints}
+  value={canSeeClassification ? totalPoints : "-"}
+  big
+/>
+             <ClassificationHeaderCard
+  currentUserStanding={canSeeClassification ? currentUserStanding : null}
+/>
 
               <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
                 <button

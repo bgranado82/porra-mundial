@@ -50,6 +50,17 @@ export default function GroupMatchCompactRow({
   onChangeHome,
   onChangeAway,
 }: Props) {
+  const hasOfficialResult =
+    officialHomeGoals !== null && officialAwayGoals !== null;
+
+  const pointsBadgeClass = !hasOfficialResult
+    ? "bg-gray-100 text-gray-500"
+    : points > 0
+      ? "bg-[var(--iberdrola-green)] text-white"
+      : "bg-gray-100 text-gray-500";
+
+  const pointsLabel = !hasOfficialResult ? "- pts" : `${points} pts`;
+
   return (
     <div className="grid h-[52px] grid-cols-[132px_minmax(0,1fr)_82px] items-center gap-2 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
       <div className="flex flex-col justify-center leading-tight">
@@ -63,7 +74,7 @@ export default function GroupMatchCompactRow({
 
         <span className="whitespace-nowrap text-[10px] font-semibold text-[var(--iberdrola-forest)]/75">
           Oficial:{" "}
-          {officialHomeGoals !== null && officialAwayGoals !== null
+          {hasOfficialResult
             ? `${officialHomeGoals}-${officialAwayGoals}`
             : "-"}
         </span>
@@ -85,7 +96,7 @@ export default function GroupMatchCompactRow({
             onChange={(e) =>
               onChangeHome(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-[13px] font-bold text-[var(--iberdrola-forest)] outline-none"
+            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-[13px] font-bold leading-none text-[var(--iberdrola-forest)] outline-none"
           />
 
           <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
@@ -97,7 +108,7 @@ export default function GroupMatchCompactRow({
             onChange={(e) =>
               onChangeAway(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-[13px] font-bold text-[var(--iberdrola-forest)] outline-none"
+            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-[13px] font-bold leading-none text-[var(--iberdrola-forest)] outline-none"
           />
         </div>
 
@@ -110,8 +121,10 @@ export default function GroupMatchCompactRow({
       </div>
 
       <div className="flex justify-end">
-        <span className="inline-flex rounded-full bg-[var(--iberdrola-green)] px-3 py-1 text-xs font-black text-white">
-          {points} pts
+        <span
+          className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${pointsBadgeClass}`}
+        >
+          {pointsLabel}
         </span>
       </div>
     </div>
