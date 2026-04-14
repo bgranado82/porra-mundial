@@ -79,6 +79,21 @@ function formatKickoffSpain(kickoff: string | null | undefined) {
   }).format(date);
 }
 
+function formatKickoffAdminCompact(kickoff: string | null | undefined) {
+  if (!kickoff) return "-";
+
+  const date = new Date(kickoff);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("es-ES", {
+    timeZone: "Europe/Madrid",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+}
+
 function formatDateHeaderSpain(dateKey: string) {
   const [year, month, day] = dateKey.split("-");
   const date = new Date(`${year}-${month}-${day}T12:00:00+02:00`);
@@ -674,21 +689,9 @@ async function handleSavePoolSettings() {
         />
       </label>
 
-      <label className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
-        <span className="text-sm font-bold text-[var(--iberdrola-forest)]">
-          Pool visible
-        </span>
-        <input
-          type="checkbox"
-          checked={poolSettings.is_pool_visible}
-          onChange={(e) =>
-            updatePoolSetting("is_pool_visible", e.target.checked)
-          }
-        />
-      </label>
     </div>
 
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       <div className="rounded-2xl border border-[var(--iberdrola-sky)] p-4">
         <label className="mb-2 block text-sm font-bold text-[var(--iberdrola-forest)]">
           Visibilidad clasificación
@@ -810,87 +813,110 @@ async function handleSavePoolSettings() {
           </p>
         </div>
 
-        <div className="p-4 space-y-5">
-          {groupedMatchesByDate.map((block) => (
-            <section
-              key={block.dateKey}
-              className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white"
-            >
-              <div className="flex flex-col gap-1 border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm font-black capitalize text-[var(--iberdrola-forest)]">
-                  {block.label}
-                </div>
-                <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                  Jornada {block.matchday}
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <div className="min-w-[980px]">
-                  <div className="grid grid-cols-[70px_70px_130px_minmax(280px,1fr)_120px_120px] gap-3 border-b border-[var(--iberdrola-sky)] px-4 py-3 text-xs font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                    <div>Jornada</div>
-                    <div>Grupo</div>
-                    <div>Hora (ES)</div>
-                    <div>Partido</div>
-                    <div className="text-center">Resultado</div>
-                  </div>
-
-                  {block.matches.map((match) => {
-                    const home = teamMap.get(match.homeTeamId ?? "");
-                    const away = teamMap.get(match.awayTeamId ?? "");
-
-                    if (!home || !away) return null;
-
-                    return (
-                     <div
-  key={match.id}
-  className="grid grid-cols-[70px_70px_130px_minmax(280px,1fr)_120px] items-center gap-3 border-b border-[var(--iberdrola-sky)]/60 px-4 py-3"
->
-  <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
-    J{block.matchday}
-  </div>
-
-  <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
-    {match.group}
-  </div>
-
-  <div className="text-sm font-medium text-[var(--iberdrola-forest)]/70">
-    {formatKickoffSpain(match.kickoff)}
-  </div>
-
-  <div className="min-w-0 text-sm font-semibold text-[var(--iberdrola-forest)]">
-    <span>{home.flag} {home.name}</span>
-    <span className="mx-2 text-[var(--iberdrola-forest)]/45">vs</span>
-    <span>{away.flag} {away.name}</span>
-  </div>
-
-  <div className="flex items-center justify-center gap-2">
-    <input
-      value={groupResults[match.id]?.homeGoals ?? ""}
-      onChange={(e) =>
-        updateGroupResult(match.id, "homeGoals", e.target.value)
-      }
-      className="w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
-    />
-
-    <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
-
-    <input
-      value={groupResults[match.id]?.awayGoals ?? ""}
-      onChange={(e) =>
-        updateGroupResult(match.id, "awayGoals", e.target.value)
-      }
-      className="w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
-    />
-  </div>
-</div>
-                    );
-                  })}
-                </div>
-              </div>
-            </section>
-          ))}
+       <div className="p-4 space-y-5">
+  {groupedMatchesByDate.map((block) => (
+    <section
+      key={block.dateKey}
+      className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white"
+    >
+      <div className="flex flex-col gap-1 border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-sm font-black capitalize text-[var(--iberdrola-forest)]">
+          {block.label}
         </div>
+        <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+          Jornada {block.matchday}
+        </div>
+      </div>
+
+      <div className="divide-y divide-[var(--iberdrola-sky)]/60">
+        {block.matches.map((match) => {
+          const home = teamMap.get(match.homeTeamId ?? "");
+          const away = teamMap.get(match.awayTeamId ?? "");
+
+          if (!home || !away) return null;
+
+          return (
+            <div key={match.id} className="px-4 py-3">
+              {/* Desktop */}
+              <div className="hidden md:grid md:grid-cols-[110px_120px_minmax(0,1fr)_120px] md:items-center md:gap-4">
+                <div className="text-sm font-bold text-[var(--iberdrola-forest)]">
+                  J{block.matchday} · {match.group}
+                </div>
+
+                <div className="text-sm font-medium text-[var(--iberdrola-forest)]/70">
+                  {formatKickoffAdminCompact(match.kickoff)}
+                </div>
+
+                <div className="min-w-0 text-sm font-semibold text-[var(--iberdrola-forest)]">
+                  <span>{home.flag} {home.name}</span>
+                  <span className="mx-2 text-[var(--iberdrola-forest)]/45">vs</span>
+                  <span>{away.flag} {away.name}</span>
+                </div>
+
+                <div className="flex items-center justify-end gap-2">
+                  <input
+                    value={groupResults[match.id]?.homeGoals ?? ""}
+                    onChange={(e) =>
+                      updateGroupResult(match.id, "homeGoals", e.target.value)
+                    }
+                    className="w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+                  />
+
+                  <span className="font-bold text-[var(--iberdrola-forest)]/60">
+                    -
+                  </span>
+
+                  <input
+                    value={groupResults[match.id]?.awayGoals ?? ""}
+                    onChange={(e) =>
+                      updateGroupResult(match.id, "awayGoals", e.target.value)
+                    }
+                    className="w-12 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+                  />
+                </div>
+              </div>
+
+              {/* Mobile */}
+              <div className="space-y-2 md:hidden">
+                <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                  J{block.matchday} · Grupo {match.group} · {formatKickoffAdminCompact(match.kickoff)}
+                </div>
+
+                <div className="text-sm font-semibold text-[var(--iberdrola-forest)]">
+                  {home.flag} {home.name}
+                  <span className="mx-2 text-[var(--iberdrola-forest)]/45">vs</span>
+                  {away.flag} {away.name}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    value={groupResults[match.id]?.homeGoals ?? ""}
+                    onChange={(e) =>
+                      updateGroupResult(match.id, "homeGoals", e.target.value)
+                    }
+                    className="w-14 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-base font-bold text-[var(--iberdrola-forest)]"
+                  />
+
+                  <span className="font-bold text-[var(--iberdrola-forest)]/60">
+                    -
+                  </span>
+
+                  <input
+                    value={groupResults[match.id]?.awayGoals ?? ""}
+                    onChange={(e) =>
+                      updateGroupResult(match.id, "awayGoals", e.target.value)
+                    }
+                    className="w-14 rounded-xl border border-[var(--iberdrola-green)] px-2 py-2 text-center text-base font-bold text-[var(--iberdrola-forest)]"
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  ))}
+</div>
       </section>
 
       <div className="grid gap-6 xl:grid-cols-2">
