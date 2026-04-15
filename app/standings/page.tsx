@@ -34,7 +34,9 @@ export default async function StandingsPage({ searchParams }: PageProps) {
   const poolSlug = params.poolSlug;
 
   const backHref =
-    entryId && poolSlug ? `/pool/${poolSlug}/entry/${entryId}` : "/";
+    entryId && poolSlug
+      ? `/pool/${poolSlug}/entry/${entryId}`
+      : "/dashboard";
 
   if (!poolId) {
     return (
@@ -85,7 +87,8 @@ export default async function StandingsPage({ searchParams }: PageProps) {
                   Clasificación Porra Mundial 2026
                 </h1>
                 <p className="mt-1 text-sm text-gray-600">
-                  Consulta la clasificación por jornadas de grupos o la clasificación general acumulada.
+                  Consulta la clasificación por jornadas de grupos o la
+                  clasificación general acumulada.
                 </p>
               </div>
             </div>
