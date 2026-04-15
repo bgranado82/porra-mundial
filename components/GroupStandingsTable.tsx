@@ -1,3 +1,4 @@
+
 type Row = {
   teamId: string;
   teamName?: string;
@@ -66,7 +67,16 @@ export default function GroupStandingsTable({ title, rows, labels }: Props) {
                 <tr key={row.teamId} className="border-b border-gray-100">
                   <td className="px-2 py-2 font-semibold">{index + 1}</td>
                   <td className="whitespace-nowrap px-2 py-2 font-bold">
-                    {row.teamFlag} {row.teamName ?? row.teamId}
+                    <div className="flex items-center gap-2">
+                      {row.teamFlag ? (
+                        <img
+                          src={row.teamFlag}
+                          alt={row.teamName ?? row.teamId}
+                          className="h-4 w-6 object-cover rounded-sm"
+                        />
+                      ) : null}
+                      <span>{row.teamName ?? row.teamId}</span>
+                    </div>
                   </td>
                   <td className="px-2 py-2 text-center">{row.played}</td>
                   <td className="px-2 py-2 text-center">{row.won}</td>
@@ -89,8 +99,17 @@ export default function GroupStandingsTable({ title, rows, labels }: Props) {
               className="rounded-xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-3 py-3"
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0 text-sm font-black text-[var(--iberdrola-forest)]">
-                  {index + 1}. {row.teamFlag} {row.teamName ?? row.teamId}
+                <div className="min-w-0 text-sm font-black text-[var(--iberdrola-forest)] flex items-center gap-2">
+                  {row.teamFlag ? (
+                    <img
+                      src={row.teamFlag}
+                      alt={row.teamName ?? row.teamId}
+                      className="h-4 w-6 object-cover rounded-sm"
+                    />
+                  ) : null}
+                  <span>
+                    {index + 1}. {row.teamName ?? row.teamId}
+                  </span>
                 </div>
                 <div className="rounded-full bg-[var(--iberdrola-green)] px-2.5 py-1 text-xs font-black text-white">
                   {row.points} {labels.pointsShort}
