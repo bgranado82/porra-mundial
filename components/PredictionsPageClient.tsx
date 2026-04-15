@@ -1247,55 +1247,55 @@ const canSeeTransparency =
     </div>
 
     <div className="p-4">
-  <div className="hidden xl:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
-    <div className="grid grid-cols-[132px_minmax(0,1fr)_82px] gap-2 bg-[var(--iberdrola-sand)]/35 px-3 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
-      <div>J / G / Fecha</div>
-      <div className="text-center">Pronóstico</div>
-      <div className="text-right">Puntos</div>
-    </div>
-
-    {orderedGroupMatches.map((match) => {
-      const homeTeam = teamMap.get(match.homeTeamId ?? "");
-      const awayTeam = teamMap.get(match.awayTeamId ?? "");
-
-      if (!homeTeam || !awayTeam) return null;
-
-      const prediction = predictions[match.id] ?? {
-        homeGoals: null,
-        awayGoals: null,
-      };
-
-      const score = calculateMatchPredictionScore(
-        match.homeGoals,
-        match.awayGoals,
-        prediction.homeGoals,
-        prediction.awayGoals,
-        scoreSettings
-      );
-
-      return (
-        <GroupMatchCompactRow
-          key={match.id}
-          day={match.day}
-          group={match.group ?? null}
-          kickoff={match.kickoff ?? null}
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          homePrediction={prediction.homeGoals}
-          awayPrediction={prediction.awayGoals}
-          officialHomeGoals={match.homeGoals}
-          officialAwayGoals={match.awayGoals}
-          points={score.points}
-          onChangeHome={(value) =>
-            updatePrediction(match.id, "homeGoals", value)
-          }
-          onChangeAway={(value) =>
-            updatePrediction(match.id, "awayGoals", value)
-          }
-        />
-      );
-    })}
+ <div className="hidden xl:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
+  <div className="grid grid-cols-[140px_minmax(0,1fr)_80px] gap-3 bg-[var(--iberdrola-sand)]/40 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
+    <div>J / G / Fecha</div>
+    <div className="text-center">Pronóstico</div>
+    <div className="text-right">Puntos</div>
   </div>
+
+  {orderedGroupMatches.map((match) => {
+    const homeTeam = teamMap.get(match.homeTeamId ?? "");
+    const awayTeam = teamMap.get(match.awayTeamId ?? "");
+
+    if (!homeTeam || !awayTeam) return null;
+
+    const prediction = predictions[match.id] ?? {
+      homeGoals: null,
+      awayGoals: null,
+    };
+
+    const score = calculateMatchPredictionScore(
+      match.homeGoals,
+      match.awayGoals,
+      prediction.homeGoals,
+      prediction.awayGoals,
+      scoreSettings
+    );
+
+    return (
+      <GroupMatchCompactRow
+        key={match.id}
+        day={match.day}
+        group={match.group ?? null}
+        kickoff={match.kickoff ?? null}
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        homePrediction={prediction.homeGoals}
+        awayPrediction={prediction.awayGoals}
+        officialHomeGoals={match.homeGoals}
+        officialAwayGoals={match.awayGoals}
+        points={score.points}
+        onChangeHome={(value) =>
+          updatePrediction(match.id, "homeGoals", value)
+        }
+        onChangeAway={(value) =>
+          updatePrediction(match.id, "awayGoals", value)
+        }
+      />
+    );
+  })}
+</div>
 
  <div className="space-y-2 xl:hidden">
     {orderedGroupMatches.map((match) => {
