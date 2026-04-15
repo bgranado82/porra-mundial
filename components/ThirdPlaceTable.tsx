@@ -1,3 +1,4 @@
+
 import { ThirdPlaceRow } from "@/lib/thirdPlace";
 
 type Props = {
@@ -74,7 +75,16 @@ export default function ThirdPlaceTable({
                   <td className="px-3 py-2 font-bold">{index + 1}</td>
                   <td className="px-3 py-2 font-semibold">{row.group}</td>
                   <td className="whitespace-nowrap px-3 py-2 font-bold">
-                    {row.teamFlag} {row.teamName}
+                    <div className="flex items-center gap-2">
+                      {row.teamFlag ? (
+                        <img
+                          src={row.teamFlag}
+                          alt={row.teamName}
+                          className="h-4 w-6 object-cover rounded-sm"
+                        />
+                      ) : null}
+                      <span>{row.teamName}</span>
+                    </div>
                   </td>
                   <td className="px-2 py-2 text-center">{row.played}</td>
                   <td className="px-2 py-2 text-center">{row.won}</td>
