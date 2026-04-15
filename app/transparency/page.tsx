@@ -1,6 +1,6 @@
 
 import TransparencyPageClient from "./TransparencyPageClient";
 
-export default function TransparencyPage() {
+export default function Page() {
   return <TransparencyPageClient />;
 }
