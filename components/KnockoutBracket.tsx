@@ -351,7 +351,7 @@ export default function KnockoutBracket({
       </div>
 
       <div className="space-y-6 p-4">
-        <div className="xl:hidden space-y-6">
+        <div className="lg:hidden space-y-6">
           <div className="space-y-3">
             <StageTitle>Lado izquierdo</StageTitle>
             <StageColumn
@@ -438,7 +438,7 @@ export default function KnockoutBracket({
           </div>
         </div>
 
-        <div className="hidden xl:grid xl:grid-cols-[1fr_1fr_0.8fr_1fr_1fr] xl:gap-4">
+        <div className="hidden lg:grid lg:grid-cols-[1fr_1fr_0.8fr_1fr_1fr] xl:gap-4">
           <StageColumn
             title="Round of 32"
             matches={orderedRound32Left}
