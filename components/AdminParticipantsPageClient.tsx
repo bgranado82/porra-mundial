@@ -422,30 +422,30 @@ const totalRevenue = paidCount * 10;
 </div>
 
 
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-3 w-full">
               <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
-                <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
                   Participantes
                 </div>
-                <div className="text-4xl font-black text-[var(--iberdrola-green)]">
+                <div className="text-5xl xl:text-6xl font-black text-[var(--iberdrola-green)]">
                   {participantsCount}
                 </div>
               </div>
 
               <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
-                <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
                   Pagados
                 </div>
-                <div className="text-4xl font-black text-[var(--iberdrola-green)]">
+                <div className="text-5xl xl:text-6xl font-black text-[var(--iberdrola-green)]">
                   {paidCount}
                 </div>
               </div>
 
               <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
-                <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
                   Recaudación
                 </div>
-                <div className="text-4xl font-black text-[var(--iberdrola-green)]">
+                <div className="text-5xl xl:text-6xl font-black text-[var(--iberdrola-green)]">
                   {totalRevenue}€
                 </div>
               </div>
