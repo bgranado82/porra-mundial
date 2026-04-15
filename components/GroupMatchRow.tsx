@@ -98,9 +98,11 @@ export default function GroupMatchRow({
 
       <div className="space-y-3">
         <div className="grid grid-cols-[1fr_auto] items-center gap-3">
-          <div className="min-w-0 flex items-center gap-2 truncate text-sm font-bold text-[var(--iberdrola-forest)]">
+          <div className="min-w-0 flex items-center gap-2">
             <TeamFlag team={homeTeam} />
-            <span className="truncate">{homeTeam.name}</span>
+            <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)]">
+              {homeTeam.name}
+            </span>
           </div>
 
           <input
@@ -115,9 +117,11 @@ export default function GroupMatchRow({
         </div>
 
         <div className="grid grid-cols-[1fr_auto] items-center gap-3">
-          <div className="min-w-0 flex items-center gap-2 truncate text-sm font-bold text-[var(--iberdrola-forest)]">
+          <div className="min-w-0 flex items-center gap-2">
             <TeamFlag team={awayTeam} />
-            <span className="truncate">{awayTeam.name}</span>
+            <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)]">
+              {awayTeam.name}
+            </span>
           </div>
 
           <input
