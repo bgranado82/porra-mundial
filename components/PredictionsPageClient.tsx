@@ -1235,7 +1235,7 @@ const canSeeTransparency =
   </div>
 </section>
 
-   <div className="grid gap-4 xl:grid-cols-[1.65fr_0.95fr]">
+   <div className="grid gap-4 lg:grid-cols-[1.65fr_0.95fr]">
   <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
     <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
       <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
@@ -1247,7 +1247,7 @@ const canSeeTransparency =
     </div>
 
     <div className="p-4">
- <div className="hidden xl:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
+ <div className="hidden lg:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
   <div className="grid grid-cols-[140px_minmax(0,1fr)_80px] gap-3 bg-[var(--iberdrola-sand)]/40 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
     <div>J / G / Fecha</div>
     <div className="text-center">Pronóstico</div>
@@ -1297,7 +1297,7 @@ const canSeeTransparency =
   })}
 </div>
 
- <div className="space-y-2 xl:hidden">
+ <div className="space-y-2 lg:hidden">
     {orderedGroupMatches.map((match) => {
       const homeTeam = teamMap.get(match.homeTeamId ?? "");
       const awayTeam = teamMap.get(match.awayTeamId ?? "");
@@ -1348,7 +1348,7 @@ const canSeeTransparency =
     </div>
   </section>
 
-  <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm xl:sticky xl:top-4 self-start">
+  <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
     <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
       <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
         Clasificaciones
