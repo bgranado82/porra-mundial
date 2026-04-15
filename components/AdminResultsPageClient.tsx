@@ -85,7 +85,7 @@ function RoundSection({
   matches: KnockoutBracketMatch[];
   picks: KnockoutPredictionMap;
   onPick: (matchId: string, teamId: string) => void;
-  teamMap: Map<string, { id: string; name: string; flag: string }>;
+teamMap: Map<string, { id: string; name: string; flag?: string; flagUrl?: string }>;
 }) {
   if (matches.length === 0) return null;
 
@@ -541,14 +541,13 @@ export default function AdminResultsPageClient() {
   <div className="flex items-center justify-between gap-2">
 
     {/* IZQUIERDA: info mínima */}
-    <div className="min-w-0 flex-1 text-xs text-[var(--iberdrola-forest)]/70">
-      <div>
-        J{block.matchday} · {match.group}
-      </div>
-      <div className="truncate font-semibold text-[var(--iberdrola-forest)]">
-        {home.flag} {home.name} vs {away.flag} {away.name}
-      </div>
-    </div>
+   <div className="truncate font-semibold text-[var(--iberdrola-forest)]">
+  <img src={home.flagUrl} className="inline h-4 w-6 mr-1" />
+  {home.name}
+  {" vs "}
+  <img src={away.flagUrl} className="inline h-4 w-6 mx-1" />
+  {away.name}
+</div>
 
     {/* DERECHA: resultado */}
     <div className="flex items-center gap-1 shrink-0">

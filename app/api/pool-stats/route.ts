@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
             count,
             percentage: participants > 0 ? (count / participants) * 100 : 0,
             teamId,
-            flag: team?.flag ?? null,
+            flagUrl: team?.flagUrl ?? null,
           };
         })
         .sort((a, b) => b.count - a.count);

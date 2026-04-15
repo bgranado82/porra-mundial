@@ -1,46 +1,58 @@
 
 "use client";
 
-type TeamDisplay = {
+type Team = {
+  id: string;
   name: string;
-  flag: string;
+  flagUrl: string;
 };
 
 type Props = {
-  matchNumber?: number | null;
-  kickoff?: string | null;
-  homeTeam: TeamDisplay;
-  awayTeam: TeamDisplay;
+  day: number;
+  group: string | null;
+  kickoff: string | null;
+  homeTeam: Team;
+  awayTeam: Team;
   homePrediction: number | null;
   awayPrediction: number | null;
   officialHomeGoals: number | null;
   officialAwayGoals: number | null;
   points: number;
-  pointsShortLabel: string;
-  officialLabel: string;
-  officialPendingLabel: string;
+  matchNumber: number;
+  pointsShortLabel?: string;
+  officialLabel?: string;
+  officialPendingLabel?: string;
   onChangeHome: (value: number | null) => void;
   onChangeAway: (value: number | null) => void;
 };
 
-function formatKickoff(kickoff?: string | null) {
-  if (!kickoff) return { short: "" };
+function formatKickoff(kickoff: string | null) {
+  if (!kickoff) return "-";
 
   const date = new Date(kickoff);
-  if (Number.isNaN(date.getTime())) return { short: "" };
+  if (Number.isNaN(date.getTime())) return "-";
 
-  return {
-    short: date.toLocaleString("es-ES", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-  };
+  return date.toLocaleString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-export default function GroupMatchRow({
-  matchNumber,
+function TeamFlag({ team }: { team: Team }) {
+  return (
+    <img
+      src={team.flagUrl}
+      alt={team.name}
+      className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+    />
+  );
+}
+
+export default function GroupMatchCompactRow({
+  day,
+  group,
   kickoff,
   homeTeam,
   awayTeam,
@@ -49,81 +61,54 @@ export default function GroupMatchRow({
   officialHomeGoals,
   officialAwayGoals,
   points,
-  pointsShortLabel,
-  officialLabel,
-  officialPendingLabel,
   onChangeHome,
   onChangeAway,
 }: Props) {
-  const kickoffInfo = formatKickoff(kickoff);
-
   const hasOfficialResult =
     officialHomeGoals !== null && officialAwayGoals !== null;
-
-  const officialText = hasOfficialResult
-    ? `${officialHomeGoals}-${officialAwayGoals}`
-    : officialPendingLabel;
 
   const pointsBadgeClass = !hasOfficialResult
     ? "bg-gray-100 text-gray-500"
     : points > 0
-      ? "bg-[var(--iberdrola-green)] text-white"
-      : "bg-gray-100 text-gray-500";
+    ? "bg-[var(--iberdrola-green)] text-white"
+    : "bg-gray-100 text-gray-500";
+
+  const pointsLabel = !hasOfficialResult ? "- pts" : `${points} pts`;
 
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3 shadow-sm">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <div className="min-w-0 text-xs font-semibold text-[var(--iberdrola-forest)]/65">
-          {matchNumber ? `Partido ${matchNumber}` : ""}
-          {kickoffInfo.short ? ` · ${kickoffInfo.short}` : ""}
-        </div>
+    <div className="grid h-[52px] grid-cols-[132px_minmax(0,1fr)_82px] items-center gap-2 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
+      
+      {/* INFO */}
+      <div className="flex flex-col justify-center leading-tight">
+        <span className="text-[12px] font-bold text-[var(--iberdrola-forest)]">
+          J{day} · {group ?? "-"}
+        </span>
 
-        <div
-          className={`rounded-full px-3 py-1 text-sm font-black ${pointsBadgeClass}`}
-        >
-          {hasOfficialResult ? `${points} ${pointsShortLabel}` : "-"}
-        </div>
+        <span className="whitespace-nowrap text-[10px] font-medium text-[var(--iberdrola-forest)]/60">
+          {formatKickoff(kickoff)}
+        </span>
+
+        <span className="whitespace-nowrap text-[10px] font-semibold text-[var(--iberdrola-forest)]/75">
+          Oficial:{" "}
+          {hasOfficialResult
+            ? `${officialHomeGoals}-${officialAwayGoals}`
+            : "-"}
+        </span>
       </div>
 
-      <div className="hidden items-center gap-2 lg:grid lg:grid-cols-[minmax(0,1fr)_44px_20px_44px_minmax(0,1fr)]">
-        <div className="truncate text-right text-[15px] font-bold text-[var(--iberdrola-forest)]">
-          {homeTeam.flag} {homeTeam.name}
+      {/* MATCH */}
+      <div className="grid grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)] items-center gap-2 -ml-9">
+        
+        {/* HOME */}
+        <div className="flex min-w-0 items-center justify-start gap-1.5">
+          <TeamFlag team={homeTeam} />
+          <span className="truncate text-left text-[13px] font-semibold text-[var(--iberdrola-forest)]">
+            {homeTeam.name}
+          </span>
         </div>
 
-        <input
-          type="number"
-          min={0}
-          value={homePrediction ?? ""}
-          onChange={(e) =>
-            onChangeHome(e.target.value === "" ? null : Number(e.target.value))
-          }
-          className="h-10 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
-        />
-
-        <div className="text-center text-sm font-black text-[var(--iberdrola-forest)]">
-          -
-        </div>
-
-        <input
-          type="number"
-          min={0}
-          value={awayPrediction ?? ""}
-          onChange={(e) =>
-            onChangeAway(e.target.value === "" ? null : Number(e.target.value))
-          }
-          className="h-10 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
-        />
-
-        <div className="truncate text-left text-[15px] font-bold text-[var(--iberdrola-forest)]">
-          {awayTeam.name} {awayTeam.flag}
-        </div>
-      </div>
-
-      <div className="space-y-3 lg:hidden">
-        <div className="grid grid-cols-[1fr_auto] items-center gap-3">
-          <div className="min-w-0 truncate text-sm font-bold text-[var(--iberdrola-forest)]">
-            {homeTeam.flag} {homeTeam.name}
-          </div>
+        {/* INPUTS */}
+        <div className="flex items-center justify-center gap-2">
           <input
             type="number"
             min={0}
@@ -131,14 +116,11 @@ export default function GroupMatchRow({
             onChange={(e) =>
               onChangeHome(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
+            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-[13px] font-bold text-[var(--iberdrola-forest)] outline-none"
           />
-        </div>
 
-        <div className="grid grid-cols-[1fr_auto] items-center gap-3">
-          <div className="min-w-0 truncate text-sm font-bold text-[var(--iberdrola-forest)]">
-            {awayTeam.flag} {awayTeam.name}
-          </div>
+          <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
+
           <input
             type="number"
             min={0}
@@ -146,13 +128,26 @@ export default function GroupMatchRow({
             onChange={(e) =>
               onChangeAway(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
+            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-[13px] font-bold text-[var(--iberdrola-forest)] outline-none"
           />
+        </div>
+
+        {/* AWAY */}
+        <div className="flex min-w-0 items-center justify-end gap-1.5">
+          <span className="truncate text-right text-[13px] font-semibold text-[var(--iberdrola-forest)]">
+            {awayTeam.name}
+          </span>
+          <TeamFlag team={awayTeam} />
         </div>
       </div>
 
-      <div className="mt-2 border-t border-dashed border-[var(--iberdrola-sky)] pt-2 text-xs font-semibold text-[var(--iberdrola-forest)]/75">
-        {officialLabel}: {officialText}
+      {/* POINTS */}
+      <div className="flex justify-end">
+        <span
+          className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${pointsBadgeClass}`}
+        >
+          {pointsLabel}
+        </span>
       </div>
     </div>
   );

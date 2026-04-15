@@ -62,8 +62,18 @@ function getOfficialMatchNumber(id: string) {
 }
 
 function getDisplayText(team: Team | null, label?: string) {
-  if (team) return `${team.flag} ${team.name}`;
-  return label ?? "Por definir";
+  if (!team) return label ?? "Por definir";
+
+  return (
+    <span className="flex items-center gap-2">
+      <img
+        src={team.flagUrl}
+        alt={team.name}
+        className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+      />
+      {team.name}
+    </span>
+  );
 }
 
 function getPointsForStage(stage: string) {
@@ -247,7 +257,18 @@ function ChampionCard({
         Campeón
       </div>
       <div className="mt-2 text-lg font-black text-[var(--iberdrola-forest)]">
-        {champion ? `${champion.flag} ${champion.name}` : "Por definir"}
+        {champion ? (
+  <span className="flex items-center justify-center gap-2">
+    <img
+      src={champion.flagUrl}
+      alt={champion.name}
+      className="h-5 w-7 rounded-[2px] border border-gray-200 object-cover"
+    />
+    {champion.name}
+  </span>
+) : (
+  "Por definir"
+)}
       </div>
       {points && points > 0 ? (
         <div className="mt-2 inline-flex rounded-full bg-[var(--iberdrola-green)] px-3 py-1 text-xs font-black text-white">

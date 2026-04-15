@@ -4,7 +4,7 @@
 type Team = {
   id: string;
   name: string;
-  flag: string;
+  flagUrl: string;
 };
 
 type Props = {
@@ -36,6 +36,16 @@ function formatKickoff(kickoff: string | null) {
   });
 }
 
+function TeamFlag({ team }: { team: Team }) {
+  return (
+    <img
+      src={team.flagUrl}
+      alt={team.name}
+      className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+    />
+  );
+}
+
 export default function GroupMatchCompactRow({
   day,
   group,
@@ -56,13 +66,15 @@ export default function GroupMatchCompactRow({
   const pointsBadgeClass = !hasOfficialResult
     ? "bg-gray-100 text-gray-500"
     : points > 0
-      ? "bg-[var(--iberdrola-green)] text-white"
-      : "bg-gray-100 text-gray-500";
+    ? "bg-[var(--iberdrola-green)] text-white"
+    : "bg-gray-100 text-gray-500";
 
   const pointsLabel = !hasOfficialResult ? "- pts" : `${points} pts`;
 
   return (
     <div className="grid h-[52px] grid-cols-[132px_minmax(0,1fr)_82px] items-center gap-2 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
+      
+      {/* INFO */}
       <div className="flex flex-col justify-center leading-tight">
         <span className="text-[12px] font-bold text-[var(--iberdrola-forest)]">
           J{day} · {group ?? "-"}
@@ -80,14 +92,18 @@ export default function GroupMatchCompactRow({
         </span>
       </div>
 
+      {/* MATCH */}
       <div className="grid grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)] items-center gap-2 -ml-9">
+        
+        {/* HOME */}
         <div className="flex min-w-0 items-center justify-start gap-1.5">
-          <span className="shrink-0 text-[11px]">{homeTeam.flag}</span>
+          <TeamFlag team={homeTeam} />
           <span className="truncate text-left text-[13px] font-semibold text-[var(--iberdrola-forest)]">
             {homeTeam.name}
           </span>
         </div>
 
+        {/* INPUTS */}
         <div className="flex items-center justify-center gap-2">
           <input
             type="number"
@@ -96,7 +112,7 @@ export default function GroupMatchCompactRow({
             onChange={(e) =>
               onChangeHome(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-[13px] font-bold leading-none text-[var(--iberdrola-forest)] outline-none"
+            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-[13px] font-bold text-[var(--iberdrola-forest)] outline-none"
           />
 
           <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
@@ -108,18 +124,20 @@ export default function GroupMatchCompactRow({
             onChange={(e) =>
               onChangeAway(e.target.value === "" ? null : Number(e.target.value))
             }
-            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-[13px] font-bold leading-none text-[var(--iberdrola-forest)] outline-none"
+            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-[13px] font-bold text-[var(--iberdrola-forest)] outline-none"
           />
         </div>
 
+        {/* AWAY */}
         <div className="flex min-w-0 items-center justify-end gap-1.5">
           <span className="truncate text-right text-[13px] font-semibold text-[var(--iberdrola-forest)]">
             {awayTeam.name}
           </span>
-          <span className="shrink-0 text-[11px]">{awayTeam.flag}</span>
+          <TeamFlag team={awayTeam} />
         </div>
       </div>
 
+      {/* POINTS */}
       <div className="flex justify-end">
         <span
           className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${pointsBadgeClass}`}

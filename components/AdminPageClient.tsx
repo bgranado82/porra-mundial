@@ -103,7 +103,7 @@ function RoundSection({
   matches: KnockoutBracketMatch[];
   picks: KnockoutPredictionMap;
   onPick: (matchId: string, teamId: string) => void;
-  teamMap: Map<string, { id: string; name: string; flag: string }>;
+teamMap: Map<string, { id: string; name: string; flag?: string; flagUrl?: string }>;
 }) {
   if (matches.length === 0) return null;
 
@@ -864,13 +864,19 @@ export default function AdminPageClient() {
                           </div>
                         </div>
 
-                        <div className="min-w-0 text-sm font-semibold text-[var(--iberdrola-forest)]">
-                          <span>{home.flag} {home.name}</span>
-                          <span className="mx-2 text-[var(--iberdrola-forest)]/45">
-                            vs
-                          </span>
-                          <span>{away.flag} {away.name}</span>
-                        </div>
+                        <div className="flex items-center gap-2">
+  <span className="flex items-center gap-1">
+    <img src={home.flagUrl} className="h-4 w-6 rounded-[2px]" />
+    {home.name}
+  </span>
+
+  <span className="mx-2 text-[var(--iberdrola-forest)]/60">vs</span>
+
+  <span className="flex items-center gap-1">
+    <img src={away.flagUrl} className="h-4 w-6 rounded-[2px]" />
+    {away.name}
+  </span>
+</div>
 
                         <div className="flex items-center justify-center gap-2">
                           <input

@@ -8,8 +8,8 @@ export type KnockoutStage =
 export type Team = {
   id: string;
   name: string;
-  flag: string;
-  group: string | null;
+  group?: string;
+  flagUrl: string; // 👈 obligatorio
 };
 
 export type Match = {
