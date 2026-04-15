@@ -56,6 +56,10 @@ export default function AdminParticipantsPageClient() {
   const [savingEntryId, setSavingEntryId] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
+const [search, setSearch] = useState("");
+const [filterPayment, setFilterPayment] = useState<"all" | "paid" | "pending">("all");
+const [filterStatus, setFilterStatus] = useState<"all" | "submitted" | "draft">("all");
+
   const [paymentDrafts, setPaymentDrafts] = useState<
     Record<string, { payment_status: string; payment_method: string; payment_note: string }>
   >({});
@@ -145,10 +149,33 @@ export default function AdminParticipantsPageClient() {
     () => pools.find((pool) => pool.id === selectedPoolId) ?? null,
     [pools, selectedPoolId]
   );
+const filteredEntries = useMemo(() => {
+  return entries.filter((entry) => {
+    const text = `${entry.name ?? ""} ${entry.email ?? ""}`
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
-  const participantsCount = entries.length;
-  const paidCount = entries.filter((entry) => entry.payment_status === "paid").length;
-  const totalRevenue = paidCount * 10;
+    const paymentOk =
+      filterPayment === "all" ||
+      (filterPayment === "paid" && entry.payment_status === "paid") ||
+      (filterPayment === "pending" && entry.payment_status !== "paid");
+
+    const statusOk =
+      filterStatus === "all" ||
+      (filterStatus === "submitted" && entry.status === "submitted") ||
+      (filterStatus === "draft" && entry.status !== "submitted");
+
+    return text && paymentOk && statusOk;
+  });
+}, [entries, search, filterPayment, filterStatus]);
+  
+  const participantsCount = filteredEntries.length;
+
+const paidCount = filteredEntries.filter(
+  (entry) => entry.payment_status === "paid"
+).length;
+
+const totalRevenue = paidCount * 10;
 
   function updatePaymentDraft(
     entryId: string,
@@ -302,6 +329,7 @@ export default function AdminParticipantsPageClient() {
     return <div className="p-6">Cargando participantes...</div>;
   }
 
+
   return (
     <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-4 sm:px-6">
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
@@ -363,6 +391,37 @@ export default function AdminParticipantsPageClient() {
               </select>
             </div>
 
+<div className="grid gap-3 sm:grid-cols-3">
+  <input
+    type="text"
+    placeholder="Buscar nombre o email"
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm"
+  />
+
+  <select
+    value={filterPayment}
+    onChange={(e) => setFilterPayment(e.target.value as any)}
+    className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm"
+  >
+    <option value="all">Todos pagos</option>
+    <option value="paid">Pagados</option>
+    <option value="pending">Pendientes</option>
+  </select>
+
+  <select
+    value={filterStatus}
+    onChange={(e) => setFilterStatus(e.target.value as any)}
+    className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm"
+  >
+    <option value="all">Todas porras</option>
+    <option value="submitted">Enviadas</option>
+    <option value="draft">Borrador</option>
+  </select>
+</div>
+
+
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
                 <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
@@ -409,7 +468,7 @@ export default function AdminParticipantsPageClient() {
             </div>
           ) : (
             <div className="space-y-3">
-              {entries.map((entry) => {
+              {filteredEntries.map((entry) => {
                 const draft = paymentDrafts[entry.id] ?? {
                   payment_status: entry.payment_status ?? "pending",
                   payment_method: entry.payment_method ?? "",
