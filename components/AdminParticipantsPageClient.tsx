@@ -375,52 +375,63 @@ const totalRevenue = paidCount * 10;
         <div className="space-y-5 p-4">
           <div className="grid gap-4 xl:grid-cols-[320px_1fr] xl:items-end">
             <div>
-              <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                Pool
-              </label>
-              <select
-                value={selectedPoolId}
-                onChange={(e) => setSelectedPoolId(e.target.value)}
-                className="w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
-              >
-                {pools.map((pool) => (
-                  <option key={pool.id} value={pool.id}>
-                    {pool.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+      <div className="grid gap-3">
+  <div className="w-full min-w-0">
+    <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+      Pool
+    </label>
+    <select
+      value={selectedPoolId}
+      onChange={(e) => setSelectedPoolId(e.target.value)}
+      className="block w-full min-w-0 max-w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+    >
+      {pools.map((pool) => (
+        <option key={pool.id} value={pool.id}>
+          {pool.name}
+        </option>
+      ))}
+    </select>
+  </div>
 
-<div className="grid gap-3 sm:grid-cols-3">
-  <input
-    type="text"
-    placeholder="Buscar nombre o email"
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm"
-  />
+  <div className="w-full min-w-0">
+    <input
+      type="text"
+      placeholder="Buscar nombre o email"
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      className="block w-full min-w-0 max-w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm text-[var(--iberdrola-forest)]"
+    />
+  </div>
 
-  <select
-    value={filterPayment}
-    onChange={(e) => setFilterPayment(e.target.value as any)}
-    className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm"
-  >
-    <option value="all">Todos pagos</option>
-    <option value="paid">Pagados</option>
-    <option value="pending">Pendientes</option>
-  </select>
+  <div className="w-full min-w-0">
+    <select
+      value={filterPayment}
+      onChange={(e) =>
+        setFilterPayment(e.target.value as "all" | "paid" | "pending")
+      }
+      className="block w-full min-w-0 max-w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm text-[var(--iberdrola-forest)]"
+    >
+      <option value="all">Todos pagos</option>
+      <option value="paid">Pagados</option>
+      <option value="pending">Pendientes</option>
+    </select>
+  </div>
 
-  <select
-    value={filterStatus}
-    onChange={(e) => setFilterStatus(e.target.value as any)}
-    className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm"
-  >
-    <option value="all">Todas porras</option>
-    <option value="submitted">Enviadas</option>
-    <option value="draft">Borrador</option>
-  </select>
+  <div className="w-full min-w-0">
+    <select
+      value={filterStatus}
+      onChange={(e) =>
+        setFilterStatus(e.target.value as "all" | "submitted" | "draft")
+      }
+      className="block w-full min-w-0 max-w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm text-[var(--iberdrola-forest)]"
+    >
+      <option value="all">Todas porras</option>
+      <option value="submitted">Enviadas</option>
+      <option value="draft">Borrador</option>
+    </select>
+  </div>
 </div>
-
+</div>
 
            <div className="grid grid-cols-3 gap-2 sm:gap-3 xl:flex xl:flex-wrap xl:items-center">
   <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-2 py-2 sm:px-4 sm:py-2 flex flex-col items-center justify-center min-w-0">
