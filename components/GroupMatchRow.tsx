@@ -8,6 +8,9 @@ type Team = {
 };
 
 type Props = {
+    day: number;
+      group: string | null;
+
   matchNumber?: number | null;
   kickoff?: string | null;
   homeTeam: Team;
