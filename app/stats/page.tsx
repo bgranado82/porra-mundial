@@ -1,3 +1,4 @@
+
 import StatsPageClient from "@/components/StatsPageClient";
 
 type Props = {

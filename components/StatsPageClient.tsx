@@ -302,39 +302,64 @@ export default function StatsPageClient({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+const [resolvedPoolId, setResolvedPoolId] = useState(poolId);
+const [resolvedPoolSlug, setResolvedPoolSlug] = useState(poolSlug ?? "");
+
   useEffect(() => {
-    async function load() {
-      if (!poolId) {
-        setError("Falta el poolId.");
-        setLoading(false);
-        return;
-      }
+  async function load() {
+    try {
+      setLoading(true);
+      setError("");
 
-      try {
-        setLoading(true);
-        setError("");
+      let effectivePoolId = poolId;
+      let effectivePoolSlug = poolSlug;
 
-        const res = await fetch(`/api/pool-stats?poolId=${poolId}`, {
-          cache: "no-store",
-        });
+      if (!effectivePoolId) {
+        const { data: pools, error: poolsError } = await supabase
+          .from("pools")
+          .select("id, slug")
+          .eq("is_pool_visible", true)
+          .order("name", { ascending: true })
+          .limit(1);
 
-        const json = await res.json();
-
-        if (!res.ok) {
-          throw new Error(json?.error || "Error cargando estadísticas");
+        if (poolsError) {
+          throw poolsError;
         }
 
-        setData(json as StatsResponse);
-      } catch (err) {
-        console.error(err);
-        setError("No se pudieron cargar las estadísticas.");
-      } finally {
-        setLoading(false);
-      }
-    }
+        if (!pools || pools.length === 0) {
+          setError("No hay pools visibles disponibles.");
+          setLoading(false);
+          return;
+        }
 
-    load();
-  }, [poolId, supabase]);
+        effectivePoolId = pools[0].id;
+        effectivePoolSlug = pools[0].slug ?? "";
+      }
+
+      setResolvedPoolId(effectivePoolId);
+      setResolvedPoolSlug(effectivePoolSlug ?? "");
+
+      const res = await fetch(`/api/pool-stats?poolId=${effectivePoolId}`, {
+        cache: "no-store",
+      });
+
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json?.error || "Error cargando estadísticas");
+      }
+
+      setData(json as StatsResponse);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudieron cargar las estadísticas.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  load();
+}, [poolId, poolSlug, supabase]);
 
   const extraMap = useMemo(() => {
     const map = new Map<string, StatsResponse["extras"][number]>();
@@ -379,19 +404,19 @@ export default function StatsPageClient({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {poolId ? (
-              <Link
-                href={
-                  poolSlug
-                    ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}`
-                    : `/standings?poolId=${poolId}`
-                }
-                className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
-              >
-                Ver clasificación
-              </Link>
-            ) : null}
-          </div>
+  {resolvedPoolId ? (
+    <Link
+      href={
+        resolvedPoolSlug
+          ? `/standings?poolId=${resolvedPoolId}&poolSlug=${resolvedPoolSlug}`
+          : `/standings?poolId=${resolvedPoolId}`
+      }
+      className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
+    >
+      Ver clasificación
+    </Link>
+  ) : null}
+</div>
         </div>
       </section>
 
