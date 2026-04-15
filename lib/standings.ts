@@ -28,8 +28,8 @@ function createBaseRows(groupTeams: Team[]): StandingRow[] {
   return groupTeams.map((team) => ({
     teamId: team.id,
     teamName: team.name,
-    teamFlag: team.flag,
-    group: team.group,
+    teamFlag: team.flagUrl,
+    group: team.group ?? null,
     played: 0,
     won: 0,
     drawn: 0,

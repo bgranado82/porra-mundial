@@ -347,7 +347,7 @@ export function generateRound32(
       .filter((team) => team.qualifies)
       .map((team) => ({
         teamId: team.teamId,
-        group: team.group,
+        group: team.group ?? null,
       }));
 
     const assigned = resolveThirdAssignments(
