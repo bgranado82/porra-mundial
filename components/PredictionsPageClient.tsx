@@ -228,7 +228,7 @@ type Props = {
 };
 
 export default function PredictionsPageClient({ entryId }: Props) {
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
 
   const [predictions, setPredictions] = useState<PredictionMap>({});
   const [knockoutPredictions, setKnockoutPredictions] =
@@ -560,9 +560,9 @@ setExtraPredictions(nextExtraPredictions);
 
   async function handleSaveEntry() {
     if (!activeEntryId) {
-      setSubmitMessage("No hay entry activa.");
-      return;
-    }
+  setSubmitMessage("No hay entry activa.");
+  throw new Error("No hay entry activa.");
+}
 
     setSaveLoading(true);
     setSubmitMessage("");
@@ -642,56 +642,52 @@ if (extraRows.length > 0) {
       setSubmitMessage("Porra guardada correctamente.");
       await refreshStandings();
     } catch (err) {
-      console.error(err);
-      setSubmitMessage("Error guardando la porra.");
-    } finally {
+  console.error(err);
+  setSubmitMessage("Error guardando la porra.");
+  throw err;
+} finally {
       setSaveLoading(false);
     }
   }
 
   async function handleSubmitEntry() {
-    if (!activeEntryId) {
-      setSubmitMessage("No se ha encontrado la entry activa.");
-      return;
-    }
-
-    const confirmed = window.confirm(
-      "¿Seguro que quieres enviar la porra? Después no podrás modificarla."
-    );
-
-    if (!confirmed) return;
-
-    setSubmitLoading(true);
-    setSubmitMessage("");
-
-    try {
-      await handleSaveEntry();
-
-      const res = await fetch("/api/submit-entry", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ entryId: activeEntryId }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setSubmitMessage(data.error || "No se pudo enviar la porra.");
-        return;
-      }
-
-      setEntryStatus("submitted");
-      setSubmitMessage("Porra enviada correctamente.");
-      await refreshStandings();
-    } catch (err) {
-      console.error(err);
-      setSubmitMessage("Error de conexión al enviar.");
-    } finally {
-      setSubmitLoading(false);
-    }
+  if (!activeEntryId) {
+    setSubmitMessage("No se ha encontrado la entry activa.");
+    return;
   }
+
+  const confirmed = window.confirm(
+    "¿Seguro que quieres enviar la porra? Después no podrás modificarla."
+  );
+
+  if (!confirmed) return;
+
+  setSubmitLoading(true);
+  setSubmitMessage("");
+
+  try {
+    await handleSaveEntry();
+
+    const { error: updateError } = await supabase
+  .from("entries")
+  .update({
+    status: "submitted",
+    submitted_at: new Date().toISOString(),
+  })
+  .eq("id", activeEntryId);
+
+    if (updateError) throw updateError;
+
+    setEntryStatus("submitted");
+    setSubmitMessage("Porra enviada correctamente.");
+    await refreshStandings();
+  } catch (err) {
+    console.error(err);
+    setSubmitMessage("Error al enviar la porra.");
+  } finally {
+    setSubmitLoading(false);
+  }
+}
 
   async function handleLogout() {
     await supabase.auth.signOut();
