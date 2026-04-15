@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { createClient } from "@/utils/supabase/client";
 import { teams } from "@/data/teams";
@@ -290,76 +291,50 @@ function InsightsCard({ items }: { items: string[] }) {
   );
 }
 
-export default function StatsPageClient({
-  poolId,
-  poolSlug,
-}: {
-  poolId: string;
-  poolSlug?: string;
-}) {
+export default function StatsPageClient() {
+const searchParams = useSearchParams();
+const poolId = searchParams.get("poolId") ?? "";
+const poolSlug = searchParams.get("poolSlug") ?? "";
   const supabase = createClient();
   const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-const [resolvedPoolId, setResolvedPoolId] = useState(poolId);
-const [resolvedPoolSlug, setResolvedPoolSlug] = useState(poolSlug ?? "");
 
   useEffect(() => {
-  async function load() {
-    try {
-      setLoading(true);
-      setError("");
+    async function load() {
+      try {
+        setLoading(true);
+        setError("");
 
-      let effectivePoolId = poolId;
-      let effectivePoolSlug = poolSlug;
-
-      if (!effectivePoolId) {
-        const { data: pools, error: poolsError } = await supabase
-          .from("pools")
-          .select("id, slug")
-          .eq("is_pool_visible", true)
-          .order("name", { ascending: true })
-          .limit(1);
-
-        if (poolsError) {
-          throw poolsError;
-        }
-
-        if (!pools || pools.length === 0) {
-          setError("No hay pools visibles disponibles.");
+        if (!poolId) {
+          setError("Falta el poolId.");
           setLoading(false);
           return;
         }
 
-        effectivePoolId = pools[0].id;
-        effectivePoolSlug = pools[0].slug ?? "";
+        const res = await fetch(`/api/pool-stats?poolId=${poolId}`, {
+          cache: "no-store",
+        });
+
+        const json = await res.json();
+
+        if (!res.ok) {
+          throw new Error(json?.error || "Error cargando estadísticas");
+        }
+
+        setData(json as StatsResponse);
+      } catch (err) {
+        console.error(err);
+        setError("No se pudieron cargar las estadísticas.");
+      } finally {
+        setLoading(false);
       }
-
-      setResolvedPoolId(effectivePoolId);
-      setResolvedPoolSlug(effectivePoolSlug ?? "");
-
-      const res = await fetch(`/api/pool-stats?poolId=${effectivePoolId}`, {
-        cache: "no-store",
-      });
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json?.error || "Error cargando estadísticas");
-      }
-
-      setData(json as StatsResponse);
-    } catch (err) {
-      console.error(err);
-      setError("No se pudieron cargar las estadísticas.");
-    } finally {
-      setLoading(false);
     }
-  }
 
-  load();
-}, [poolId, poolSlug, supabase]);
+    load();
+  }, [poolId]);
+
 
   const extraMap = useMemo(() => {
     const map = new Map<string, StatsResponse["extras"][number]>();
@@ -404,12 +379,12 @@ const [resolvedPoolSlug, setResolvedPoolSlug] = useState(poolSlug ?? "");
           </div>
 
           <div className="flex flex-wrap gap-2">
-  {resolvedPoolId ? (
+  {poolId ? (
     <Link
       href={
-        resolvedPoolSlug
-          ? `/standings?poolId=${resolvedPoolId}&poolSlug=${resolvedPoolSlug}`
-          : `/standings?poolId=${resolvedPoolId}`
+        poolSlug
+          ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}`
+          : `/standings?poolId=${poolId}`
       }
       className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
     >
