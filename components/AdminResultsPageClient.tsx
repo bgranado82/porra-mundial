@@ -8,6 +8,10 @@ import { matches as initialMatches } from "@/data/matches";
 import { teams } from "@/data/teams";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
+import { calculatePredictedStandings } from "@/lib/standings";
+import GroupStandingsTable from "@/components/GroupStandingsTable";
+import AdminGroupMatchCompactRow from "@/components/AdminGroupMatchCompactRow";
+import AdminGroupMatchRow from "@/components/AdminGroupMatchRow";
 import {
   KnockoutPredictionMap,
   Match,
@@ -47,21 +51,6 @@ function getDateKeySpain(kickoff: string | null | undefined) {
   }).format(date);
 }
 
-function formatKickoffAdminCompact(kickoff: string | null | undefined) {
-  if (!kickoff) return "-";
-
-  const date = new Date(kickoff);
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return new Intl.DateTimeFormat("es-ES", {
-    timeZone: "Europe/Madrid",
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
 function formatDateHeaderSpain(dateKey: string) {
   const [year, month, day] = dateKey.split("-");
   const date = new Date(`${year}-${month}-${day}T12:00:00+02:00`);
@@ -85,7 +74,10 @@ function RoundSection({
   matches: KnockoutBracketMatch[];
   picks: KnockoutPredictionMap;
   onPick: (matchId: string, teamId: string) => void;
-teamMap: Map<string, { id: string; name: string; flag?: string; flagUrl?: string }>;
+  teamMap: Map<
+    string,
+    { id: string; name: string; flag?: string; flagUrl?: string }
+  >;
 }) {
   if (matches.length === 0) return null;
 
@@ -121,7 +113,9 @@ teamMap: Map<string, { id: string; name: string; flag?: string; flagUrl?: string
 
                 <div className="mb-3 space-y-1 text-sm font-semibold text-[var(--iberdrola-forest)]">
                   <div>{home ? `${home.flag} ${homeLabel}` : homeLabel}</div>
-                  <div className="text-xs text-[var(--iberdrola-forest)]/45">vs</div>
+                  <div className="text-xs text-[var(--iberdrola-forest)]/45">
+                    vs
+                  </div>
                   <div>{away ? `${away.flag} ${awayLabel}` : awayLabel}</div>
                 </div>
 
@@ -162,7 +156,9 @@ export default function AdminResultsPageClient() {
   const [groupResults, setGroupResults] = useState<GroupResultMap>({});
   const [knockoutResults, setKnockoutResults] =
     useState<KnockoutPredictionMap>({});
-  const [officialExtras, setOfficialExtras] = useState<OfficialExtraResultMap>({});
+  const [officialExtras, setOfficialExtras] = useState<OfficialExtraResultMap>(
+    {}
+  );
 
   const [loading, setLoading] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
@@ -182,7 +178,12 @@ export default function AdminResultsPageClient() {
     () =>
       initialMatches
         .filter((match) => match.stage === "group")
-        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+        .sort((a, b) => {
+          if ((a.order ?? 0) !== (b.order ?? 0)) {
+            return (a.order ?? 0) - (b.order ?? 0);
+          }
+          return (a.matchNumber ?? 0) - (b.matchNumber ?? 0);
+        }),
     []
   );
 
@@ -226,6 +227,15 @@ export default function AdminResultsPageClient() {
       };
     });
   }, [groupResults]);
+
+  const standingsByGroup = useMemo(
+    () =>
+      groups.map((groupCode) => ({
+        groupCode,
+        rows: calculatePredictedStandings(teams, officialMatches, {}, groupCode),
+      })),
+    [groups, officialMatches]
+  );
 
   const realBracket = useMemo(
     () => buildRealKnockoutBracket(teams, officialMatches, groups, knockoutResults),
@@ -468,33 +478,33 @@ export default function AdminResultsPageClient() {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-  <Link
-    href="/admin"
-    className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
-  >
-    Inicio admin
-  </Link>
+            <Link
+              href="/admin"
+              className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
+            >
+              Inicio admin
+            </Link>
 
-  <Link
-    href="/admin/participants"
-    className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
-  >
-    Participantes y pagos
-  </Link>
+            <Link
+              href="/admin/participants"
+              className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
+            >
+              Participantes y pagos
+            </Link>
 
-  {selectedPoolId ? (
-    <Link
-      href={
-        selectedPoolSlug
-          ? `/stats?poolId=${selectedPoolId}&poolSlug=${selectedPoolSlug}`
-          : `/stats?poolId=${selectedPoolId}`
-      }
-      className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
-    >
-      Ver estadísticas
-    </Link>
-  ) : null}
-</div>
+            {selectedPoolId ? (
+              <Link
+                href={
+                  selectedPoolSlug
+                    ? `/stats?poolId=${selectedPoolId}&poolSlug=${selectedPoolSlug}`
+                    : `/stats?poolId=${selectedPoolId}`
+                }
+                className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
+              >
+                Ver estadísticas
+              </Link>
+            ) : null}
+          </div>
 
           {message ? (
             <div className="mt-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
@@ -504,82 +514,141 @@ export default function AdminResultsPageClient() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-        <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-          <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-            Resultados de la fase de grupos
-          </h2>
-          <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-            Partidos ordenados cronológicamente y agrupados por jornada lógica de España.
-          </p>
-        </div>
+      <div className="grid gap-4 xl:grid-cols-[1.65fr_0.95fr]">
+        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+            <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+              Resultados de la fase de grupos
+            </h2>
+            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+              Partidos ordenados cronológicamente y agrupados por jornada lógica de España.
+            </p>
+          </div>
 
-        <div className="p-4 space-y-5">
-          {groupedMatchesByDate.map((block) => (
-            <section
-              key={block.dateKey}
-              className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white"
-            >
-              <div className="flex flex-col gap-1 border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-sm font-black capitalize text-[var(--iberdrola-forest)]">
-                  {block.label}
+          <div className="p-4 space-y-5">
+            {groupedMatchesByDate.map((block) => (
+              <section
+                key={block.dateKey}
+                className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white"
+              >
+                <div className="flex flex-col gap-1 border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-sm font-black capitalize text-[var(--iberdrola-forest)]">
+                    {block.label}
+                  </div>
+                  <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                    Jornada {block.matchday}
+                  </div>
                 </div>
-                <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                  Jornada {block.matchday}
+
+                <div className="hidden xl:block overflow-hidden rounded-b-2xl bg-white">
+                  <div className="grid grid-cols-[140px_minmax(0,1fr)_90px] gap-3 border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/35 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
+                    <div>J / G / Fecha</div>
+                    <div className="text-center">Resultado oficial</div>
+                    <div className="text-right">Estado</div>
+                  </div>
+
+                  {block.matches.map((match) => {
+                    const homeTeam = teamMap.get(match.homeTeamId ?? "");
+                    const awayTeam = teamMap.get(match.awayTeamId ?? "");
+
+                    if (!homeTeam || !awayTeam) return null;
+
+                    const homeValue = groupResults[match.id]?.homeGoals ?? "";
+                    const awayValue = groupResults[match.id]?.awayGoals ?? "";
+
+                    return (
+                      <AdminGroupMatchCompactRow
+                        key={match.id}
+                        day={match.day}
+                        group={match.group ?? null}
+                        kickoff={match.kickoff ?? null}
+                        homeTeam={homeTeam}
+                        awayTeam={awayTeam}
+                        homeValue={homeValue}
+                        awayValue={awayValue}
+                        onChangeHome={(value) =>
+                          updateGroupResult(match.id, "homeGoals", value)
+                        }
+                        onChangeAway={(value) =>
+                          updateGroupResult(match.id, "awayGoals", value)
+                        }
+                      />
+                    );
+                  })}
                 </div>
+
+                <div className="space-y-2 p-3 xl:hidden">
+                  {block.matches.map((match) => {
+                    const homeTeam = teamMap.get(match.homeTeamId ?? "");
+                    const awayTeam = teamMap.get(match.awayTeamId ?? "");
+
+                    if (!homeTeam || !awayTeam) return null;
+
+                    const homeValue = groupResults[match.id]?.homeGoals ?? "";
+                    const awayValue = groupResults[match.id]?.awayGoals ?? "";
+
+                    return (
+                      <AdminGroupMatchRow
+                        key={match.id}
+                        day={match.day}
+                        group={match.group ?? null}
+                        matchNumber={match.matchNumber ?? 0}
+                        kickoff={match.kickoff ?? null}
+                        homeTeam={homeTeam}
+                        awayTeam={awayTeam}
+                        homeValue={homeValue}
+                        awayValue={awayValue}
+                        onChangeHome={(value) =>
+                          updateGroupResult(match.id, "homeGoals", value)
+                        }
+                        onChangeAway={(value) =>
+                          updateGroupResult(match.id, "awayGoals", value)
+                        }
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm xl:sticky xl:top-4 self-start">
+          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+            <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+              Clasificaciones
+            </h2>
+            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+              Clasificación actualizada por grupo según resultados oficiales.
+            </p>
+          </div>
+
+          <div className="space-y-3 p-4">
+            {standingsByGroup.map(({ groupCode, rows }) => (
+              <div
+                key={groupCode}
+                className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
+              >
+                <GroupStandingsTable
+                  title={`Grupo ${groupCode}`}
+                  rows={rows}
+                  labels={{
+                    team: "Equipo",
+                    played: "PJ",
+                    won: "PG",
+                    drawn: "PE",
+                    lost: "PP",
+                    goalsFor: "GF",
+                    goalsAgainst: "GC",
+                    goalDifference: "DG",
+                    pointsShort: "Pts",
+                  }}
+                />
               </div>
-
-              <div className="divide-y divide-[var(--iberdrola-sky)]/60">
-                {block.matches.map((match) => {
-                  const home = teamMap.get(match.homeTeamId ?? "");
-                  const away = teamMap.get(match.awayTeamId ?? "");
-
-                  if (!home || !away) return null;
-
-                  return (
-                  <div key={match.id} className="px-2 py-2">
-  <div className="flex items-center justify-between gap-2">
-
-    {/* IZQUIERDA: info mínima */}
-   <div className="truncate font-semibold text-[var(--iberdrola-forest)]">
-  <img src={home.flagUrl} className="inline h-4 w-6 mr-1" />
-  {home.name}
-  {" vs "}
-  <img src={away.flagUrl} className="inline h-4 w-6 mx-1" />
-  {away.name}
-</div>
-
-    {/* DERECHA: resultado */}
-    <div className="flex items-center gap-1 shrink-0">
-      <input
-        value={groupResults[match.id]?.homeGoals ?? ""}
-        onChange={(e) =>
-          updateGroupResult(match.id, "homeGoals", e.target.value)
-        }
-        className="h-9 w-10 rounded-lg border border-[var(--iberdrola-green)] text-center text-sm font-bold"
-      />
-
-      <span className="text-sm font-bold">-</span>
-
-      <input
-        value={groupResults[match.id]?.awayGoals ?? ""}
-        onChange={(e) =>
-          updateGroupResult(match.id, "awayGoals", e.target.value)
-        }
-        className="h-9 w-10 rounded-lg border border-[var(--iberdrola-green)] text-center text-sm font-bold"
-      />
-    </div>
-
-  </div>
-</div>
-
-                  );
-                })}
-              </div>
-            </section>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <RoundSection
@@ -632,7 +701,10 @@ export default function AdminResultsPageClient() {
 
         <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
           {EXTRA_QUESTIONS.map((question) => (
-            <div key={question.key} className="rounded-2xl border border-[var(--iberdrola-sky)] p-4">
+            <div
+              key={question.key}
+              className="rounded-2xl border border-[var(--iberdrola-sky)] p-4"
+            >
               <label className="mb-2 block text-sm font-bold text-[var(--iberdrola-forest)]">
                 {EXTRA_LABELS[question.key] ?? question.key}
               </label>
