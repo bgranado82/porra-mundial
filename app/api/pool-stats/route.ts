@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       count: number;
       percentage: number;
       teamId?: string | null;
-      flag?: string | null;
+      flagUrl?: string | null;
     }> = [];
 
     let extras: Array<{
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
         .from("entry_knockout_predictions")
         .select("entry_id, match_id, picked_team_id")
         .in("entry_id", entryIds)
-        .eq("match_id", "final_winner");
+        .eq("match_id", "final-1");
 
       if (koError) {
         return NextResponse.json({ error: "Error loading champion predictions" }, { status: 500 });
