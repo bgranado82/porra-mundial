@@ -1042,6 +1042,26 @@ const canSeeTransparency =
               ) : null}
             </div>
 
+<div className="flex flex-wrap gap-2">
+  {poolId && activeEntryId && poolSlug ? (
+    <Link
+      href={`/standings?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
+      className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+    >
+      Ver clasificación completa
+    </Link>
+  ) : null}
+
+  {poolId ? (
+    <Link
+      href={poolSlug ? `/stats?poolId=${poolId}&poolSlug=${poolSlug}` : `/stats?poolId=${poolId}`}
+      className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+    >
+      Ver estadísticas
+    </Link>
+  ) : null}
+</div>
+
             <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
               <div>
                 <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">

@@ -468,25 +468,33 @@ export default function AdminResultsPageClient() {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              href="/admin"
-              className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
-            >
-              Inicio admin
-            </Link>
-            <Link
-              href="/admin/participants"
-              className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
-            >
-              Participantes y pagos
-            </Link>
-            <Link
-              href="/admin/settings"
-              className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
-            >
-              Configuración
-            </Link>
-          </div>
+  <Link
+    href="/admin"
+    className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
+  >
+    Inicio admin
+  </Link>
+
+  <Link
+    href="/admin/participants"
+    className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
+  >
+    Participantes y pagos
+  </Link>
+
+  {selectedPoolId ? (
+    <Link
+      href={
+        selectedPoolSlug
+          ? `/stats?poolId=${selectedPoolId}&poolSlug=${selectedPoolSlug}`
+          : `/stats?poolId=${selectedPoolId}`
+      }
+      className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
+    >
+      Ver estadísticas
+    </Link>
+  ) : null}
+</div>
 
           {message ? (
             <div className="mt-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
