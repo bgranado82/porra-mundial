@@ -486,7 +486,16 @@ export default function StatsPageClient() {
                 Ver clasificación
               </Link>
             ) : null}
-
+<Link
+  href={
+    poolId
+      ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
+      : "/transparency"
+  }
+  className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
+>
+  Ver predicciones por participante
+</Link>
             <Link
               href={backHref}
               className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
