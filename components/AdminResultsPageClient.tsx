@@ -8,7 +8,7 @@ import { matches as initialMatches } from "@/data/matches";
 import { teams } from "@/data/teams";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
-import { calculatePredictedStandings } from "@/lib/standings";
+import { calculateStandings } from "@/lib/standings";
 import GroupStandingsTable from "@/components/GroupStandingsTable";
 import AdminGroupMatchCompactRow from "@/components/AdminGroupMatchCompactRow";
 import AdminGroupMatchRow from "@/components/AdminGroupMatchRow";
@@ -232,7 +232,7 @@ export default function AdminResultsPageClient() {
     () =>
       groups.map((groupCode) => ({
         groupCode,
-        rows: calculatePredictedStandings(teams, officialMatches, {}, groupCode),
+        rows: calculateStandings(teams, officialMatches, groupCode),
       })),
     [groups, officialMatches]
   );
