@@ -1314,27 +1314,25 @@ const canSeeTransparency =
     );
 
     return (
-      <GroupMatchRow
-        key={match.id}
-        matchNumber={match.matchNumber ?? 0}
-        kickoff={match.kickoff ?? null}
-        homeTeam={homeTeam}
-        awayTeam={awayTeam}
-        homePrediction={prediction.homeGoals}
-        awayPrediction={prediction.awayGoals}
-        officialHomeGoals={match.homeGoals}
-        officialAwayGoals={match.awayGoals}
-        points={score.points}
-        pointsShortLabel={t.pointsShort}
-        officialLabel={t.officialLabel}
-        officialPendingLabel={t.officialPending}
-        onChangeHome={(value) =>
-          updatePrediction(match.id, "homeGoals", value)
-        }
-        onChangeAway={(value) =>
-          updatePrediction(match.id, "awayGoals", value)
-        }
-      />
+      <GroupMatchCompactRow
+  key={match.id}
+  day={match.day}
+  group={match.group ?? null}
+  kickoff={match.kickoff ?? null}
+  homeTeam={homeTeam}
+  awayTeam={awayTeam}
+  homePrediction={prediction.homeGoals}
+  awayPrediction={prediction.awayGoals}
+  officialHomeGoals={match.homeGoals}
+  officialAwayGoals={match.awayGoals}
+  points={score.points}
+  onChangeHome={(value) =>
+    updatePrediction(match.id, "homeGoals", value)
+  }
+  onChangeAway={(value) =>
+    updatePrediction(match.id, "awayGoals", value)
+  }
+/>
     );
   })}
 </div>
