@@ -111,13 +111,31 @@ function RoundSection({
                   {match.id}
                 </div>
 
-                <div className="mb-3 space-y-1 text-sm font-semibold text-[var(--iberdrola-forest)]">
-                  <div>{home ? `${home.flag} ${homeLabel}` : homeLabel}</div>
-                  <div className="text-xs text-[var(--iberdrola-forest)]/45">
-                    vs
-                  </div>
-                  <div>{away ? `${away.flag} ${awayLabel}` : awayLabel}</div>
-                </div>
+                <div className="mb-3 space-y-2 text-sm font-semibold text-[var(--iberdrola-forest)]">
+  <div className="flex items-center gap-2">
+    {home?.flagUrl ? (
+      <img
+        src={home.flagUrl}
+        alt={home.name}
+        className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+      />
+    ) : null}
+    <span>{homeLabel}</span>
+  </div>
+
+  <div className="text-xs text-[var(--iberdrola-forest)]/45">vs</div>
+
+  <div className="flex items-center gap-2">
+    {away?.flagUrl ? (
+      <img
+        src={away.flagUrl}
+        alt={away.name}
+        className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+      />
+    ) : null}
+    <span>{awayLabel}</span>
+  </div>
+</div>
 
                 <select
                   value={picks[match.id] ?? ""}
@@ -128,12 +146,12 @@ function RoundSection({
                   <option value="">Selecciona ganador</option>
                   {home ? (
                     <option value={home.id}>
-                      {home.flag} {home.name}
+                      {home.name}
                     </option>
                   ) : null}
                   {away ? (
                     <option value={away.id}>
-                      {away.flag} {away.name}
+                      {away.name}
                     </option>
                   ) : null}
                 </select>
