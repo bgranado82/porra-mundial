@@ -422,34 +422,31 @@ const totalRevenue = paidCount * 10;
 </div>
 
 
-            <div className="flex flex-wrap items-center justify-between gap-4">
-  {/* KPIs */}
-  <div className="flex gap-3">
-    <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-4 py-2 flex flex-col items-center justify-center min-w-[100px]">
-      <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-        Participantes
-      </div>
-      <div className="text-3xl font-black text-[var(--iberdrola-green)]">
-        {participantsCount}
-      </div>
+           <div className="grid grid-cols-3 gap-2 sm:gap-3 xl:flex xl:flex-wrap xl:items-center">
+  <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-2 py-2 sm:px-4 sm:py-2 flex flex-col items-center justify-center min-w-0">
+    <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55 text-center">
+      Participantes
     </div>
-
-    <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-4 py-2 flex flex-col items-center justify-center min-w-[100px]">
-      <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-        Pagados
-      </div>
-      <div className="text-3xl font-black text-[var(--iberdrola-green)]">
-        {paidCount}
-      </div>
+    <div className="text-2xl sm:text-3xl font-black text-[var(--iberdrola-green)] leading-none">
+      {participantsCount}
     </div>
+  </div>
 
-    <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-4 py-2 flex flex-col items-center justify-center min-w-[110px]">
-      <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-        Recaudación
-      </div>
-      <div className="text-3xl font-black text-[var(--iberdrola-green)]">
-        {totalRevenue}€
-      </div>
+  <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-2 py-2 sm:px-4 sm:py-2 flex flex-col items-center justify-center min-w-0">
+    <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55 text-center">
+      Pagados
+    </div>
+    <div className="text-2xl sm:text-3xl font-black text-[var(--iberdrola-green)] leading-none">
+      {paidCount}
+    </div>
+  </div>
+
+  <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-2 py-2 sm:px-4 sm:py-2 flex flex-col items-center justify-center min-w-0">
+    <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55 text-center">
+      Recaudación
+    </div>
+    <div className="text-2xl sm:text-3xl font-black text-[var(--iberdrola-green)] leading-none">
+      {totalRevenue}€
     </div>
   </div>
 </div>
