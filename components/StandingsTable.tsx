@@ -205,7 +205,7 @@ export default function StandingsTable({ days, standings }: Props) {
   ) : null}
 
   {/* ✅ NUEVO: TOTAL JORNADAS */}
-  <th className="top-[44px] z-30 min-w-[360px] border-b border-l border-gray-200 bg-sky-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
+  <th className="top-[44px] z-30 min-w-[95px] border-b border-l border-gray-200 bg-sky-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
   Total<br />jornadas
 </th>
 
@@ -293,7 +293,7 @@ export default function StandingsTable({ days, standings }: Props) {
   </>
 ) : null}
 
-<td className="min-w-[360px] border-b border-l border-gray-100 px-2 py-3 text-center font-semibold">
+<td className="min-w-[95px] border-b border-l border-gray-100 px-2 py-3 text-center font-semibold">
   {row.group_total}
 </td>
 
