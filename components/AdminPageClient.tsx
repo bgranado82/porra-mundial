@@ -1106,7 +1106,12 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
 />
               </div>
             ))}
-            <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3">
+          </div>
+         
+        </section>
+      </div>
+
+          <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3">
   <AdminThirdPlaceTable
     title="Mejores terceros"
     subtitle="Desempate manual solo si siguen empatados a todo."
@@ -1132,12 +1137,6 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
     }}
   />
 </div>
-          </div>
-         
-        </section>
-      </div>
-
-
 
       <div className="grid gap-6 xl:grid-cols-2">
         <RoundSection
