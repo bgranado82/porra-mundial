@@ -9,7 +9,9 @@ import { teams } from "@/data/teams";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
 import { calculateStandings } from "@/lib/standings";
-import GroupStandingsTable from "@/components/GroupStandingsTable";
+import { getBestThirdPlacedTeams } from "@/lib/thirdPlace";
+import AdminGroupStandingsTable from "@/components/AdminGroupStandingsTable";
+import AdminThirdPlaceTable from "@/components/AdminThirdPlaceTable";
 import AdminGroupMatchCompactRow from "@/components/AdminGroupMatchCompactRow";
 import AdminGroupMatchRow from "@/components/AdminGroupMatchRow";
 import {
@@ -43,6 +45,16 @@ type PoolSettingsRow = {
 };
 
 type PoolRow = PoolSettingsRow;
+
+type AdminTiebreakRow = {
+  scope: "group" | "third_place";
+  scope_value: string;
+  team_id: string;
+  priority: number;
+};
+
+// 🔥 NUEVO: desempates manuales
+type AdminTiebreakMap = Record<string, number>;
 
 const EXTRA_LABELS: Record<string, string> = {
   first_goal_scorer_world: "🥇 Primer goleador del Mundial",
@@ -160,6 +172,14 @@ function RoundSection({
   );
 }
 
+function getTiebreakKey(
+  scope: "group" | "third_place",
+  scopeValue: string,
+  teamId: string
+) {
+  return `${scope}:${scopeValue}:${teamId}`;
+}
+
 export default function AdminPageClient() {
   const supabase = createClient();
 
@@ -193,12 +213,14 @@ export default function AdminPageClient() {
   });
 
   const [groupResults, setGroupResults] = useState<GroupResultMap>({});
+
   const [knockoutResults, setKnockoutResults] =
     useState<KnockoutPredictionMap>({});
   const [officialExtras, setOfficialExtras] = useState<OfficialExtraResultMap>(
     {}
   );
 
+const [adminTiebreaks, setAdminTiebreaks] = useState<AdminTiebreakMap>({});
   const [loading, setLoading] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
   const [message, setMessage] = useState("");
@@ -269,23 +291,92 @@ export default function AdminPageClient() {
     });
   }, [groupResults]);
 
-  const standingsByGroup = useMemo(
-    () =>
-      groups.map((groupCode) => ({
-        groupCode,
-        rows: calculateStandings(
-          teams,
-          officialMatches,
-          groupCode
-        ),
-      })),
-    [groups, officialMatches]
-  );
+// 🔥 NUEVO: mapear desempates por grupo
+const groupAdminTiebreaks = useMemo(() => {
+  const result: Record<string, Record<string, number>> = {};
 
-  const realBracket = useMemo(
-    () => buildRealKnockoutBracket(teams, officialMatches, groups, knockoutResults),
-    [officialMatches, groups, knockoutResults]
-  );
+  Object.entries(adminTiebreaks).forEach(([key, rank]) => {
+    const [scope, group, teamId] = key.split(":");
+    if (scope !== "group") return;
+
+    if (!result[group]) result[group] = {};
+    result[group][teamId] = rank;
+  });
+
+  return result;
+}, [adminTiebreaks]);
+
+// 🔥 NUEVO: desempates terceros
+const thirdPlaceAdminTiebreaks = useMemo(() => {
+  const result: Record<string, number> = {};
+
+  Object.entries(adminTiebreaks).forEach(([key, rank]) => {
+    const [scope, , teamId] = key.split(":");
+    if (scope !== "third_place") return;
+
+    result[teamId] = rank;
+  });
+
+  return result;
+}, [adminTiebreaks]);
+
+  const standingsByGroup = useMemo(
+  () =>
+    groups.map((groupCode) => ({
+      groupCode,
+      rows: calculateStandings(
+        teams,
+        officialMatches,
+        groupCode,
+        undefined,
+        groupAdminTiebreaks[groupCode]
+      ),
+    })),
+  [groups, officialMatches, groupAdminTiebreaks]
+);
+
+
+const thirdPlaceRows = useMemo(
+  () =>
+    getBestThirdPlacedTeams(
+      teams,
+      officialMatches,
+      groups,
+      8,
+      undefined,
+      thirdPlaceAdminTiebreaks,
+      groupAdminTiebreaks
+    ),
+  [
+    teams,
+    officialMatches,
+    groups,
+    thirdPlaceAdminTiebreaks,
+    groupAdminTiebreaks,
+  ]
+);
+
+const realBracket = useMemo(
+  () =>
+    buildRealKnockoutBracket(
+      teams,
+      officialMatches,
+      groups,
+      knockoutResults,
+      {
+        groupAdminTiebreaks,
+        thirdPlaceAdminTiebreaks,
+      }
+    ),
+  [
+    officialMatches,
+    groups,
+    knockoutResults,
+    groupAdminTiebreaks,
+    thirdPlaceAdminTiebreaks,
+  ]
+);
+
 
   useEffect(() => {
     async function loadInitialData() {
@@ -348,17 +439,29 @@ export default function AdminPageClient() {
         });
         setKnockoutResults(nextKO);
 
-        const { data: extraRows, error: extraError } = await supabase
-          .from("official_extra_results")
-          .select("question_key, official_value");
+       const { data: extraRows, error: extraError } = await supabase
+  .from("official_extra_results")
+  .select("question_key, official_value");
 
-        if (extraError) throw extraError;
+const { data: tiebreakRows, error: tiebreakError } = await supabase
+  .from("admin_tiebreaks")
+  .select("scope, scope_value, team_id, priority");
 
-        const nextExtras: OfficialExtraResultMap = {};
-        (extraRows ?? []).forEach((row) => {
-          nextExtras[row.question_key] = row.official_value ?? "";
-        });
-        setOfficialExtras(nextExtras);
+if (extraError) throw extraError;
+if (tiebreakError) throw tiebreakError;
+
+const nextExtras: OfficialExtraResultMap = {};
+(extraRows ?? []).forEach((row) => {
+  nextExtras[row.question_key] = row.official_value ?? "";
+});
+setOfficialExtras(nextExtras);
+
+const nextTiebreaks: AdminTiebreakMap = {};
+((tiebreakRows ?? []) as AdminTiebreakRow[]).forEach((row) => {
+  const key = `${row.scope}:${row.scope_value}:${row.team_id}`;
+  nextTiebreaks[key] = row.priority;
+});
+setAdminTiebreaks(nextTiebreaks);
       } catch (err) {
         console.error(err);
         setMessage("Error cargando resultados.");
@@ -424,6 +527,42 @@ export default function AdminPageClient() {
       [questionKey]: value,
     }));
   }
+
+function updateGroupTiebreak(group: string, teamId: string, value: string) {
+  if (!/^\d*$/.test(value)) return;
+
+  const key = getTiebreakKey("group", group, teamId);
+
+  setAdminTiebreaks((prev) => {
+    const next = { ...prev };
+
+    if (value === "") {
+      delete next[key];
+    } else {
+      next[key] = Number(value);
+    }
+
+    return next;
+  });
+}
+
+function updateThirdPlaceTiebreak(teamId: string, value: string) {
+  if (!/^\d*$/.test(value)) return;
+
+  const key = getTiebreakKey("third_place", "overall", teamId);
+
+  setAdminTiebreaks((prev) => {
+    const next = { ...prev };
+
+    if (value === "") {
+      delete next[key];
+    } else {
+      next[key] = Number(value);
+    }
+
+    return next;
+  });
+}
 
   function updatePoolSetting<K extends keyof typeof poolSettings>(
     key: K,
@@ -532,15 +671,30 @@ export default function AdminPageClient() {
         return;
       }
 
+// 🔥 guardar desempates
+const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
+  ([key, priority]) => {
+    const [scope, scope_value, team_id] = key.split(":");
+
+    return {
+      scope: scope as "group" | "third_place",
+      scope_value,
+      team_id,
+      priority,
+    };
+  }
+);
+
       const res = await fetch("/api/admin/update-results", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          groupResults: groupRows,
-          knockoutResults: knockoutRows,
-        }),
+  groupResults: groupRows,
+  knockoutResults: knockoutRows,
+  adminTiebreaks: tiebreakRows,
+}),
       });
 
       const data = await res.json();
@@ -925,30 +1079,65 @@ export default function AdminPageClient() {
 
           <div className="p-4 space-y-3">
             {standingsByGroup.map(({ groupCode, rows }) => (
+              
+              
               <div
                 key={groupCode}
                 className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
               >
-                <GroupStandingsTable
-                  title={`Grupo ${groupCode}`}
-                  rows={rows}
-                  labels={{
-                    team: "Equipo",
-                    played: "PJ",
-                    won: "G",
-                    drawn: "E",
-                    lost: "P",
-                    goalsFor: "GF",
-                    goalsAgainst: "GC",
-                    goalDifference: "DG",
-                    pointsShort: "Pts",
-                  }}
-                />
+               <AdminGroupStandingsTable
+  title={`Grupo ${groupCode}`}
+  groupCode={groupCode}
+  rows={rows}
+  tiebreaks={adminTiebreaks}
+  onChangeTiebreak={updateGroupTiebreak}
+  labels={{
+    team: "Equipo",
+    played: "PJ",
+    won: "G",
+    drawn: "E",
+    lost: "P",
+    goalsFor: "GF",
+    goalsAgainst: "GC",
+    goalDifference: "DG",
+    pointsShort: "Pts",
+    tiebreak: "TB",
+  }}
+/>
               </div>
             ))}
+            <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3">
+  <AdminThirdPlaceTable
+    title="Mejores terceros"
+    subtitle="Desempate manual solo si siguen empatados a todo."
+    rows={thirdPlaceRows}
+    tiebreaks={adminTiebreaks}
+    onChangeTiebreak={updateThirdPlaceTiebreak}
+    labels={{
+      position: "#",
+      group: "Grupo",
+      team: "Equipo",
+      played: "PJ",
+      won: "PG",
+      drawn: "PE",
+      lost: "PP",
+      goalsFor: "GF",
+      goalsAgainst: "GC",
+      goalDifference: "DG",
+      pointsShort: "Pts",
+      status: "Estado",
+      qualified: "Clasifica",
+      eliminated: "Fuera",
+      tiebreak: "TB",
+    }}
+  />
+</div>
           </div>
+         
         </section>
       </div>
+
+
 
       <div className="grid gap-6 xl:grid-cols-2">
         <RoundSection

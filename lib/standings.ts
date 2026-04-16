@@ -1,3 +1,4 @@
+
 import { Match, Team } from "@/types";
 
 export type StandingRow = {
@@ -21,7 +22,7 @@ type TeamRankingMeta = {
 };
 
 type TeamRankingMetaMap = Record<string, TeamRankingMeta | undefined>;
-
+type ManualTiebreakMap = Record<string, number> | undefined;
 type MiniStandingRow = StandingRow;
 
 function createBaseRows(groupTeams: Team[]): StandingRow[] {
@@ -57,10 +58,7 @@ function getPlayedGroupMatches(matches: Match[], group: string): Match[] {
   );
 }
 
-function applyMatchToRowMap(
-  rowMap: Map<string, StandingRow>,
-  match: Match,
-): void {
+function applyMatchToRowMap(rowMap: Map<string, StandingRow>, match: Match): void {
   if (
     !match.homeTeamId ||
     !match.awayTeamId ||
@@ -107,7 +105,7 @@ function finalizeRows(rows: StandingRow[]): void {
 function buildOverallRows(
   teams: Team[],
   matches: Match[],
-  group: string,
+  group: string
 ): StandingRow[] {
   const groupTeams = teams.filter((team) => team.group === group);
   const table = createBaseRows(groupTeams);
@@ -124,7 +122,7 @@ function buildOverallRows(
 function buildMiniTable(
   tiedRows: StandingRow[],
   matches: Match[],
-  group: string,
+  group: string
 ): MiniStandingRow[] {
   const tiedIds = new Set(tiedRows.map((row) => row.teamId));
   const miniRows = cloneRows(tiedRows).map((row) => ({
@@ -145,7 +143,7 @@ function buildMiniTable(
       match.homeTeamId !== null &&
       match.awayTeamId !== null &&
       tiedIds.has(match.homeTeamId) &&
-      tiedIds.has(match.awayTeamId),
+      tiedIds.has(match.awayTeamId)
   );
 
   for (const match of miniMatches) {
@@ -168,22 +166,51 @@ function compareUsingStats(a: StandingRow, b: StandingRow): number {
 function compareUsingFairPlayAndRanking(
   a: StandingRow,
   b: StandingRow,
-  rankingMeta?: TeamRankingMetaMap,
+  rankingMeta?: TeamRankingMetaMap
 ): number {
   if (!rankingMeta) return 0;
 
   const aFair = rankingMeta[a.teamId]?.fairPlayPoints;
   const bFair = rankingMeta[b.teamId]?.fairPlayPoints;
 
-  if (typeof aFair === "number" && typeof bFair === "number" && aFair !== bFair) {
+  if (
+    typeof aFair === "number" &&
+    typeof bFair === "number" &&
+    aFair !== bFair
+  ) {
     return bFair - aFair;
   }
 
   const aRank = rankingMeta[a.teamId]?.fifaRanking;
   const bRank = rankingMeta[b.teamId]?.fifaRanking;
 
-  if (typeof aRank === "number" && typeof bRank === "number" && aRank !== bRank) {
+  if (
+    typeof aRank === "number" &&
+    typeof bRank === "number" &&
+    aRank !== bRank
+  ) {
     return aRank - bRank;
+  }
+
+  return 0;
+}
+
+function compareUsingManualTiebreak(
+  a: StandingRow,
+  b: StandingRow,
+  manualTiebreaks?: ManualTiebreakMap
+): number {
+  if (!manualTiebreaks) return 0;
+
+  const aManual = manualTiebreaks[a.teamId];
+  const bManual = manualTiebreaks[b.teamId];
+
+  if (
+    typeof aManual === "number" &&
+    typeof bManual === "number" &&
+    aManual !== bManual
+  ) {
+    return aManual - bManual;
   }
 
   return 0;
@@ -195,6 +222,7 @@ function resolveTiedCluster(
   matches: Match[],
   group: string,
   rankingMeta?: TeamRankingMetaMap,
+  manualTiebreaks?: ManualTiebreakMap
 ): StandingRow[] {
   if (cluster.length <= 1) return cluster;
 
@@ -222,9 +250,16 @@ function resolveTiedCluster(
     const fairPlayCompare = compareUsingFairPlayAndRanking(
       overallA,
       overallB,
-      rankingMeta,
+      rankingMeta
     );
     if (fairPlayCompare !== 0) return fairPlayCompare;
+
+    const manualCompare = compareUsingManualTiebreak(
+      overallA,
+      overallB,
+      manualTiebreaks
+    );
+    if (manualCompare !== 0) return manualCompare;
 
     return a.teamName.localeCompare(b.teamName);
   });
@@ -237,6 +272,7 @@ function resolveTiedCluster(
     while (end < ordered.length) {
       const left = miniMap.get(ordered[start].teamId)!;
       const right = miniMap.get(ordered[end].teamId)!;
+
       if (
         left.points === right.points &&
         left.goalDifference === right.goalDifference &&
@@ -251,7 +287,6 @@ function resolveTiedCluster(
     const subCluster = ordered.slice(start, end);
 
     if (subCluster.length === cluster.length) {
-      // No head-to-head split was possible; fall back to overall + metadata.
       resolved.push(
         ...subCluster.sort((a, b) => {
           const overallA = overallMap.get(a.teamId)!;
@@ -268,18 +303,32 @@ function resolveTiedCluster(
           const fairPlayCompare = compareUsingFairPlayAndRanking(
             overallA,
             overallB,
-            rankingMeta,
+            rankingMeta
           );
           if (fairPlayCompare !== 0) return fairPlayCompare;
 
+          const manualCompare = compareUsingManualTiebreak(
+            overallA,
+            overallB,
+            manualTiebreaks
+          );
+          if (manualCompare !== 0) return manualCompare;
+
           return a.teamName.localeCompare(b.teamName);
-        }),
+        })
       );
       return resolved;
     }
 
     resolved.push(
-      ...resolveTiedCluster(subCluster, overallMap, matches, group, rankingMeta),
+      ...resolveTiedCluster(
+        subCluster,
+        overallMap,
+        matches,
+        group,
+        rankingMeta,
+        manualTiebreaks
+      )
     );
     start = end;
   }
@@ -292,6 +341,7 @@ export function calculateStandings(
   matches: Match[],
   group: string,
   rankingMeta?: TeamRankingMetaMap,
+  manualTiebreaks?: Record<string, number>
 ): StandingRow[] {
   const table = buildOverallRows(teams, matches, group);
   const overallMap = new Map(table.map((row) => [row.teamId, row]));
@@ -305,7 +355,10 @@ export function calculateStandings(
 
   while (start < byPoints.length) {
     let end = start + 1;
-    while (end < byPoints.length && byPoints[end].points === byPoints[start].points) {
+    while (
+      end < byPoints.length &&
+      byPoints[end].points === byPoints[start].points
+    ) {
       end += 1;
     }
 
@@ -314,7 +367,14 @@ export function calculateStandings(
       resolved.push(cluster[0]);
     } else {
       resolved.push(
-        ...resolveTiedCluster(cluster, overallMap, matches, group, rankingMeta),
+        ...resolveTiedCluster(
+          cluster,
+          overallMap,
+          matches,
+          group,
+          rankingMeta,
+          manualTiebreaks
+        )
       );
     }
 
@@ -330,6 +390,7 @@ export function calculatePredictedStandings(
   predictions: Record<string, { homeGoals: number | null; awayGoals: number | null }>,
   group: string,
   rankingMeta?: TeamRankingMetaMap,
+  manualTiebreaks?: Record<string, number>
 ): StandingRow[] {
   const predictedMatches: Match[] = matches.map((match) => ({
     ...match,
@@ -337,5 +398,11 @@ export function calculatePredictedStandings(
     awayGoals: predictions[match.id]?.awayGoals ?? null,
   }));
 
-  return calculateStandings(teams, predictedMatches, group, rankingMeta);
+  return calculateStandings(
+    teams,
+    predictedMatches,
+    group,
+    rankingMeta,
+    manualTiebreaks
+  );
 }

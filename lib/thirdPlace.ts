@@ -1,3 +1,4 @@
+
 import { Match, Team } from "@/types";
 import { calculateStandings, StandingRow } from "@/lib/standings";
 
@@ -17,6 +18,7 @@ function compareThirdPlacedTeams(
   a: ThirdPlaceRow,
   b: ThirdPlaceRow,
   rankingMeta?: TeamRankingMetaMap,
+  manualThirdPlaceTiebreaks?: Record<string, number>
 ): number {
   if (b.points !== a.points) return b.points - a.points;
   if (b.goalDifference !== a.goalDifference) {
@@ -28,15 +30,36 @@ function compareThirdPlacedTeams(
     const aFair = rankingMeta[a.teamId]?.fairPlayPoints;
     const bFair = rankingMeta[b.teamId]?.fairPlayPoints;
 
-    if (typeof aFair === "number" && typeof bFair === "number" && aFair !== bFair) {
+    if (
+      typeof aFair === "number" &&
+      typeof bFair === "number" &&
+      aFair !== bFair
+    ) {
       return bFair - aFair;
     }
 
     const aRank = rankingMeta[a.teamId]?.fifaRanking;
     const bRank = rankingMeta[b.teamId]?.fifaRanking;
 
-    if (typeof aRank === "number" && typeof bRank === "number" && aRank !== bRank) {
+    if (
+      typeof aRank === "number" &&
+      typeof bRank === "number" &&
+      aRank !== bRank
+    ) {
       return aRank - bRank;
+    }
+  }
+
+  if (manualThirdPlaceTiebreaks) {
+    const aManual = manualThirdPlaceTiebreaks[a.teamId];
+    const bManual = manualThirdPlaceTiebreaks[b.teamId];
+
+    if (
+      typeof aManual === "number" &&
+      typeof bManual === "number" &&
+      aManual !== bManual
+    ) {
+      return aManual - bManual;
     }
   }
 
@@ -48,11 +71,19 @@ export function getThirdPlacedTeams(
   matches: Match[],
   groups: string[],
   rankingMeta?: TeamRankingMetaMap,
+  groupAdminTiebreaks?: Record<string, Record<string, number>>
 ): ThirdPlaceRow[] {
   const thirdPlacedTeams: ThirdPlaceRow[] = [];
 
   for (const group of groups) {
-    const standings = calculateStandings(teams, matches, group, rankingMeta);
+    const standings = calculateStandings(
+      teams,
+      matches,
+      group,
+      rankingMeta,
+      groupAdminTiebreaks?.[group]
+    );
+
     if (standings.length >= 3) {
       thirdPlacedTeams.push({
         ...standings[2],
@@ -71,11 +102,19 @@ export function getBestThirdPlacedTeams(
   groups: string[],
   limit = 8,
   rankingMeta?: TeamRankingMetaMap,
+  manualThirdPlaceTiebreaks?: Record<string, number>,
+  groupAdminTiebreaks?: Record<string, Record<string, number>>
 ): ThirdPlaceRow[] {
-  const thirdPlacedTeams = getThirdPlacedTeams(teams, matches, groups, rankingMeta);
+  const thirdPlacedTeams = getThirdPlacedTeams(
+    teams,
+    matches,
+    groups,
+    rankingMeta,
+    groupAdminTiebreaks
+  );
 
   const sorted = [...thirdPlacedTeams].sort((a, b) =>
-    compareThirdPlacedTeams(a, b, rankingMeta),
+    compareThirdPlacedTeams(a, b, rankingMeta, manualThirdPlaceTiebreaks)
   );
 
   return sorted.map((team, index) => ({

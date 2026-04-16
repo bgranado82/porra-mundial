@@ -1,3 +1,4 @@
+
 import { Match, Team } from "@/types";
 import { calculateStandings } from "@/lib/standings";
 import { getBestThirdPlacedTeams } from "@/lib/thirdPlace";
@@ -31,6 +32,8 @@ type GenerateRound32Options = {
   requireWholeGroupStageForThirds?: boolean;
   rankingMeta?: TeamRankingMetaMap;
   allowLegacyFallbackWhileTableIsIncomplete?: boolean;
+  groupAdminTiebreaks?: Record<string, Record<string, number>>;
+  thirdPlaceAdminTiebreaks?: Record<string, number>;
 };
 
 type ThirdCandidate = {
@@ -61,13 +64,13 @@ const SLOT_ALLOWED_GROUPS: Record<ThirdSlot, string[]> = {
 
 function isGroupComplete(matches: Match[], group: string) {
   const groupMatches = matches.filter(
-    (match) => match.stage === "group" && match.group === group,
+    (match) => match.stage === "group" && match.group === group
   );
 
   if (groupMatches.length === 0) return false;
 
   return groupMatches.every(
-    (match) => match.homeGoals !== null && match.awayGoals !== null,
+    (match) => match.homeGoals !== null && match.awayGoals !== null
   );
 }
 
@@ -77,7 +80,7 @@ function isWholeGroupStageComplete(matches: Match[]) {
   if (groupMatches.length === 0) return false;
 
   return groupMatches.every(
-    (match) => match.homeGoals !== null && match.awayGoals !== null,
+    (match) => match.homeGoals !== null && match.awayGoals !== null
   );
 }
 
@@ -88,13 +91,14 @@ function getGroupPosition(
   position: 1 | 2 | 3,
   requireCompleteGroup: boolean,
   rankingMeta?: TeamRankingMetaMap,
+  manualTiebreaks?: Record<string, number>
 ): StandingTeam {
   const label =
     position === 1
       ? `1º Grupo ${group}`
       : position === 2
-        ? `2º Grupo ${group}`
-        : `3º Grupo ${group}`;
+      ? `2º Grupo ${group}`
+      : `3º Grupo ${group}`;
 
   if (requireCompleteGroup && !isGroupComplete(matches, group)) {
     return {
@@ -103,7 +107,13 @@ function getGroupPosition(
     };
   }
 
-  const standings = calculateStandings(teams, matches, group, rankingMeta);
+  const standings = calculateStandings(
+    teams,
+    matches,
+    group,
+    rankingMeta,
+    manualTiebreaks
+  );
   const row = standings[position - 1];
 
   return {
@@ -126,11 +136,11 @@ function assignThirdsLegacyBacktracking(availableThirds: ThirdCandidate[]) {
 
   const slots = (Object.keys(SLOT_ALLOWED_GROUPS) as ThirdSlot[]).sort((a, b) => {
     const aCount = availableThirds.filter(
-      (t) => t.group && SLOT_ALLOWED_GROUPS[a].includes(t.group),
+      (t) => t.group && SLOT_ALLOWED_GROUPS[a].includes(t.group)
     ).length;
 
     const bCount = availableThirds.filter(
-      (t) => t.group && SLOT_ALLOWED_GROUPS[b].includes(t.group),
+      (t) => t.group && SLOT_ALLOWED_GROUPS[b].includes(t.group)
     ).length;
 
     return aCount - bCount;
@@ -148,7 +158,7 @@ function assignThirdsLegacyBacktracking(availableThirds: ThirdCandidate[]) {
       (team) =>
         team.group !== null &&
         allowedGroups.includes(team.group) &&
-        !used.has(team.teamId),
+        !used.has(team.teamId)
     );
 
     for (const candidate of candidates) {
@@ -184,7 +194,7 @@ function assignThirdsLegacyBacktracking(availableThirds: ThirdCandidate[]) {
 
 function resolveThirdAssignments(
   qualifiedThirds: ThirdCandidate[],
-  allowLegacyFallbackWhileTableIsIncomplete: boolean,
+  allowLegacyFallbackWhileTableIsIncomplete: boolean
 ) {
   const groups = qualifiedThirds
     .map((team) => team.group)
@@ -192,8 +202,10 @@ function resolveThirdAssignments(
 
   const teamIdByGroup = new Map(
     qualifiedThirds
-      .filter((team): team is { teamId: string; group: string } => Boolean(team.group))
-      .map((team) => [team.group, team.teamId]),
+      .filter(
+        (team): team is { teamId: string; group: string } => Boolean(team.group)
+      )
+      .map((team) => [team.group, team.teamId])
   );
 
   const key = buildThirdComboKey(groups);
@@ -240,7 +252,7 @@ export function generateRound32(
   teams: Team[],
   matches: Match[],
   groups: string[],
-  options?: GenerateRound32Options,
+  options?: GenerateRound32Options
 ): Round32Match[] {
   const requireCompleteGroupsForQualifiedTeams =
     options?.requireCompleteGroupsForQualifiedTeams ?? true;
@@ -249,78 +261,224 @@ export function generateRound32(
   const rankingMeta = options?.rankingMeta;
   const allowLegacyFallbackWhileTableIsIncomplete =
     options?.allowLegacyFallbackWhileTableIsIncomplete ?? true;
+  const groupAdminTiebreaks = options?.groupAdminTiebreaks;
+  const thirdPlaceAdminTiebreaks = options?.thirdPlaceAdminTiebreaks;
 
   const A1 = getGroupPosition(
-    teams, matches, "A", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "A",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.A
   );
   const A2 = getGroupPosition(
-    teams, matches, "A", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "A",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.A
   );
   const B1 = getGroupPosition(
-    teams, matches, "B", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "B",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.B
   );
   const B2 = getGroupPosition(
-    teams, matches, "B", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "B",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.B
   );
   const C1 = getGroupPosition(
-    teams, matches, "C", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "C",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.C
   );
   const C2 = getGroupPosition(
-    teams, matches, "C", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "C",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.C
   );
   const D1 = getGroupPosition(
-    teams, matches, "D", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "D",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.D
   );
   const D2 = getGroupPosition(
-    teams, matches, "D", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "D",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.D
   );
   const E1 = getGroupPosition(
-    teams, matches, "E", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "E",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.E
   );
   const E2 = getGroupPosition(
-    teams, matches, "E", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "E",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.E
   );
   const F1 = getGroupPosition(
-    teams, matches, "F", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "F",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.F
   );
   const F2 = getGroupPosition(
-    teams, matches, "F", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "F",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.F
   );
   const G1 = getGroupPosition(
-    teams, matches, "G", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "G",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.G
   );
   const G2 = getGroupPosition(
-    teams, matches, "G", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "G",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.G
   );
   const H1 = getGroupPosition(
-    teams, matches, "H", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "H",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.H
   );
   const H2 = getGroupPosition(
-    teams, matches, "H", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "H",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.H
   );
   const I1 = getGroupPosition(
-    teams, matches, "I", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "I",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.I
   );
   const I2 = getGroupPosition(
-    teams, matches, "I", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "I",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.I
   );
   const J1 = getGroupPosition(
-    teams, matches, "J", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "J",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.J
   );
   const J2 = getGroupPosition(
-    teams, matches, "J", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "J",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.J
   );
   const K1 = getGroupPosition(
-    teams, matches, "K", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "K",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.K
   );
   const K2 = getGroupPosition(
-    teams, matches, "K", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "K",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.K
   );
   const L1 = getGroupPosition(
-    teams, matches, "L", 1, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "L",
+    1,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.L
   );
   const L2 = getGroupPosition(
-    teams, matches, "L", 2, requireCompleteGroupsForQualifiedTeams, rankingMeta,
+    teams,
+    matches,
+    "L",
+    2,
+    requireCompleteGroupsForQualifiedTeams,
+    rankingMeta,
+    groupAdminTiebreaks?.L
   );
 
   let third74: string | null = null;
@@ -343,6 +501,8 @@ export function generateRound32(
       groups,
       8,
       rankingMeta,
+      thirdPlaceAdminTiebreaks,
+      groupAdminTiebreaks
     )
       .filter((team) => team.qualifies)
       .map((team) => ({
@@ -352,7 +512,7 @@ export function generateRound32(
 
     const assigned = resolveThirdAssignments(
       qualifiedThirds,
-      allowLegacyFallbackWhileTableIsIncomplete,
+      allowLegacyFallbackWhileTableIsIncomplete
     );
 
     third74 = assigned.third74;
@@ -367,6 +527,7 @@ export function generateRound32(
 
   return [
     { id: "r32-1", homeTeamId: A2.teamId, awayTeamId: B2.teamId, homeLabel: "2º Grupo A", awayLabel: "2º Grupo B" },
+    { id: "r32-2", homeTeamId: E1.teamId, awayTeamId: third74, homeLabel: "1º Grupo E", awayLabel: "3º oficial" },
     { id: "r32-2", homeTeamId: E1.teamId, awayTeamId: third74, homeLabel: "1º Grupo E", awayLabel: "3º oficial" },
     { id: "r32-3", homeTeamId: F1.teamId, awayTeamId: C2.teamId, homeLabel: "1º Grupo F", awayLabel: "2º Grupo C" },
     { id: "r32-4", homeTeamId: C1.teamId, awayTeamId: F2.teamId, homeLabel: "1º Grupo C", awayLabel: "2º Grupo F" },

@@ -9,7 +9,9 @@ import { teams } from "@/data/teams";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
 import { calculateStandings } from "@/lib/standings";
-import GroupStandingsTable from "@/components/GroupStandingsTable";
+import { getBestThirdPlacedTeams } from "@/lib/thirdPlace";
+import AdminGroupStandingsTable from "@/components/AdminGroupStandingsTable";
+import AdminThirdPlaceTable from "@/components/AdminThirdPlaceTable";
 import AdminGroupMatchCompactRow from "@/components/AdminGroupMatchCompactRow";
 import AdminGroupMatchRow from "@/components/AdminGroupMatchRow";
 import {
@@ -20,11 +22,19 @@ import {
 
 type GroupResultMap = Record<string, { homeGoals: string; awayGoals: string }>;
 type OfficialExtraResultMap = Record<string, string>;
+type AdminTiebreakMap = Record<string, number>;
 
 type PoolRow = {
   id: string;
   name: string;
   slug: string;
+};
+
+type AdminTiebreakRow = {
+  scope: "group" | "third_place";
+  scope_value: string;
+  team_id: string;
+  priority: number;
 };
 
 const EXTRA_LABELS: Record<string, string> = {
@@ -53,7 +63,7 @@ function getDateKeySpain(kickoff: string | null | undefined) {
 
 function formatDateHeaderSpain(dateKey: string) {
   const [year, month, day] = dateKey.split("-");
-  const date = new Date(`${year}-${month}-${day}T12:00:00+02:00`);
+  const date = new Date(`${year}-${month}-${day}T12:00:00+02:00}`);
 
   return new Intl.DateTimeFormat("es-ES", {
     weekday: "long",
@@ -61,6 +71,14 @@ function formatDateHeaderSpain(dateKey: string) {
     month: "long",
     timeZone: "Europe/Madrid",
   }).format(date);
+}
+
+function getTiebreakKey(
+  scope: "group" | "third_place",
+  scopeValue: string,
+  teamId: string
+) {
+  return `${scope}:${scopeValue}:${teamId}`;
 }
 
 function RoundSection({
@@ -112,30 +130,30 @@ function RoundSection({
                 </div>
 
                 <div className="mb-3 space-y-2 text-sm font-semibold text-[var(--iberdrola-forest)]">
-  <div className="flex items-center gap-2">
-    {home?.flagUrl ? (
-      <img
-        src={home.flagUrl}
-        alt={home.name}
-        className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
-      />
-    ) : null}
-    <span>{homeLabel}</span>
-  </div>
+                  <div className="flex items-center gap-2">
+                    {home?.flagUrl ? (
+                      <img
+                        src={home.flagUrl}
+                        alt={home.name}
+                        className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+                      />
+                    ) : null}
+                    <span>{homeLabel}</span>
+                  </div>
 
-  <div className="text-xs text-[var(--iberdrola-forest)]/45">vs</div>
+                  <div className="text-xs text-[var(--iberdrola-forest)]/45">vs</div>
 
-  <div className="flex items-center gap-2">
-    {away?.flagUrl ? (
-      <img
-        src={away.flagUrl}
-        alt={away.name}
-        className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
-      />
-    ) : null}
-    <span>{awayLabel}</span>
-  </div>
-</div>
+                  <div className="flex items-center gap-2">
+                    {away?.flagUrl ? (
+                      <img
+                        src={away.flagUrl}
+                        alt={away.name}
+                        className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+                      />
+                    ) : null}
+                    <span>{awayLabel}</span>
+                  </div>
+                </div>
 
                 <select
                   value={picks[match.id] ?? ""}
@@ -144,16 +162,8 @@ function RoundSection({
                   className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <option value="">Selecciona ganador</option>
-                  {home ? (
-                    <option value={home.id}>
-                      {home.name}
-                    </option>
-                  ) : null}
-                  {away ? (
-                    <option value={away.id}>
-                      {away.name}
-                    </option>
-                  ) : null}
+                  {home ? <option value={home.id}>{home.name}</option> : null}
+                  {away ? <option value={away.id}>{away.name}</option> : null}
                 </select>
               </div>
             );
@@ -177,6 +187,7 @@ export default function AdminResultsPageClient() {
   const [officialExtras, setOfficialExtras] = useState<OfficialExtraResultMap>(
     {}
   );
+  const [adminTiebreaks, setAdminTiebreaks] = useState<AdminTiebreakMap>({});
 
   const [loading, setLoading] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
@@ -188,7 +199,8 @@ export default function AdminResultsPageClient() {
   );
 
   const groups = useMemo(
-    () => [...new Set(teams.map((team) => team.group).filter(Boolean))] as string[],
+    () =>
+      [...new Set(teams.map((team) => team.group).filter(Boolean))] as string[],
     []
   );
 
@@ -246,18 +258,84 @@ export default function AdminResultsPageClient() {
     });
   }, [groupResults]);
 
+  const groupAdminTiebreaks = useMemo(() => {
+    const result: Record<string, Record<string, number>> = {};
+
+    groups.forEach((groupCode) => {
+      result[groupCode] = {};
+
+      teams
+        .filter((team) => team.group === groupCode)
+        .forEach((team) => {
+          const key = getTiebreakKey("group", groupCode, team.id);
+          const value = adminTiebreaks[key];
+
+          if (typeof value === "number") {
+            result[groupCode][team.id] = value;
+          }
+        });
+    });
+
+    return result;
+  }, [groups, adminTiebreaks]);
+
+  const thirdPlaceAdminTiebreaks = useMemo(() => {
+    const result: Record<string, number> = {};
+
+    teams.forEach((team) => {
+      const key = getTiebreakKey("third_place", "overall", team.id);
+      const value = adminTiebreaks[key];
+
+      if (typeof value === "number") {
+        result[team.id] = value;
+      }
+    });
+
+    return result;
+  }, [adminTiebreaks]);
+
   const standingsByGroup = useMemo(
     () =>
       groups.map((groupCode) => ({
         groupCode,
-        rows: calculateStandings(teams, officialMatches, groupCode),
+        rows: calculateStandings(
+          teams,
+          officialMatches,
+          groupCode,
+          undefined,
+          groupAdminTiebreaks[groupCode]
+        ),
       })),
-    [groups, officialMatches]
+    [groups, officialMatches, groupAdminTiebreaks]
+  );
+
+  const thirdPlaceRows = useMemo(
+    () =>
+      getBestThirdPlacedTeams(
+        teams,
+        officialMatches,
+        groups,
+        8,
+        undefined,
+        thirdPlaceAdminTiebreaks,
+        groupAdminTiebreaks
+      ),
+    [teams, officialMatches, groups, thirdPlaceAdminTiebreaks, groupAdminTiebreaks]
   );
 
   const realBracket = useMemo(
-    () => buildRealKnockoutBracket(teams, officialMatches, groups, knockoutResults),
-    [officialMatches, groups, knockoutResults]
+    () =>
+      buildRealKnockoutBracket(teams, officialMatches, groups, knockoutResults, {
+        groupAdminTiebreaks,
+        thirdPlaceAdminTiebreaks,
+      }),
+    [
+      officialMatches,
+      groups,
+      knockoutResults,
+      groupAdminTiebreaks,
+      thirdPlaceAdminTiebreaks,
+    ]
   );
 
   useEffect(() => {
@@ -319,6 +397,20 @@ export default function AdminResultsPageClient() {
           nextExtras[row.question_key] = row.official_value ?? "";
         });
         setOfficialExtras(nextExtras);
+
+        const { data: tbRows, error: tbError } = await supabase
+          .from("admin_tiebreaks")
+          .select("scope, scope_value, team_id, priority");
+
+        if (tbError) throw tbError;
+
+        const nextTiebreaks: AdminTiebreakMap = {};
+        ((tbRows ?? []) as AdminTiebreakRow[]).forEach((row) => {
+          nextTiebreaks[
+            getTiebreakKey(row.scope, row.scope_value, row.team_id)
+          ] = row.priority;
+        });
+        setAdminTiebreaks(nextTiebreaks);
       } catch (err) {
         console.error(err);
         setMessage("Error cargando resultados.");
@@ -366,6 +458,42 @@ export default function AdminResultsPageClient() {
     }));
   }
 
+  function updateGroupTiebreak(groupCode: string, teamId: string, value: string) {
+    if (!/^\d*$/.test(value)) return;
+
+    const key = getTiebreakKey("group", groupCode, teamId);
+
+    setAdminTiebreaks((prev) => {
+      const next = { ...prev };
+
+      if (value === "") {
+        delete next[key];
+      } else {
+        next[key] = Number(value);
+      }
+
+      return next;
+    });
+  }
+
+  function updateThirdPlaceTiebreak(teamId: string, value: string) {
+    if (!/^\d*$/.test(value)) return;
+
+    const key = getTiebreakKey("third_place", "overall", teamId);
+
+    setAdminTiebreaks((prev) => {
+      const next = { ...prev };
+
+      if (value === "") {
+        delete next[key];
+      } else {
+        next[key] = Number(value);
+      }
+
+      return next;
+    });
+  }
+
   async function handleSaveAllResults() {
     setSavingAll(true);
     setMessage("");
@@ -396,6 +524,18 @@ export default function AdminResultsPageClient() {
           : null;
       }).filter(Boolean);
 
+      const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
+        ([key, priority]) => {
+          const [scope, scopeValue, teamId] = key.split(":");
+          return {
+            scope: scope as "group" | "third_place",
+            scope_value: scopeValue,
+            team_id: teamId,
+            priority,
+          };
+        }
+      );
+
       const { error: extrasError } = await supabase
         .from("official_extra_results")
         .upsert(extraRows, { onConflict: "question_key" });
@@ -414,6 +554,7 @@ export default function AdminResultsPageClient() {
         body: JSON.stringify({
           groupResults: groupRows,
           knockoutResults: knockoutRows,
+          adminTiebreaks: tiebreakRows,
         }),
       });
 
@@ -450,7 +591,7 @@ export default function AdminResultsPageClient() {
                 Resultados oficiales
               </h1>
               <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                Gestiona fase de grupos, knockout y preguntas extra.
+                Gestiona fase de grupos, knockout, desempates y preguntas extra.
               </p>
             </div>
 
@@ -647,9 +788,12 @@ export default function AdminResultsPageClient() {
                 key={groupCode}
                 className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
               >
-                <GroupStandingsTable
+                <AdminGroupStandingsTable
                   title={`Grupo ${groupCode}`}
+                  groupCode={groupCode}
                   rows={rows}
+                  tiebreaks={adminTiebreaks}
+                  onChangeTiebreak={updateGroupTiebreak}
                   labels={{
                     team: "Equipo",
                     played: "PJ",
@@ -660,10 +804,38 @@ export default function AdminResultsPageClient() {
                     goalsAgainst: "GC",
                     goalDifference: "DG",
                     pointsShort: "Pts",
+                    tiebreak: "TB",
                   }}
                 />
               </div>
             ))}
+
+            <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3">
+              <AdminThirdPlaceTable
+                title="Mejores terceros"
+                subtitle="Desempate manual solo si siguen empatados a todo."
+                rows={thirdPlaceRows}
+                tiebreaks={adminTiebreaks}
+                onChangeTiebreak={updateThirdPlaceTiebreak}
+                labels={{
+                  position: "#",
+                  group: "Grupo",
+                  team: "Equipo",
+                  played: "PJ",
+                  won: "PG",
+                  drawn: "PE",
+                  lost: "PP",
+                  goalsFor: "GF",
+                  goalsAgainst: "GC",
+                  goalDifference: "DG",
+                  pointsShort: "Pts",
+                  status: "Estado",
+                  qualified: "Clasifica",
+                  eliminated: "Fuera",
+                  tiebreak: "TB",
+                }}
+              />
+            </div>
           </div>
         </section>
       </div>

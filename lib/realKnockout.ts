@@ -1,3 +1,4 @@
+
 import {
   KnockoutBracketMatch,
   KnockoutPredictionMap,
@@ -14,11 +15,17 @@ export function buildRealKnockoutBracket(
   teams: Team[],
   matches: Match[],
   groups: string[],
-  realKnockoutPredictions: KnockoutPredictionMap
+  realKnockoutPredictions: KnockoutPredictionMap,
+  options?: {
+    groupAdminTiebreaks?: Record<string, Record<string, number>>;
+    thirdPlaceAdminTiebreaks?: Record<string, number>;
+  }
 ) {
   const round32 = generateRound32(teams, matches, groups, {
     requireCompleteGroupsForQualifiedTeams: true,
     requireWholeGroupStageForThirds: true,
+    groupAdminTiebreaks: options?.groupAdminTiebreaks,
+    thirdPlaceAdminTiebreaks: options?.thirdPlaceAdminTiebreaks,
   }).map((m) => ({
     id: m.id,
     stage: "round32" as const,

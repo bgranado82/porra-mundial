@@ -15,6 +15,13 @@ type KnockoutResultRow = {
   picked_team_id: string;
 };
 
+type AdminTiebreakRow = {
+  scope: "group" | "third_place";
+  scope_value: string;
+  team_id: string;
+  priority: number;
+};
+
 type EntryRow = {
   id: string;
   pool_id: string;
@@ -55,6 +62,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const groupResults = (body.groupResults ?? []) as GroupResultRow[];
     const knockoutResults = (body.knockoutResults ?? []) as KnockoutResultRow[];
+    const adminTiebreaks = (body.adminTiebreaks ?? []) as AdminTiebreakRow[];
 
     // 1. Limpiar resultados oficiales actuales
     const { error: deleteGroupError } = await adminSupabase
@@ -81,7 +89,20 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Insertar solo lo que venga ahora
+    // 2. Limpiar desempates admin actuales
+    const { error: deleteTiebreaksError } = await adminSupabase
+      .from("admin_tiebreaks")
+      .delete()
+      .in("scope", ["group", "third_place"]);
+
+    if (deleteTiebreaksError) {
+      return NextResponse.json(
+        { error: deleteTiebreaksError.message },
+        { status: 500 }
+      );
+    }
+
+    // 3. Insertar solo lo que venga ahora
     if (groupResults.length > 0) {
       const { error: insertGroupError } = await adminSupabase
         .from("official_group_results")
@@ -108,10 +129,23 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Recalcular puntuaciones desde cero
+    if (adminTiebreaks.length > 0) {
+      const { error: insertTiebreaksError } = await adminSupabase
+        .from("admin_tiebreaks")
+        .insert(adminTiebreaks);
+
+      if (insertTiebreaksError) {
+        return NextResponse.json(
+          { error: insertTiebreaksError.message },
+          { status: 500 }
+        );
+      }
+    }
+
+    // 4. Recalcular puntuaciones desde cero
     const debug = await recalculateScoresAll();
 
-    // 4. Crear snapshot de clasificación tras recalcular
+    // 5. Crear snapshot de clasificación tras recalcular
     const { data: entries, error: entriesError } = await adminSupabase
       .from("entries")
       .select("id, pool_id, name, email");
