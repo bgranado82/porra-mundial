@@ -108,7 +108,7 @@ function RoundSection({
       </div>
 
       <div className="p-4">
-        <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+        <div className="grid gap-3 lg:grid-cols-2 2lg:grid-cols-3">
           {matches.map((match) => {
             const home = match.homeTeamId ? teamMap.get(match.homeTeamId) : null;
             const away = match.awayTeamId ? teamMap.get(match.awayTeamId) : null;
@@ -673,8 +673,8 @@ export default function AdminResultsPageClient() {
         </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[1.65fr_0.95fr]">
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <div className="grid gap-4 lg:grid-cols-[1.95fr_0.85fr]">
+        <section className="rounded-3lg border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
               Resultados de la fase de grupos
@@ -699,7 +699,7 @@ export default function AdminResultsPageClient() {
                   </div>
                 </div>
 
-                <div className="hidden xl:block overflow-hidden rounded-b-2xl bg-white">
+                <div className="hidden lg:block overflow-hidden rounded-b-2xl bg-white">
                   <div className="grid grid-cols-[140px_minmax(0,1fr)_90px] gap-3 border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/35 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
                     <div>J / G / Fecha</div>
                     <div className="text-center">Resultado oficial</div>
@@ -736,7 +736,7 @@ export default function AdminResultsPageClient() {
                   })}
                 </div>
 
-                <div className="space-y-2 p-3 xl:hidden">
+                <div className="space-y-2 p-3 lg:hidden">
                   {block.matches.map((match) => {
                     const homeTeam = teamMap.get(match.homeTeamId ?? "");
                     const awayTeam = teamMap.get(match.awayTeamId ?? "");
@@ -772,7 +772,7 @@ export default function AdminResultsPageClient() {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm xl:sticky xl:top-4 self-start">
+        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
               Clasificaciones
@@ -889,7 +889,7 @@ export default function AdminResultsPageClient() {
           </h2>
         </div>
 
-        <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-3">
           {EXTRA_QUESTIONS.map((question) => (
             <div
               key={question.key}
