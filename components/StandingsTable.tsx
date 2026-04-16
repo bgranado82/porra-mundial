@@ -205,21 +205,21 @@ export default function StandingsTable({ days, standings }: Props) {
   ) : null}
 
   {/* ✅ NUEVO: TOTAL JORNADAS */}
-  <th className="top-[44px] z-30 w-[115px] border-b border-l border-gray-200 bg-sky-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-    Total<br />jornadas
-  </th>
+  <th className="top-[44px] z-30 min-w-[120px] border-b border-l border-gray-200 bg-sky-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
+  Total<br />jornadas
+</th>
 
-  <th className="top-[44px] z-30 w-[115px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold md:px-2">
-    1º gol
-  </th>
+<th className="top-[44px] z-30 min-w-[90px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold whitespace-nowrap">
+  1º gol
+</th>
 
-  <th className="top-[44px] z-30 w-[115px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-    1º gol<br />España
-  </th>
+<th className="top-[44px] z-30 min-w-[120px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
+  1º gol<br />España
+</th>
 
-  <th className="top-[44px] z-30 w-[115px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold text-white md:px-2">
-    Total<br />grupos
-  </th>
+<th className="top-[44px] z-30 min-w-[115px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-2 py-3 text-center font-bold text-white whitespace-nowrap">
+  Total<br />grupos
+</th>
 
   <th className="top-[44px] z-30 w-[115px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium md:px-2">
     Aciertos
