@@ -78,7 +78,7 @@ export default function AdminGroupMatchCompactRow({
         </span>
       </div>
 
-      <div className="grid grid-cols-[minmax(140px,1fr)_auto_minmax(140px,1fr)] items-center gap-3">
+      <div className="grid grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)] items-center gap-2 -ml-9">
         <div className="flex min-w-0 items-center gap-1.5">
           <TeamFlag team={homeTeam} />
           <span className="truncate text-[13px] font-semibold text-[var(--iberdrola-forest)]">
