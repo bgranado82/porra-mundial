@@ -338,6 +338,45 @@ export default function AdminResultsPageClient() {
     ]
   );
 
+useEffect(() => {
+  function sanitizePick(
+  currentValue: string | null | undefined,
+  match: KnockoutBracketMatch
+) {
+  if (!currentValue) return "";
+
+  const validOptions = new Set(
+    [match.homeTeamId, match.awayTeamId].filter(Boolean) as string[]
+  );
+
+  return validOptions.has(currentValue) ? currentValue : "";
+}
+
+  setKnockoutResults((prev) => {
+    const next = { ...prev };
+    let changed = false;
+
+    const allMatches = [
+      ...realBracket.round32,
+      ...realBracket.round16,
+      ...realBracket.quarterfinals,
+      ...realBracket.semifinals,
+      ...realBracket.finals,
+    ];
+
+    for (const match of allMatches) {
+      const sanitized = sanitizePick(prev[match.id], match);
+
+      if ((prev[match.id] ?? "") !== sanitized) {
+        next[match.id] = sanitized;
+        changed = true;
+      }
+    }
+
+    return changed ? next : prev;
+  });
+}, [realBracket]);
+
   useEffect(() => {
     async function loadInitialData() {
       setLoading(true);
