@@ -209,31 +209,31 @@ export default function StandingsTable({ days, standings }: Props) {
   Total<br />jornadas
 </th>
 
-<th className="top-[44px] z-30 min-w-[120px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold whitespace-nowrap">
+<th className="top-[44px] z-30 min-w-[95px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold whitespace-nowrap">
   1º gol
 </th>
 
-<th className="top-[44px] z-30 min-w-[160px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
+<th className="top-[44px] z-30 min-w-[120px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
   1º gol<br />España
 </th>
 
-<th className="top-[44px] z-30 min-w-[150px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-2 py-3 text-center font-bold text-white whitespace-nowrap">
+<th className="top-[44px] z-30 min-w-[110px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-2 py-3 text-center font-bold text-white whitespace-nowrap">
   Total<br />grupos
 </th>
 
-<th className="top-[44px] z-30 min-w-[110px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
+<th className="top-[44px] z-30 min-w-[90px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
   Aciertos
 </th>
 
-<th className="top-[44px] z-30 min-w-[130px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
+<th className="top-[44px] z-30 min-w-[95px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
   %<br />acierto
 </th>
 
-<th className="top-[44px] z-30 min-w-[110px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
+<th className="top-[44px] z-30 min-w-[90px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
   Exactos
 </th>
 
-<th className="top-[44px] z-30 min-w-[130px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
+<th className="top-[44px] z-30 min-w-[95px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
   %<br />exacto
 </th>
 </tr>
@@ -293,37 +293,33 @@ export default function StandingsTable({ days, standings }: Props) {
   </>
 ) : null}
 
-<td className="min-w-[180px] border-b border-l border-gray-100 px-2 py-3 text-center font-semibold">
-  {row.group_total}
-</td>
-
-<td className="min-w-[120px] border-b border-l border-gray-100 px-2 py-3 text-center">
+<td className="min-w-[95px] border-b border-l border-gray-100 px-2 py-3 text-center">
   {row.extra_points.first_goal_scorer_world}
 </td>
 
-<td className="min-w-[160px] border-b border-l border-gray-100 px-2 py-3 text-center">
+<td className="min-w-[120px] border-b border-l border-gray-100 px-2 py-3 text-center">
   {row.extra_points.first_goal_scorer_spain}
 </td>
 
 <td
-  className={`min-w-[150px] border-b border-l border-gray-100 px-2 py-3 text-center font-bold ${heatClass}`}
+  className={`min-w-[110px] border-b border-l border-gray-100 px-2 py-3 text-center font-bold ${heatClass}`}
 >
   {row.group_total + row.extra_group_points}
 </td>
 
-<td className="min-w-[110px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+<td className="min-w-[90px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
   {row.outcome_hits}
 </td>
 
-<td className="min-w-[130px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+<td className="min-w-[95px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
   {row.outcome_percent}%
 </td>
 
-<td className="min-w-[110px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+<td className="min-w-[90px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
   {row.exact_hits}
 </td>
 
-<td className="min-w-[130px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+<td className="min-w-[95px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
   {row.exact_percent}%
 </td>
                     </tr>
