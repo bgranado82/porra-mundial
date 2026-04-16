@@ -984,7 +984,7 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
           </div>
 
           <div className="p-4">
-            <div className="hidden xl:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
+            <div className="hidden lg:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
               <div className="grid grid-cols-[140px_minmax(0,1fr)_80px] gap-3 bg-[var(--iberdrola-sand)]/40 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
                 <div>J / G / Fecha</div>
                 <div className="text-center">Resultado oficial</div>
@@ -1018,7 +1018,7 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
               })}
             </div>
 
-            <div className="space-y-2 xl:hidden">
+            <div className="space-y-2 lg:hidden">
               {groupedMatchesByDate.map((block) => (
                 <section
                   key={block.dateKey}
@@ -1067,7 +1067,7 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
           </div>
         </section>
 
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm xl:sticky xl:top-4 self-start">
+        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
               Clasificaciones
