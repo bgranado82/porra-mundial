@@ -972,7 +972,7 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
         </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-[1.65fr_0.95fr]">
+      <div className="grid gap-4 lg:grid-cols-[1.45fr_1.15fr]">
   <section className="min-w-0 rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
