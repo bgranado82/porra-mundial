@@ -485,44 +485,96 @@ useEffect(() => {
 
   function updateKnockoutResult(matchId: string, teamId: string) {
   setKnockoutResults((prev) => {
-    const next = {
+    const next: KnockoutPredictionMap = {
       ...prev,
       [matchId]: teamId || "",
     };
 
-    const clearMatches = (ids: string[]) => {
+    const clear = (ids: string[]) => {
       ids.forEach((id) => {
         next[id] = "";
       });
     };
 
-    if (matchId.startsWith("r32-")) {
-      const n = Number(matchId.replace("r32-", ""));
+    switch (matchId) {
+      // ROUND OF 32 -> ROUND OF 16 -> QF -> SF -> FINAL
+      case "r32-1":
+      case "r32-3":
+        clear(["r16-2", "qf-1", "sf-1", "final-1"]);
+        break;
 
-      if ([1, 2, 3, 5].includes(n)) clearMatches(["r16-1", "r16-2", "qf-1", "sf-1", "final-1"]);
-      if ([4, 6, 7, 8].includes(n)) clearMatches(["r16-3", "r16-4", "qf-3", "sf-2", "final-1"]);
-      if ([9, 10, 11, 12].includes(n)) clearMatches(["r16-5", "r16-6", "qf-2", "sf-1", "final-1"]);
-      if ([13, 14, 15, 16].includes(n)) clearMatches(["r16-7", "r16-8", "qf-4", "sf-2", "final-1"]);
-    }
+      case "r32-2":
+      case "r32-5":
+        clear(["r16-1", "qf-1", "sf-1", "final-1"]);
+        break;
 
-    if (matchId.startsWith("r16-")) {
-      const n = Number(matchId.replace("r16-", ""));
+      case "r32-4":
+      case "r32-6":
+        clear(["r16-3", "qf-3", "sf-2", "final-1"]);
+        break;
 
-      if ([1, 2].includes(n)) clearMatches(["qf-1", "sf-1", "final-1"]);
-      if ([5, 6].includes(n)) clearMatches(["qf-2", "sf-1", "final-1"]);
-      if ([3, 4].includes(n)) clearMatches(["qf-3", "sf-2", "final-1"]);
-      if ([7, 8].includes(n)) clearMatches(["qf-4", "sf-2", "final-1"]);
-    }
+      case "r32-7":
+      case "r32-8":
+        clear(["r16-4", "qf-3", "sf-2", "final-1"]);
+        break;
 
-    if (matchId.startsWith("qf-")) {
-      const n = Number(matchId.replace("qf-", ""));
+      case "r32-9":
+      case "r32-10":
+        clear(["r16-6", "qf-2", "sf-1", "final-1"]);
+        break;
 
-      if ([1, 2].includes(n)) clearMatches(["sf-1", "final-1"]);
-      if ([3, 4].includes(n)) clearMatches(["sf-2", "final-1"]);
-    }
+      case "r32-11":
+      case "r32-12":
+        clear(["r16-5", "qf-2", "sf-1", "final-1"]);
+        break;
 
-    if (matchId.startsWith("sf-")) {
-      clearMatches(["final-1"]);
+      case "r32-13":
+      case "r32-15":
+        clear(["r16-8", "qf-4", "sf-2", "final-1"]);
+        break;
+
+      case "r32-14":
+      case "r32-16":
+        clear(["r16-7", "qf-4", "sf-2", "final-1"]);
+        break;
+
+      // ROUND OF 16 -> QF -> SF -> FINAL
+      case "r16-1":
+      case "r16-2":
+        clear(["qf-1", "sf-1", "final-1"]);
+        break;
+
+      case "r16-5":
+      case "r16-6":
+        clear(["qf-2", "sf-1", "final-1"]);
+        break;
+
+      case "r16-3":
+      case "r16-4":
+        clear(["qf-3", "sf-2", "final-1"]);
+        break;
+
+      case "r16-7":
+      case "r16-8":
+        clear(["qf-4", "sf-2", "final-1"]);
+        break;
+
+      // QUARTERS -> SEMIS -> FINAL
+      case "qf-1":
+      case "qf-2":
+        clear(["sf-1", "final-1"]);
+        break;
+
+      case "qf-3":
+      case "qf-4":
+        clear(["sf-2", "final-1"]);
+        break;
+
+      // SEMIS -> FINAL
+      case "sf-1":
+      case "sf-2":
+        clear(["final-1"]);
+        break;
     }
 
     return next;
