@@ -693,6 +693,7 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
         body: JSON.stringify({
   groupResults: groupRows,
   knockoutResults: knockoutRows,
+  extraResults: extraRows,
   adminTiebreaks: tiebreakRows,
 }),
       });

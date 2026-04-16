@@ -15,6 +15,11 @@ type KnockoutResultRow = {
   picked_team_id: string;
 };
 
+type ExtraResultRow = {
+  question_key: string;
+  official_value: string;
+};
+
 type AdminTiebreakRow = {
   scope: "group" | "third_place";
   scope_value: string;
@@ -62,6 +67,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const groupResults = (body.groupResults ?? []) as GroupResultRow[];
     const knockoutResults = (body.knockoutResults ?? []) as KnockoutResultRow[];
+    const extraResults = (body.extraResults ?? []) as ExtraResultRow[];
     const adminTiebreaks = (body.adminTiebreaks ?? []) as AdminTiebreakRow[];
 
     // 1. Limpiar resultados oficiales actuales
@@ -85,6 +91,18 @@ export async function POST(req: Request) {
     if (deleteKnockoutError) {
       return NextResponse.json(
         { error: deleteKnockoutError.message },
+        { status: 500 }
+      );
+    }
+
+    const { error: deleteExtraError } = await adminSupabase
+      .from("official_extra_results")
+      .delete()
+      .not("question_key", "is", null);
+
+    if (deleteExtraError) {
+      return NextResponse.json(
+        { error: deleteExtraError.message },
         { status: 500 }
       );
     }
@@ -124,6 +142,19 @@ export async function POST(req: Request) {
       if (insertKnockoutError) {
         return NextResponse.json(
           { error: insertKnockoutError.message },
+          { status: 500 }
+        );
+      }
+    }
+
+    if (extraResults.length > 0) {
+      const { error: insertExtraError } = await adminSupabase
+        .from("official_extra_results")
+        .insert(extraResults);
+
+      if (insertExtraError) {
+        return NextResponse.json(
+          { error: insertExtraError.message },
           { status: 500 }
         );
       }

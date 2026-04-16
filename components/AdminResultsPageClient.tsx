@@ -554,6 +554,7 @@ export default function AdminResultsPageClient() {
         body: JSON.stringify({
           groupResults: groupRows,
           knockoutResults: knockoutRows,
+          extraResults: extraRows,
           adminTiebreaks: tiebreakRows,
         }),
       });
