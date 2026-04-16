@@ -205,34 +205,37 @@ export default function StandingsTable({ days, standings }: Props) {
   ) : null}
 
   {/* ✅ NUEVO: TOTAL JORNADAS */}
-  <th className="top-[44px] z-30 min-w-[120px] border-b border-l border-gray-200 bg-sky-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
+  <th className="top-[44px] z-30 min-w-[360px] border-b border-l border-gray-200 bg-sky-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
   Total<br />jornadas
 </th>
 
-<th className="top-[44px] z-30 min-w-[90px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold whitespace-nowrap">
+<th className="top-[44px] z-30 min-w-[270px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold whitespace-nowrap">
   1º gol
 </th>
 
-<th className="top-[44px] z-30 min-w-[120px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
+<th className="top-[44px] z-30 min-w-[360px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
   1º gol<br />España
 </th>
 
-<th className="top-[44px] z-30 min-w-[115px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-2 py-3 text-center font-bold text-white whitespace-nowrap">
+<th className="top-[44px] z-30 min-w-[345px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-2 py-3 text-center font-bold text-white whitespace-nowrap">
   Total<br />grupos
 </th>
 
-  <th className="top-[44px] z-30 w-[115px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium md:px-2">
-    Aciertos
-  </th>
-  <th className="top-[44px] z-30 w-[115px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium md:px-2">
-    %<br />acierto
-  </th>
-  <th className="top-[44px] z-30 w-[115px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium md:px-2">
-    Exactos
-  </th>
-  <th className="top-[44px] z-30 w-[115px] border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-medium md:px-2">
-    %<br />exacto
-  </th>
+<th className="top-[44px] z-30 min-w-[270px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
+  Aciertos
+</th>
+
+<th className="top-[44px] z-30 min-w-[315px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
+  %<br />acierto
+</th>
+
+<th className="top-[44px] z-30 min-w-[270px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
+  Exactos
+</th>
+
+<th className="top-[44px] z-30 min-w-[315px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
+  %<br />exacto
+</th>
 </tr>
               </thead>
 
@@ -290,36 +293,39 @@ export default function StandingsTable({ days, standings }: Props) {
   </>
 ) : null}
 
-<td className="border-b border-l border-gray-100 px-1 py-3 text-center font-semibold md:px-2">
+<td className="min-w-[360px] border-b border-l border-gray-100 px-2 py-3 text-center font-semibold">
   {row.group_total}
 </td>
 
-<td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+<td className="min-w-[270px] border-b border-l border-gray-100 px-2 py-3 text-center">
   {row.extra_points.first_goal_scorer_world}
 </td>
 
-<td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+<td className="min-w-[360px] border-b border-l border-gray-100 px-2 py-3 text-center">
   {row.extra_points.first_goal_scorer_spain}
 </td>
 
 <td
-  className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
+  className={`min-w-[345px] border-b border-l border-gray-100 px-2 py-3 text-center font-bold ${heatClass}`}
 >
   {row.group_total + row.extra_group_points}
 </td>
 
-                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
-                        {row.outcome_hits}
-                      </td>
-                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
-                        {row.outcome_percent}%
-                      </td>
-                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
-                        {row.exact_hits}
-                      </td>
-                      <td className="border-b border-l border-gray-100 px-1 py-3 text-center text-slate-700 md:px-2">
-                        {row.exact_percent}%
-                      </td>
+<td className="min-w-[270px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+  {row.outcome_hits}
+</td>
+
+<td className="min-w-[315px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+  {row.outcome_percent}%
+</td>
+
+<td className="min-w-[270px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+  {row.exact_hits}
+</td>
+
+<td className="min-w-[315px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
+  {row.exact_percent}%
+</td>
                     </tr>
                   );
                 })}
