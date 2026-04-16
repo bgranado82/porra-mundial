@@ -972,7 +972,7 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
         </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-[2.1fr_0.8fr]">
+      <div className="grid gap-4 lg:grid-cols-[1.75fr_0.95fr]">
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
@@ -1111,34 +1111,44 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
         </section>
       </div>
 
-          <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3">
-  <AdminThirdPlaceTable
-    title="Mejores terceros"
-    subtitle="Desempate manual solo si siguen empatados a todo."
-    rows={thirdPlaceRows}
-    tiebreaks={adminTiebreaks}
-    onChangeTiebreak={updateThirdPlaceTiebreak}
-    labels={{
-      position: "#",
-      group: "Grupo",
-      team: "Equipo",
-      played: "PJ",
-      won: "PG",
-      drawn: "PE",
-      lost: "PP",
-      goalsFor: "GF",
-      goalsAgainst: "GC",
-      goalDifference: "DG",
-      pointsShort: "Pts",
-      status: "Estado",
-      qualified: "Clasifica",
-      eliminated: "Fuera",
-      tiebreak: "TB",
-    }}
-  />
-</div>
+          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+  <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+    <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+      Mejores terceros
+    </h2>
+    <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+      Desempate manual solo si siguen empatados a todo.
+    </p>
+  </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+  <div className="p-4">
+    <AdminThirdPlaceTable
+      title="Ranking de terceros"
+      rows={thirdPlaceRows}
+      tiebreaks={adminTiebreaks}
+      onChangeTiebreak={updateThirdPlaceTiebreak}
+      labels={{
+        position: "#",
+        group: "Grupo",
+        team: "Equipo",
+        played: "PJ",
+        won: "PG",
+        drawn: "PE",
+        lost: "PP",
+        goalsFor: "GF",
+        goalsAgainst: "GC",
+        goalDifference: "DG",
+        pointsShort: "Pts",
+        status: "Estado",
+        qualified: "Clasifica",
+        eliminated: "Fuera",
+        tiebreak: "TB",
+      }}
+    />
+  </div>
+</section>
+
+      <div className="grid gap-6 lg:grid-cols-2">
         <RoundSection
           title="Round of 32"
           matches={realBracket.round32}
@@ -1187,7 +1197,7 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
           </h2>
         </div>
 
-        <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-3">
           {EXTRA_QUESTIONS.map((question) => (
             <div
               key={question.key}
