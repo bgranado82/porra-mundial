@@ -453,15 +453,11 @@ setExtraPredictions(nextExtraPredictions);
 
         if (officialKnockoutError) console.error(officialKnockoutError);
 
-        const nextRealKo: KnockoutPredictionMap = {
-          ...initialRealKnockoutPredictions,
-        };
+       const nextRealKo: KnockoutPredictionMap = {};
 
-        (officialKnockoutRows as OfficialKnockoutRow[] | null)?.forEach((row) => {
-          if (row.picked_team_id) {
-            nextRealKo[row.match_id] = row.picked_team_id;
-          }
-        });
+(officialKnockoutRows ?? []).forEach((row) => {
+  nextRealKo[row.match_id] = row.picked_team_id ?? null;
+});
 
         setRealKnockoutPredictions(nextRealKo);
       } catch (err) {
