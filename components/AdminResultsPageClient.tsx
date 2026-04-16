@@ -19,6 +19,8 @@ import {
   Match,
   KnockoutBracketMatch,
 } from "@/types";
+import AdminKnockoutBracket from "@/components/AdminKnockoutBracket";
+
 
 type GroupResultMap = Record<string, { homeGoals: string; awayGoals: string }>;
 type OfficialExtraResultMap = Record<string, string>;
@@ -483,7 +485,7 @@ useEffect(() => {
     }));
   }
 
-  function updateKnockoutResult(matchId: string, teamId: string) {
+function updateKnockoutResult(matchId: string, teamId: string | null) {
   setKnockoutResults((prev) => {
     const next: KnockoutPredictionMap = {
       ...prev,
@@ -980,47 +982,18 @@ useEffect(() => {
   </div>
 </section>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RoundSection
-          title="Round of 32"
-          matches={realBracket.round32}
-          picks={knockoutResults}
-          onPick={updateKnockoutResult}
-          teamMap={teamMap}
-        />
-
-        <RoundSection
-          title="Round of 16"
-          matches={realBracket.round16}
-          picks={knockoutResults}
-          onPick={updateKnockoutResult}
-          teamMap={teamMap}
-        />
-
-        <RoundSection
-          title="Cuartos"
-          matches={realBracket.quarterfinals}
-          picks={knockoutResults}
-          onPick={updateKnockoutResult}
-          teamMap={teamMap}
-        />
-
-        <RoundSection
-          title="Semifinales"
-          matches={realBracket.semifinals}
-          picks={knockoutResults}
-          onPick={updateKnockoutResult}
-          teamMap={teamMap}
-        />
-      </div>
-
-      <RoundSection
-        title="Final"
-        matches={realBracket.finals}
-        picks={knockoutResults}
-        onPick={updateKnockoutResult}
-        teamMap={teamMap}
-      />
+      <AdminKnockoutBracket
+  title="Knockout"
+  subtitle="Selecciona los ganadores oficiales de cada cruce."
+  round32={realBracket.round32}
+  round16={realBracket.round16}
+  quarterfinals={realBracket.quarterfinals}
+  semifinals={realBracket.semifinals}
+  finals={realBracket.finals}
+  teams={teams}
+  picks={knockoutResults}
+  onPick={updateKnockoutResult}
+/>
 
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
