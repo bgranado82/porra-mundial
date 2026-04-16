@@ -580,7 +580,6 @@ useEffect(() => {
     return next;
   });
 }
-
   function updateOfficialExtra(questionKey: string, value: string) {
     setOfficialExtras((prev) => ({
       ...prev,
