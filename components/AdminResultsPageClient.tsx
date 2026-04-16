@@ -674,7 +674,7 @@ export default function AdminResultsPageClient() {
       </section>
 
       <div className="grid gap-4 lg:grid-cols-[1.65fr_0.95fr]">
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+  <section className="min-w-0 rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
               Resultados de la fase de grupos
@@ -772,7 +772,7 @@ export default function AdminResultsPageClient() {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
+        <section className="min-w-0 rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
               Clasificaciones
