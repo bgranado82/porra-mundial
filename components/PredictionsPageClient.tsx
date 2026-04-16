@@ -11,7 +11,6 @@ import ThirdPlaceTable from "@/components/ThirdPlaceTable";
 import { matches as initialMatches } from "@/data/matches";
 import { scoreSettings } from "@/data/settings";
 import { teams } from "@/data/teams";
-import { realKnockoutPredictions as initialRealKnockoutPredictions } from "@/data/realKnockoutPredictions";
 import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { calculatePredictedStandings } from "@/lib/standings";
 import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
@@ -234,7 +233,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [knockoutPredictions, setKnockoutPredictions] =
     useState<KnockoutPredictionMap>({});
   const [realKnockoutPredictions, setRealKnockoutPredictions] =
-    useState(initialRealKnockoutPredictions);
+  useState<KnockoutPredictionMap>({});
   const [officialMatches, setOfficialMatches] = useState<Match[]>(initialMatches);
   const [locale, setLocale] = useState<Locale>("es");
   const [authUserEmail, setAuthUserEmail] = useState("");
