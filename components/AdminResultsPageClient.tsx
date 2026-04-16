@@ -484,11 +484,50 @@ useEffect(() => {
   }
 
   function updateKnockoutResult(matchId: string, teamId: string) {
-    setKnockoutResults((prev) => ({
+  setKnockoutResults((prev) => {
+    const next = {
       ...prev,
-      [matchId]: teamId,
-    }));
-  }
+      [matchId]: teamId || "",
+    };
+
+    const clearMatches = (ids: string[]) => {
+      ids.forEach((id) => {
+        next[id] = "";
+      });
+    };
+
+    if (matchId.startsWith("r32-")) {
+      const n = Number(matchId.replace("r32-", ""));
+
+      if ([1, 2, 3, 5].includes(n)) clearMatches(["r16-1", "r16-2", "qf-1", "sf-1", "final-1"]);
+      if ([4, 6, 7, 8].includes(n)) clearMatches(["r16-3", "r16-4", "qf-3", "sf-2", "final-1"]);
+      if ([9, 10, 11, 12].includes(n)) clearMatches(["r16-5", "r16-6", "qf-2", "sf-1", "final-1"]);
+      if ([13, 14, 15, 16].includes(n)) clearMatches(["r16-7", "r16-8", "qf-4", "sf-2", "final-1"]);
+    }
+
+    if (matchId.startsWith("r16-")) {
+      const n = Number(matchId.replace("r16-", ""));
+
+      if ([1, 2].includes(n)) clearMatches(["qf-1", "sf-1", "final-1"]);
+      if ([5, 6].includes(n)) clearMatches(["qf-2", "sf-1", "final-1"]);
+      if ([3, 4].includes(n)) clearMatches(["qf-3", "sf-2", "final-1"]);
+      if ([7, 8].includes(n)) clearMatches(["qf-4", "sf-2", "final-1"]);
+    }
+
+    if (matchId.startsWith("qf-")) {
+      const n = Number(matchId.replace("qf-", ""));
+
+      if ([1, 2].includes(n)) clearMatches(["sf-1", "final-1"]);
+      if ([3, 4].includes(n)) clearMatches(["sf-2", "final-1"]);
+    }
+
+    if (matchId.startsWith("sf-")) {
+      clearMatches(["final-1"]);
+    }
+
+    return next;
+  });
+}
 
   function updateOfficialExtra(questionKey: string, value: string) {
     setOfficialExtras((prev) => ({
