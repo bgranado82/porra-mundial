@@ -243,10 +243,31 @@ function ExtraQuestionBarCard({
   title: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
 }) {
-  const data = items.slice(0, 5).map((item) => ({
-    name: item.label,
-    percentage: Number(item.percentage.toFixed(1)),
-  }));
+  const topItems = items.slice(0, 5);
+  const otherItems = items.slice(5);
+
+  const othersCount = otherItems.reduce((sum, item) => sum + item.count, 0);
+  const othersPercentage = otherItems.reduce(
+    (sum, item) => sum + item.percentage,
+    0
+  );
+
+  const data = [
+    ...topItems.map((item) => ({
+      name: item.label,
+      percentage: Number(item.percentage.toFixed(1)),
+      count: item.count,
+    })),
+    ...(othersCount > 0
+      ? [
+          {
+            name: "Otros",
+            percentage: Number(othersPercentage.toFixed(1)),
+            count: othersCount,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
@@ -268,21 +289,39 @@ function ExtraQuestionBarCard({
               strokeDasharray="3 3"
               vertical={false}
             />
-            <XAxis type="number" />
-            <YAxis type="category" dataKey="name" width={100} />
+
+            <XAxis
+              type="number"
+              domain={[0, 100]}
+              tickFormatter={(value) => `${value}%`}
+            />
+
+            <YAxis
+              type="category"
+              dataKey="name"
+              width={140}
+            />
+
             <Tooltip
-              formatter={(value) => [`${value}%`, "Porcentaje"]}
+              formatter={(value, _name, props) => {
+                const count = props.payload.count;
+                return [`${value}% · ${count} picks`, ""];
+              }}
               contentStyle={{
                 backgroundColor: "#ffffff",
                 border: "1px solid #d9e7dc",
                 borderRadius: 12,
               }}
             />
-            <Bar
-              dataKey="percentage"
-              fill="#00A443"
-              radius={[0, 8, 8, 0]}
-            />
+
+            <Bar dataKey="percentage" radius={[0, 8, 8, 0]}>
+              {data.map((_, index) => (
+                <Cell
+                  key={index}
+                  fill={CHART_COLORS[index % CHART_COLORS.length]}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
