@@ -385,6 +385,7 @@ function ExtraQuestionListCard({
 }
 
 function InsightsCard({ items }: { items: string[] }) {
+  
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
       <SectionHeader title="Insights del pool" />
@@ -506,7 +507,7 @@ export default function StatsPageClient() {
                 Estadísticas del pool
               </div>
               <h1 className="text-2xl font-black text-[var(--iberdrola-forest)]">
-                {data.summary.poolName}
+                Porra Mundial 2026
               </h1>
               <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
                 Transparencia y tendencias del pool.

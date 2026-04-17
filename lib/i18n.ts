@@ -117,7 +117,7 @@ export const messages: Record<Locale, Messages> = {
     language: "Idioma",
 
     participantData: "Datos del participante",
-    name: "Nombre",
+    name: "Nombre completo",
     email: "Email",
     company: "Empresa",
     country: "País",
@@ -233,7 +233,7 @@ export const messages: Record<Locale, Messages> = {
     language: "Language",
 
     participantData: "Participant data",
-    name: "Name",
+    name: "Full name",
     email: "Email",
     company: "Company",
     country: "Country",
@@ -343,7 +343,7 @@ export const messages: Record<Locale, Messages> = {
     language: "Idioma",
 
     participantData: "Dados do participante",
-    name: "Nome",
+    name: "Nome completo",
     email: "Email",
     company: "Empresa",
     country: "País",
