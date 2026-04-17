@@ -1,9 +1,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function GET(request: NextRequest) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
+
   const poolId = request.nextUrl.searchParams.get("poolId");
 
   if (!poolId) {
