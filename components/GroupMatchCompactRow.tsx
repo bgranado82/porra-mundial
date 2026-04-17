@@ -106,50 +106,46 @@ export default function GroupMatchCompactRow({
         {/* INPUTS */}
         <div className="flex items-center justify-center gap-2">
           <input
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={homePrediction ?? ""}
-            onChange={(e) => {
-  const value = e.target.value;
+  type="text"
+  inputMode="numeric"
+  pattern="[0-9]*"
+  value={homePrediction ?? ""}
+  onChange={(e) => {
+    const value = e.target.value;
 
-  if (value === "") {
-    onChangeHome(null);
-    return;
-  }
+    if (!/^\d*$/.test(value)) return;
 
-  const num = Number(value);
+    if (value === "") {
+      onChangeHome(null);
+      return;
+    }
 
-  if (num < 0) return; // 🚫 bloquea negativos
-
-  onChangeHome(num);
-}}
-            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-[13px] font-bold text-[var(--iberdrola-forest)] outline-none"
-          />
+    onChangeHome(Number(value));
+  }}
+  className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
+/>
 
           <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
 
           <input
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={awayPrediction ?? ""}
-            onChange={(e) => {
-  const value = e.target.value;
+  type="text"
+  inputMode="numeric"
+  pattern="[0-9]*"
+  value={awayPrediction ?? ""}
+  onChange={(e) => {
+    const value = e.target.value;
 
-  if (value === "") {
-    onChangeAway(null);
-    return;
-  }
+    if (!/^\d*$/.test(value)) return;
 
-  const num = Number(value);
+    if (value === "") {
+      onChangeAway(null);
+      return;
+    }
 
-  if (num < 0) return; // 🔥 BLOQUEA NEGATIVOS
-
-  onChangeAway(num);
-}}
-            className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-[13px] font-bold text-[var(--iberdrola-forest)] outline-none"
-          />
+    onChangeAway(Number(value));
+  }}
+  className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
+/>
         </div>
 
         {/* AWAY */}
