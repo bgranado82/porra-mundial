@@ -645,11 +645,41 @@ if (extraRows.length > 0) {
     }
   }
 
+function isPredictionComplete() {
+  const allGroupsFilled = orderedGroupMatches.every((match) => {
+    const prediction = predictions[match.id];
+    return (
+      prediction &&
+      prediction.homeGoals !== null &&
+      prediction.awayGoals !== null
+    );
+  });
+
+  const allKnockoutFilled =
+    userBracket.round32.every((m) => knockoutPredictions[m.id]) &&
+    userBracket.round16.every((m) => knockoutPredictions[m.id]) &&
+    userBracket.quarterfinals.every((m) => knockoutPredictions[m.id]) &&
+    userBracket.semifinals.every((m) => knockoutPredictions[m.id]) &&
+    userBracket.finals.every((m) => knockoutPredictions[m.id]) &&
+    !!userBracket.championId;
+
+  const allExtrasFilled = EXTRA_QUESTIONS.every((question) => {
+    return (extraPredictions[question.key] ?? "").trim() !== "";
+  });
+
+  return allGroupsFilled && allKnockoutFilled && allExtrasFilled;
+}
+
   async function handleSubmitEntry() {
   if (!activeEntryId) {
     setSubmitMessage("No se ha encontrado la entry activa.");
     return;
   }
+
+if (!isPredictionComplete()) {
+  setSubmitMessage("Tienes que completar toda la porra antes de enviarla.");
+  return;
+}
 
   const confirmed = window.confirm(
     "¿Seguro que quieres enviar la porra? Después no podrás modificarla."
