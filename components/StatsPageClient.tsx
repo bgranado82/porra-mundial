@@ -459,33 +459,9 @@ export default function StatsPageClient() {
   }, [data]);
 
   const dynamicInsights = useMemo(() => {
-    if (!data) return [];
-
-    const items = [...data.insights];
-
-    const championLeader = data.champion.items[0];
-    if (championLeader) {
-      items.unshift(
-        `Favorito al título: ${championLeader.label} lidera con ${championLeader.percentage.toFixed(1)}% del pool.`
-      );
-    }
-
-    const mostConcentratedExtra = data.extras
-      .map((extra) => ({
-        title: extra.title,
-        item: extra.items[0],
-      }))
-      .filter((entry) => !!entry.item)
-      .sort((a, b) => (b.item?.percentage ?? 0) - (a.item?.percentage ?? 0))[0];
-
-    if (mostConcentratedExtra?.item) {
-      items.push(
-        `Mayor consenso: "${mostConcentratedExtra.title}" está dominada por ${mostConcentratedExtra.item.label} con ${mostConcentratedExtra.item.percentage.toFixed(1)}%.`
-      );
-    }
-
-    return Array.from(new Set(items)).slice(0, 4);
-  }, [data]);
+  if (!data) return [];
+  return data.insights.slice(0, 4);
+}, [data]);
 
   const backHref =
     entryId && poolSlug
