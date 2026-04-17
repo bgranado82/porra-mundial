@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { teams } from "@/data/teams";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 
@@ -45,7 +45,7 @@ const EXTRA_LABELS: Record<string, string> = {
 };
 
 export async function GET(request: NextRequest) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const poolId = request.nextUrl.searchParams.get("poolId");
 
   if (!poolId) {
@@ -71,7 +71,10 @@ export async function GET(request: NextRequest) {
       .returns<EntryRow[]>();
 
     if (entriesError) {
-      return NextResponse.json({ error: "Error loading entries" }, { status: 500 });
+      return NextResponse.json(
+        { error: "Error loading entries" },
+        { status: 500 }
+      );
     }
 
     const submittedEntries = entries ?? [];
@@ -121,7 +124,10 @@ export async function GET(request: NextRequest) {
         .eq("match_id", "final-1");
 
       if (koError) {
-        return NextResponse.json({ error: "Error loading champion predictions" }, { status: 500 });
+        return NextResponse.json(
+          { error: "Error loading champion predictions" },
+          { status: 500 }
+        );
       }
 
       const teamMap = new Map(teams.map((team) => [team.id, team]));
@@ -156,7 +162,10 @@ export async function GET(request: NextRequest) {
         .returns<(ExtraPredictionRow & { entry_id: string })[]>();
 
       if (extraError) {
-        return NextResponse.json({ error: "Error loading extra predictions" }, { status: 500 });
+        return NextResponse.json(
+          { error: "Error loading extra predictions" },
+          { status: 500 }
+        );
       }
 
       extras = EXTRA_QUESTIONS.map((question) => {
@@ -188,7 +197,8 @@ export async function GET(request: NextRequest) {
             key,
             label: value.label,
             count: value.count,
-            percentage: participants > 0 ? (value.count / participants) * 100 : 0,
+            percentage:
+              participants > 0 ? (value.count / participants) * 100 : 0,
           }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 8);
