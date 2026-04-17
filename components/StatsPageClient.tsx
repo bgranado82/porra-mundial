@@ -16,7 +16,6 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import { createClient } from "@/utils/supabase/client";
 import { teams } from "@/data/teams";
 
 type StatsResponse = {
@@ -56,13 +55,17 @@ type StatsResponse = {
   insights: string[];
 };
 
-const CHART_COLORS = [
-  "#00A443",
-  "#6CC24A",
-  "#009CDE",
-  "#78BE20",
-  "#A7D46F",
-];
+const CHART_COLORS = ["#00A443", "#6CC24A", "#009CDE", "#78BE20", "#A7D46F"];
+
+const EXTRA_ICONS: Record<string, string> = {
+  first_goal_scorer_world: "🥇",
+  first_goal_scorer_spain: "🇪🇸",
+  golden_boot: "👟",
+  golden_ball: "🏆",
+  best_young_player: "🌟",
+  golden_glove: "🧤",
+  top_spanish_scorer: "⚽",
+};
 
 function formatEuro(value: number) {
   return `${value.toLocaleString("es-ES")}€`;
@@ -140,6 +143,23 @@ function PrizesCard({
   );
 }
 
+function SectionHeader({
+  title,
+  icon,
+}: {
+  title: string;
+  icon?: string;
+}) {
+  return (
+    <div className="border-b border-[var(--iberdrola-sky)] px-5 py-4">
+      <div className="flex items-start gap-2 text-base font-black text-[var(--iberdrola-forest)]">
+        {icon ? <span className="text-lg leading-none">{icon}</span> : null}
+        <span>{title}</span>
+      </div>
+    </div>
+  );
+}
+
 function ChampionDonutCard({
   title,
   items,
@@ -157,22 +177,17 @@ function ChampionDonutCard({
 
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <div className="border-b border-[var(--iberdrola-sky)] px-5 py-4">
-        <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-          {title}
-        </h2>
-      </div>
-
-      <div className="grid gap-6 p-5 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="h-[280px]">
+      <SectionHeader title={title} />
+      <div className="grid items-center gap-6 p-5 lg:grid-cols-[1fr_0.95fr]">
+        <div className="mx-auto h-[300px] w-full max-w-[420px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 dataKey="value"
                 nameKey="name"
-                innerRadius={70}
-                outerRadius={105}
+                innerRadius={78}
+                outerRadius={118}
                 paddingAngle={3}
               >
                 {chartData.map((_, index) => (
@@ -238,9 +253,11 @@ function ChampionDonutCard({
 
 function ExtraQuestionBarCard({
   title,
+  icon,
   items,
 }: {
   title: string;
+  icon?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
 }) {
   const topItems = items.slice(0, 5);
@@ -271,59 +288,48 @@ function ExtraQuestionBarCard({
 
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <div className="border-b border-[var(--iberdrola-sky)] px-5 py-4">
-        <h3 className="text-base font-black text-[var(--iberdrola-forest)]">
-          {title}
-        </h3>
-      </div>
-
-      <div className="h-[280px] p-4">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            layout="vertical"
-            margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
-          >
-            <CartesianGrid
-              stroke="#d9e7dc"
-              strokeDasharray="3 3"
-              vertical={false}
-            />
-
-            <XAxis
-              type="number"
-              domain={[0, 100]}
-              tickFormatter={(value) => `${value}%`}
-            />
-
-            <YAxis
-              type="category"
-              dataKey="name"
-              width={140}
-            />
-
-            <Tooltip
-              formatter={(value, _name, props) => {
-                const count = props.payload.count;
-                return [`${value}% · ${count} picks`, ""];
-              }}
-              contentStyle={{
-                backgroundColor: "#ffffff",
-                border: "1px solid #d9e7dc",
-                borderRadius: 12,
-              }}
-            />
-
-            <Bar dataKey="percentage" radius={[0, 8, 8, 0]}>
-              {data.map((_, index) => (
-                <Cell
-                  key={index}
-                  fill={CHART_COLORS[index % CHART_COLORS.length]}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+      <SectionHeader title={title} icon={icon} />
+      <div className="flex h-[340px] items-center justify-center p-4">
+        <div className="h-[250px] w-full max-w-[420px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              layout="vertical"
+              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+            >
+              <CartesianGrid
+                stroke="#d9e7dc"
+                strokeDasharray="3 3"
+                vertical={false}
+              />
+              <XAxis
+                type="number"
+                domain={[0, 100]}
+                tickFormatter={(value) => `${value}%`}
+              />
+              <YAxis type="category" dataKey="name" width={140} />
+              <Tooltip
+                formatter={(value, _name, props) => {
+                  const count = props.payload.count;
+                  return [`${value}% · ${count} picks`, ""];
+                }}
+                contentStyle={{
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #d9e7dc",
+                  borderRadius: 12,
+                }}
+              />
+              <Bar dataKey="percentage" radius={[0, 8, 8, 0]}>
+                {data.map((_, index) => (
+                  <Cell
+                    key={index}
+                    fill={CHART_COLORS[index % CHART_COLORS.length]}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </section>
   );
@@ -331,19 +337,16 @@ function ExtraQuestionBarCard({
 
 function ExtraQuestionListCard({
   title,
+  icon,
   items,
 }: {
   title: string;
+  icon?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
 }) {
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <div className="border-b border-[var(--iberdrola-sky)] px-5 py-4">
-        <h3 className="text-base font-black text-[var(--iberdrola-forest)]">
-          {title}
-        </h3>
-      </div>
-
+      <SectionHeader title={title} icon={icon} />
       <div className="space-y-3 p-5">
         {items.slice(0, 5).length > 0 ? (
           items.slice(0, 5).map((item, index) => (
@@ -384,12 +387,7 @@ function ExtraQuestionListCard({
 function InsightsCard({ items }: { items: string[] }) {
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <div className="border-b border-[var(--iberdrola-sky)] px-5 py-4">
-        <h3 className="text-base font-black text-[var(--iberdrola-forest)]">
-          Insights del pool
-        </h3>
-      </div>
-
+      <SectionHeader title="Insights del pool" />
       <div className="space-y-3 p-5">
         {items.length > 0 ? (
           items.map((item, index) => (
@@ -416,7 +414,6 @@ export default function StatsPageClient() {
   const poolSlug = searchParams.get("poolSlug") ?? "";
   const entryId = searchParams.get("entryId") ?? "";
 
-  const supabase = createClient();
   const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -459,6 +456,35 @@ export default function StatsPageClient() {
     const map = new Map<string, StatsResponse["extras"][number]>();
     (data?.extras ?? []).forEach((item) => map.set(item.questionKey, item));
     return map;
+  }, [data]);
+
+  const dynamicInsights = useMemo(() => {
+    if (!data) return [];
+
+    const items = [...data.insights];
+
+    const championLeader = data.champion.items[0];
+    if (championLeader) {
+      items.unshift(
+        `Favorito al título: ${championLeader.label} lidera con ${championLeader.percentage.toFixed(1)}% del pool.`
+      );
+    }
+
+    const mostConcentratedExtra = data.extras
+      .map((extra) => ({
+        title: extra.title,
+        item: extra.items[0],
+      }))
+      .filter((entry) => !!entry.item)
+      .sort((a, b) => (b.item?.percentage ?? 0) - (a.item?.percentage ?? 0))[0];
+
+    if (mostConcentratedExtra?.item) {
+      items.push(
+        `Mayor consenso: "${mostConcentratedExtra.title}" está dominada por ${mostConcentratedExtra.item.label} con ${mostConcentratedExtra.item.percentage.toFixed(1)}%.`
+      );
+    }
+
+    return Array.from(new Set(items)).slice(0, 4);
   }, [data]);
 
   const backHref =
@@ -525,16 +551,18 @@ export default function StatsPageClient() {
                 Ver clasificación
               </Link>
             ) : null}
-<Link
-  href={
-    poolId
-      ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
-      : "/transparency"
-  }
-  className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
->
-  Ver predicciones por participante
-</Link>
+
+            <Link
+              href={
+                poolId
+                  ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
+                  : "/transparency"
+              }
+              className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
+            >
+              Ver predicciones por participante
+            </Link>
+
             <Link
               href={backHref}
               className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
@@ -548,10 +576,7 @@ export default function StatsPageClient() {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard label="Participantes" value={data.summary.participants} />
         <KpiCard label="Países" value={data.summary.countries} />
-        <KpiCard
-          label="Bote total"
-          value={formatEuro(data.summary.potTotal)}
-        />
+        <KpiCard label="Bote total" value={formatEuro(data.summary.potTotal)} />
         <PrizesCard
           loserRefund={data.summary.loserRefund}
           firstPrize={data.summary.firstPrize}
@@ -560,47 +585,62 @@ export default function StatsPageClient() {
         />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+      <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
         <ChampionDonutCard
           title="Favoritos al campeón"
           items={data.champion.items}
         />
+
+        <ExtraQuestionListCard
+          icon={EXTRA_ICONS.golden_ball}
+          title={extraMap.get("golden_ball")?.title ?? "Balón de Oro"}
+          items={extraMap.get("golden_ball")?.items ?? []}
+        />
+      </section>
+
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <ExtraQuestionBarCard
+          icon={EXTRA_ICONS.golden_boot}
+          title={extraMap.get("golden_boot")?.title ?? "Bota de Oro"}
+          items={extraMap.get("golden_boot")?.items ?? []}
+        />
+
+        <ExtraQuestionBarCard
+          icon={EXTRA_ICONS.golden_glove}
+          title={extraMap.get("golden_glove")?.title ?? "Guante de Oro"}
+          items={extraMap.get("golden_glove")?.items ?? []}
+        />
+
+        <ExtraQuestionListCard
+          icon={EXTRA_ICONS.best_young_player}
+          title={
+            extraMap.get("best_young_player")?.title ?? "Mejor jugador joven"
+          }
+          items={extraMap.get("best_young_player")?.items ?? []}
+        />
+      </section>
+
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <ExtraQuestionBarCard
+          icon={EXTRA_ICONS.first_goal_scorer_world}
           title={
             extraMap.get("first_goal_scorer_world")?.title ??
             "Primer goleador del Mundial"
           }
           items={extraMap.get("first_goal_scorer_world")?.items ?? []}
         />
-      </section>
 
-      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <ExtraQuestionBarCard
+          icon={EXTRA_ICONS.first_goal_scorer_spain}
           title={
             extraMap.get("first_goal_scorer_spain")?.title ??
             "Primer goleador de España"
           }
           items={extraMap.get("first_goal_scorer_spain")?.items ?? []}
         />
+
         <ExtraQuestionBarCard
-          title={extraMap.get("golden_boot")?.title ?? "Bota de Oro"}
-          items={extraMap.get("golden_boot")?.items ?? []}
-        />
-        <ExtraQuestionListCard
-          title={extraMap.get("golden_ball")?.title ?? "Balón de Oro"}
-          items={extraMap.get("golden_ball")?.items ?? []}
-        />
-        <ExtraQuestionListCard
-          title={
-            extraMap.get("best_young_player")?.title ?? "Mejor jugador joven"
-          }
-          items={extraMap.get("best_young_player")?.items ?? []}
-        />
-        <ExtraQuestionBarCard
-          title={extraMap.get("golden_glove")?.title ?? "Guante de Oro"}
-          items={extraMap.get("golden_glove")?.items ?? []}
-        />
-        <ExtraQuestionBarCard
+          icon={EXTRA_ICONS.top_spanish_scorer}
           title={
             extraMap.get("top_spanish_scorer")?.title ??
             "Máximo goleador de España"
@@ -609,7 +649,7 @@ export default function StatsPageClient() {
         />
       </section>
 
-      <InsightsCard items={data.insights} />
+      <InsightsCard items={dynamicInsights} />
     </main>
   );
 }
