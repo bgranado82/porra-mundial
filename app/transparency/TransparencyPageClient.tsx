@@ -338,11 +338,11 @@ export default function TransparencyPageClient() {
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-[var(--iberdrola-green)] bg-white">
+             <div className="flex items-center gap-3">
               <img
                 src="/icon-512.png"
                 alt="Porra Mundial 2026"
-                className="h-11 w-11 object-contain"
+                className="h-12 w-12 rounded-xl object-contain sm:h-14 sm:w-14"
               />
             </div>
 
