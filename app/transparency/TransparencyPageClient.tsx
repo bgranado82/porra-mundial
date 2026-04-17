@@ -78,11 +78,14 @@ export default function TransparencyPageClient() {
   const poolId = searchParams.get("poolId") ?? "";
   const poolSlug = searchParams.get("poolSlug") ?? "";
   const entryId = searchParams.get("entryId") ?? "";
+  const selectedEntryIdParam =
+    searchParams.get("selectedEntryId") ?? entryId;
 
   const [participants, setParticipants] = useState<TransparencyEntryListItem[]>(
     []
   );
-  const [selectedEntryId, setSelectedEntryId] = useState(entryId);
+  const [selectedEntryId, setSelectedEntryId] =
+    useState(selectedEntryIdParam);
   const [data, setData] = useState<TransparencyEntryResponse | null>(null);
   const [loadingList, setLoadingList] = useState(true);
   const [loadingEntry, setLoadingEntry] = useState(true);
@@ -97,6 +100,10 @@ export default function TransparencyPageClient() {
     () => [...new Set(teams.map((t) => t.group).filter(Boolean))] as string[],
     []
   );
+
+  useEffect(() => {
+    setSelectedEntryId(selectedEntryIdParam);
+  }, [selectedEntryIdParam]);
 
   useEffect(() => {
     async function loadParticipants() {
@@ -123,12 +130,12 @@ export default function TransparencyPageClient() {
         const items = (json.items ?? []) as TransparencyEntryListItem[];
         setParticipants(items);
 
-        if (!entryId && items.length > 0) {
+        if (!selectedEntryIdParam && items.length > 0) {
           const firstId = items[0].id;
           setSelectedEntryId(firstId);
 
           const params = new URLSearchParams(searchParams.toString());
-          params.set("entryId", firstId);
+          params.set("selectedEntryId", firstId);
           router.replace(`/transparency?${params.toString()}`);
         }
       } catch (err) {
@@ -140,7 +147,7 @@ export default function TransparencyPageClient() {
     }
 
     loadParticipants();
-  }, [poolId, entryId, router, searchParams]);
+  }, [poolId, selectedEntryIdParam, router, searchParams]);
 
   useEffect(() => {
     async function loadEntry() {
@@ -282,13 +289,13 @@ export default function TransparencyPageClient() {
   );
 
   const backToStatsHref =
-    poolId && poolSlug && selectedEntryId
-      ? `/stats?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${selectedEntryId}`
+    poolId && poolSlug && entryId
+      ? `/stats?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
       : `/stats?poolId=${poolId}`;
 
   const backToPredictionHref =
-    poolSlug && selectedEntryId
-      ? `/pool/${poolSlug}/entry/${selectedEntryId}`
+    poolSlug && entryId
+      ? `/pool/${poolSlug}/entry/${entryId}`
       : "/dashboard";
 
   const selectedParticipant = participants.find((p) => p.id === selectedEntryId);
@@ -375,7 +382,12 @@ export default function TransparencyPageClient() {
                 setSelectedEntryId(nextId);
 
                 const params = new URLSearchParams(searchParams.toString());
-                params.set("entryId", nextId);
+                params.set("selectedEntryId", nextId);
+
+                if (entryId) {
+                  params.set("entryId", entryId);
+                }
+
                 router.replace(`/transparency?${params.toString()}`);
               }}
               className="w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
@@ -569,27 +581,27 @@ export default function TransparencyPageClient() {
         </div>
 
         <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
-         {EXTRA_QUESTIONS.map((question: any) => {
-  const answer =
-    data.extraPredictions.find(
-      (row: any) => row.question_key === question.key
-    )?.predicted_value ?? "-";
+          {EXTRA_QUESTIONS.map((question: any) => {
+            const answer =
+              data.extraPredictions.find(
+                (row: any) => row.question_key === question.key
+              )?.predicted_value ?? "-";
 
-  return (
-    <div
-      key={question.key}
-      className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4"
-    >
-      <div className="mb-2 text-sm font-bold text-[var(--iberdrola-forest)]">
-        {question.label || question.title || question.text || question.key}
-      </div>
+            return (
+              <div
+                key={question.key}
+                className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4"
+              >
+                <div className="mb-2 text-sm font-bold text-[var(--iberdrola-forest)]">
+                  {question.label || question.title || question.text || question.key}
+                </div>
 
-      <div className="rounded-xl border border-[var(--iberdrola-green)]/30 bg-[var(--iberdrola-sand)]/20 px-3 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
-        {answer}
-      </div>
-    </div>
-  );
-})}
+                <div className="rounded-xl border border-[var(--iberdrola-green)]/30 bg-[var(--iberdrola-sand)]/20 px-3 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
+                  {answer}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
     </main>
