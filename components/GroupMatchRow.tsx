@@ -111,10 +111,22 @@ export default function GroupMatchRow({
           <input
             type="number"
             min={0}
+            inputMode="numeric"
             value={homePrediction ?? ""}
-            onChange={(e) =>
-              onChangeHome(e.target.value === "" ? null : Number(e.target.value))
-            }
+            onChange={(e) => {
+  const value = e.target.value;
+
+  if (value === "") {
+    onChangeHome(null);
+    return;
+  }
+
+  const num = Number(value);
+
+  if (num < 0) return; // 🚫 bloquea negativos
+
+  onChangeHome(num);
+}}
             className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
           />
         </div>
@@ -130,10 +142,22 @@ export default function GroupMatchRow({
           <input
             type="number"
             min={0}
+            inputMode="numeric"
             value={awayPrediction ?? ""}
-            onChange={(e) =>
-              onChangeAway(e.target.value === "" ? null : Number(e.target.value))
-            }
+            onChange={(e) => {
+  const value = e.target.value;
+
+  if (value === "") {
+    onChangeAway(null);
+    return;
+  }
+
+  const num = Number(value);
+
+  if (num < 0) return; // 🔥 BLOQUEA NEGATIVOS
+
+  onChangeAway(num);
+}}
             className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
           />
         </div>

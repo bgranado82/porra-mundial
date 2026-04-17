@@ -108,10 +108,22 @@ export default function GroupMatchCompactRow({
           <input
             type="number"
             min={0}
+            inputMode="numeric"
             value={homePrediction ?? ""}
-            onChange={(e) =>
-              onChangeHome(e.target.value === "" ? null : Number(e.target.value))
-            }
+            onChange={(e) => {
+  const value = e.target.value;
+
+  if (value === "") {
+    onChangeHome(null);
+    return;
+  }
+
+  const num = Number(value);
+
+  if (num < 0) return; // 🚫 bloquea negativos
+
+  onChangeHome(num);
+}}
             className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-[13px] font-bold text-[var(--iberdrola-forest)] outline-none"
           />
 
@@ -120,10 +132,22 @@ export default function GroupMatchCompactRow({
           <input
             type="number"
             min={0}
+            inputMode="numeric"
             value={awayPrediction ?? ""}
-            onChange={(e) =>
-              onChangeAway(e.target.value === "" ? null : Number(e.target.value))
-            }
+            onChange={(e) => {
+  const value = e.target.value;
+
+  if (value === "") {
+    onChangeAway(null);
+    return;
+  }
+
+  const num = Number(value);
+
+  if (num < 0) return; // 🔥 BLOQUEA NEGATIVOS
+
+  onChangeAway(num);
+}}
             className="h-9 w-11 rounded-xl border border-[var(--iberdrola-sky)] bg-white text-center text-[13px] font-bold text-[var(--iberdrola-forest)] outline-none"
           />
         </div>
