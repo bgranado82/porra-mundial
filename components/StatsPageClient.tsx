@@ -498,7 +498,7 @@ export default function StatsPageClient() {
               <img
                 src="/icon-512.png"
                 alt="Porra Mundial 2026"
-                className="h-11 w-11 object-contain"
+                 className="h-12 w-12 rounded-xl object-contain sm:h-14 sm:w-14"
               />
             </div>
 
