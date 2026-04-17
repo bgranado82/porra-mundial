@@ -1,3 +1,4 @@
+TransparencyPageClient
 
 "use client";
 
