@@ -60,6 +60,16 @@ type PredictionMap = Record<
   { homeGoals: number | null; awayGoals: number | null }
 >;
 
+const EXTRA_LABELS: Record<string, string> = {
+  first_goal_scorer_world: "🥇 Primer goleador del Mundial",
+  first_goal_scorer_spain: "🇪🇸 Primer goleador de España",
+  golden_boot: "👟 Bota de Oro",
+  golden_ball: "🏆 Balón de Oro",
+  best_young_player: "🌟 Mejor jugador joven",
+  golden_glove: "🧤 Guante de Oro",
+  top_spanish_scorer: "⚽ Máximo goleador de España",
+};
+
 function getTeamsInRound(
   matches: Array<{ homeTeamId: string | null; awayTeamId: string | null }>
 ) {
@@ -593,8 +603,12 @@ export default function TransparencyPageClient() {
                 className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4"
               >
                 <div className="mb-2 text-sm font-bold text-[var(--iberdrola-forest)]">
-                  {question.label || question.title || question.text || question.key}
-                </div>
+  {EXTRA_LABELS[question.key] ||
+    question.label ||
+    question.title ||
+    question.text ||
+    question.key}
+</div>
 
                 <div className="rounded-xl border border-[var(--iberdrola-green)]/30 bg-[var(--iberdrola-sand)]/20 px-3 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
                   {answer}
