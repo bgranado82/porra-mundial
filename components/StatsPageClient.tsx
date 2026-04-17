@@ -529,13 +529,11 @@ export default function StatsPageClient() {
             ) : null}
 
             <Link
-  href={
-    poolId
-      ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}${
-          entryId ? `&entryId=${entryId}` : ""
-        }`
-      : "/transparency"
-  }
+ href={
+  poolId
+    ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}`
+    : "/transparency"
+}
               className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
             >
               Ver predicciones por participante
