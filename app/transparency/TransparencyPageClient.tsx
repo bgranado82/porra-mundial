@@ -472,20 +472,22 @@ export default function TransparencyPageClient() {
 
                 return (
                   <GroupMatchCompactRow
-                    key={match.id}
-                    day={match.day}
-                    group={match.group ?? null}
-                    kickoff={match.kickoff ?? null}
-                    homeTeam={homeTeam}
-                    awayTeam={awayTeam}
-                    homePrediction={prediction.homeGoals}
-                    awayPrediction={prediction.awayGoals}
-                    officialHomeGoals={match.homeGoals}
-                    officialAwayGoals={match.awayGoals}
-                    points={0}
-                    onChangeHome={() => {}}
-                    onChangeAway={() => {}}
-                  />
+  key={match.id}
+  day={match.day}
+  group={match.group ?? null}
+  kickoff={match.kickoff ?? null}
+  homeTeam={homeTeam}
+  awayTeam={awayTeam}
+  homePrediction={prediction.homeGoals}
+  awayPrediction={prediction.awayGoals}
+  officialHomeGoals={match.homeGoals}
+  officialAwayGoals={match.awayGoals}
+  points={0}
+  onChangeHome={() => {}}
+  onChangeAway={() => {}}
+  officialLabel="Oficial"
+  pointsShortLabel="pts"
+/>
                 );
               })}
             </div>
@@ -504,24 +506,25 @@ export default function TransparencyPageClient() {
 
                 return (
                   <GroupMatchRow
-                    key={match.id}
-                    day={match.day}
-                    group={match.group ?? null}
-                    matchNumber={match.matchNumber ?? 0}
-                    kickoff={match.kickoff ?? null}
-                    homeTeam={homeTeam}
-                    awayTeam={awayTeam}
-                    homePrediction={prediction.homeGoals}
-                    awayPrediction={prediction.awayGoals}
-                    officialHomeGoals={match.homeGoals}
-                    officialAwayGoals={match.awayGoals}
-                    points={0}
-                    pointsShortLabel="pts"
-                    officialLabel="Oficial"
-                    officialPendingLabel="Pendiente"
-                    onChangeHome={() => {}}
-                    onChangeAway={() => {}}
-                  />
+  key={match.id}
+  day={match.day}
+  group={match.group ?? null}
+  matchNumber={match.matchNumber ?? 0}
+  kickoff={match.kickoff ?? null}
+  homeTeam={homeTeam}
+  awayTeam={awayTeam}
+  homePrediction={prediction.homeGoals}
+  awayPrediction={prediction.awayGoals}
+  officialHomeGoals={match.homeGoals}
+  officialAwayGoals={match.awayGoals}
+  points={0}
+  pointsShortLabel="pts"
+  officialLabel="Oficial"
+  officialPendingLabel="Pendiente"
+  matchLabel="Partido"
+  onChangeHome={() => {}}
+  onChangeAway={() => {}}
+/>
                 );
               })}
             </div>
@@ -570,18 +573,31 @@ export default function TransparencyPageClient() {
       </div>
 
       <KnockoutBracket
-        title="Cuadro eliminatorio"
-        subtitle="Predicción enviada por este participante"
-        round32={userBracket.round32}
-        round16={userBracket.round16}
-        quarterfinals={userBracket.quarterfinals}
-        semifinals={userBracket.semifinals}
-        finals={userBracket.finals}
-        championId={userBracket.championId}
-        teams={teams}
-        picks={knockoutPredictions}
-        realTeamsByRound={realTeamsByRound}
-      />
+  title="Cuadro eliminatorio"
+  subtitle="Predicción enviada por este participante"
+  round32={userBracket.round32}
+  round16={userBracket.round16}
+  quarterfinals={userBracket.quarterfinals}
+  semifinals={userBracket.semifinals}
+  finals={userBracket.finals}
+  championId={userBracket.championId}
+  teams={teams}
+  picks={knockoutPredictions}
+  realTeamsByRound={realTeamsByRound}
+  labels={{
+    matchLabel: "Partido",
+    championLabel: "Campeón",
+    undefinedLabel: "Por definir",
+    invalidLabel: "Inválido",
+    leftSideLabel: "Lado izquierdo",
+    rightSideLabel: "Lado derecho",
+    round32Label: "Round of 32",
+    round16Label: "Octavos",
+    quarterfinalsLabel: "Cuartos",
+    semifinalsLabel: "Semis",
+    finalLabel: "Final",
+  }}
+/>
 
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
