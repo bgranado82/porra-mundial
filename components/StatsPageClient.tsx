@@ -17,6 +17,8 @@ import {
   CartesianGrid,
 } from "recharts";
 import { teams } from "@/data/teams";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { Locale, messages } from "@/lib/i18n";
 
 type StatsResponse = {
   summary: {
@@ -54,6 +56,7 @@ type StatsResponse = {
   }>;
   insights: string[];
 };
+const LOCALE_KEY = "porra-mundial-locale";
 
 const CHART_COLORS = ["#00A443", "#6CC24A", "#009CDE", "#78BE20", "#A7D46F"];
 
@@ -163,9 +166,11 @@ function SectionHeader({
 function ChampionDonutCard({
   title,
   items,
+  notEnoughDataLabel,
 }: {
   title: string;
   items: StatsResponse["champion"]["items"];
+  notEnoughDataLabel: string;
 }) {
   const topItems = items.slice(0, 5);
   const teamMap = new Map(teams.map((team) => [team.id, team]));
@@ -242,7 +247,7 @@ function ChampionDonutCard({
             })
           ) : (
             <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-4 text-sm text-[var(--iberdrola-forest)]/65">
-              Todavía no hay datos suficientes.
+              {notEnoughDataLabel}
             </div>
           )}
         </div>
@@ -339,10 +344,12 @@ function ExtraQuestionListCard({
   title,
   icon,
   items,
+  notEnoughDataLabel,
 }: {
   title: string;
   icon?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
+  notEnoughDataLabel: string;
 }) {
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
@@ -376,7 +383,7 @@ function ExtraQuestionListCard({
           ))
         ) : (
           <div className="text-sm text-[var(--iberdrola-forest)]/65">
-            Todavía no hay datos suficientes.
+            {notEnoughDataLabel}
           </div>
         )}
       </div>
@@ -384,11 +391,18 @@ function ExtraQuestionListCard({
   );
 }
 
-function InsightsCard({ items }: { items: string[] }) {
-  
+function InsightsCard({
+  items,
+  title,
+  notEnoughInsightsLabel,
+}: {
+  items: string[];
+  title: string;
+  notEnoughInsightsLabel: string;
+}) {
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <SectionHeader title="Insights del pool" />
+      <SectionHeader title={title} />
       <div className="space-y-3 p-5">
         {items.length > 0 ? (
           items.map((item, index) => (
@@ -401,7 +415,7 @@ function InsightsCard({ items }: { items: string[] }) {
           ))
         ) : (
           <div className="text-sm text-[var(--iberdrola-forest)]/65">
-            Todavía no hay suficientes datos para generar insights.
+            {notEnoughInsightsLabel}
           </div>
         )}
       </div>
@@ -415,9 +429,22 @@ export default function StatsPageClient() {
   const poolSlug = searchParams.get("poolSlug") ?? "";
   const entryId = searchParams.get("entryId") ?? "";
 
+const [locale, setLocale] = useState<Locale>("es");
+const t = messages[locale];
   const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+  const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
+  if (savedLocale === "es" || savedLocale === "en" || savedLocale === "pt") {
+    setLocale(savedLocale);
+  }
+}, []);
+
+useEffect(() => {
+  localStorage.setItem(LOCALE_KEY, locale);
+}, [locale]);
 
   useEffect(() => {
     async function load() {
@@ -515,45 +542,51 @@ export default function StatsPageClient() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {poolId ? (
-              <Link
-                href={
-  poolSlug
-    ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
-    : `/standings?poolId=${poolId}&entryId=${entryId}`
-}
-                className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
-              >
-                Ver clasificación
-              </Link>
-            ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+  <LanguageSwitcher
+    locale={locale}
+    onChange={setLocale}
+    label={t.language}
+  />
 
-            <Link
-  href={
-    poolId
-      ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
-      : "/transparency"
-  }
-              className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
-            >
-              Ver predicciones por participante
-            </Link>
+  {poolId ? (
+    <Link
+      href={
+        poolSlug
+          ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
+          : `/standings?poolId=${poolId}&entryId=${entryId}`
+      }
+      className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
+    >
+      {t.stats.viewStandings}
+    </Link>
+  ) : null}
 
-            <Link
-              href={backHref}
-              className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
-            >
-              Volver a la porra
-            </Link>
-          </div>
+  <Link
+    href={
+      poolId
+        ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
+        : "/transparency"
+    }
+    className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
+  >
+    {t.stats.viewTransparency}
+  </Link>
+
+  <Link
+    href={backHref}
+    className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
+  >
+    {t.stats.backToPrediction}
+  </Link>
+</div>
         </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Participantes" value={data.summary.participants} />
-        <KpiCard label="Países" value={data.summary.countries} />
-        <KpiCard label="Bote total" value={formatEuro(data.summary.potTotal)} />
+        <KpiCard label={t.stats.participants} value={data.summary.participants} />
+        <KpiCard label={t.stats.countries} value={data.summary.countries} />
+        <KpiCard label={t.stats.potTotal} value={formatEuro(data.summary.potTotal)} />
         <PrizesCard
           loserRefund={data.summary.loserRefund}
           firstPrize={data.summary.firstPrize}
@@ -564,14 +597,17 @@ export default function StatsPageClient() {
 
       <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
         <ChampionDonutCard
-          title="Favoritos al campeón"
+          title={t.stats.championFavorites}
           items={data.champion.items}
+          notEnoughDataLabel={t.stats.notEnoughData}
         />
 
         <ExtraQuestionListCard
           icon={EXTRA_ICONS.golden_ball}
           title={extraMap.get("golden_ball")?.title ?? "Balón de Oro"}
           items={extraMap.get("golden_ball")?.items ?? []}
+          notEnoughDataLabel={t.stats.notEnoughData}
+
         />
       </section>
 
@@ -594,6 +630,8 @@ export default function StatsPageClient() {
             extraMap.get("best_young_player")?.title ?? "Mejor jugador joven"
           }
           items={extraMap.get("best_young_player")?.items ?? []}
+          notEnoughDataLabel={t.stats.notEnoughData}
+
         />
       </section>
 
@@ -626,7 +664,11 @@ export default function StatsPageClient() {
         />
       </section>
 
-      <InsightsCard items={dynamicInsights} />
+      <InsightsCard
+  items={dynamicInsights}
+  title={t.stats.insightsTitle}
+  notEnoughInsightsLabel={t.stats.notEnoughInsights}
+/>
     </main>
   );
 }

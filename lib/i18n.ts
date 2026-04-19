@@ -170,6 +170,41 @@ undefinedLabel: string;
 invalidLabel: string;
 leftSideLabel: string;
 rightSideLabel: string;
+stats: {
+  sectionEyebrow: string;
+  title: string;
+  subtitle: string;
+
+  viewStandings: string;
+  viewTransparency: string;
+  backToPrediction: string;
+
+  participants: string;
+  countries: string;
+  potTotal: string;
+  prizes: string;
+
+  firstPlace: string;
+  secondPlace: string;
+  thirdPlace: string;
+  lastPlace: string;
+
+  championFavorites: string;
+  poolInsights: string;
+
+  loading: string;
+  missingPoolId: string;
+  loadError: string;
+  noData: string;
+  notEnoughData: string;
+  notEnoughInsights: string;
+
+  picksLabel: string;
+  picksUnit: string;
+  others: string;
+  insightsTitle: string;
+};
+
 };
 
 
@@ -351,6 +386,40 @@ undefinedLabel: "Por definir",
 invalidLabel: "Inválido",
 leftSideLabel: "Lado izquierdo",
 rightSideLabel: "Lado derecho",
+stats: {
+  sectionEyebrow: "Estadísticas del pool",
+  title: "Porra Mundial 2026",
+  subtitle: "Transparencia y tendencias del pool.",
+
+  viewStandings: "Ver clasificación",
+  viewTransparency: "Ver predicciones por participante",
+  backToPrediction: "Volver a la porra",
+
+  participants: "Participantes",
+  countries: "Países",
+  potTotal: "Bote total",
+  prizes: "Premios",
+
+  firstPlace: "1º",
+  secondPlace: "2º",
+  thirdPlace: "3º",
+  lastPlace: "Último",
+
+  championFavorites: "Favoritos al campeón",
+  poolInsights: "Insights del pool",
+
+  loading: "Cargando estadísticas...",
+  missingPoolId: "Falta el poolId.",
+  loadError: "No se pudieron cargar las estadísticas.",
+  noData: "No hay datos disponibles.",
+  notEnoughData: "Todavía no hay datos suficientes.",
+  notEnoughInsights: "Todavía no hay suficientes datos para generar insights.",
+
+  picksLabel: "Pronósticos",
+  picksUnit: "pronósticos",
+  others: "Otros",
+  insightsTitle: "Insights del pool",
+},
 
   },
 
@@ -524,6 +593,40 @@ undefinedLabel: "To be decided",
 invalidLabel: "Invalid",
 leftSideLabel: "Left side",
 rightSideLabel: "Right side",
+stats: {
+  sectionEyebrow: "Pool stats",
+  title: "World Cup Pool 2026",
+  subtitle: "Pool transparency and trends.",
+
+  viewStandings: "View standings",
+  viewTransparency: "View participant predictions",
+  backToPrediction: "Back to prediction",
+
+  participants: "Participants",
+  countries: "Countries",
+  potTotal: "Prize pot",
+  prizes: "Prizes",
+
+  firstPlace: "1st",
+  secondPlace: "2nd",
+  thirdPlace: "3rd",
+  lastPlace: "Last place",
+
+  championFavorites: "Champion favorites",
+  poolInsights: "Pool insights",
+
+  loading: "Loading stats...",
+  missingPoolId: "Missing poolId.",
+  loadError: "Stats could not be loaded.",
+  noData: "No data available.",
+  notEnoughData: "There is not enough data yet.",
+  notEnoughInsights: "There is not enough data yet to generate insights.",
+
+  picksLabel: "Picks",
+  picksUnit: "picks",
+  others: "Others",
+  insightsTitle: "Pool insights",
+},
   },
 
   pt: {
@@ -695,5 +798,39 @@ undefinedLabel: "Por definir",
 invalidLabel: "Inválido",
 leftSideLabel: "Lado esquerdo",
 rightSideLabel: "Lado direito",
+stats: {
+  sectionEyebrow: "Estatísticas do bolão",
+  title: "Bolão Mundial 2026",
+  subtitle: "Transparência e tendências do bolão.",
+
+  viewStandings: "Ver classificação",
+  viewTransparency: "Ver palpites por participante",
+  backToPrediction: "Voltar ao bolão",
+
+  participants: "Participantes",
+  countries: "Países",
+  potTotal: "Bolo total",
+  prizes: "Prêmios",
+
+  firstPlace: "1º",
+  secondPlace: "2º",
+  thirdPlace: "3º",
+  lastPlace: "Último",
+
+  championFavorites: "Favoritos ao título",
+  poolInsights: "Insights do bolão",
+
+  loading: "Carregando estatísticas...",
+  missingPoolId: "Falta o poolId.",
+  loadError: "Não foi possível carregar as estatísticas.",
+  noData: "Não há dados disponíveis.",
+  notEnoughData: "Ainda não há dados suficientes.",
+  notEnoughInsights: "Ainda não há dados suficientes para gerar insights.",
+
+  picksLabel: "Palpites",
+  picksUnit: "palpites",
+  others: "Outros",
+  insightsTitle: "Insights do bolão",
+},
   },
 };
