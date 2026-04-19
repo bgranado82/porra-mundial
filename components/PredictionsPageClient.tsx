@@ -1235,14 +1235,18 @@ const invalidKnockoutPicks = useMemo(() => {
                   ) : null}
                 </div>
 
-                {poolId ? (
-                  <Link
-                    href={poolSlug ? `/stats?poolId=${poolId}&poolSlug=${poolSlug}` : `/stats?poolId=${poolId}`}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
-                  >
-                    Ver estadísticas
-                  </Link>
-                ) : null}
+                {poolId && activeEntryId ? (
+  <Link
+    href={
+      poolSlug
+        ? `/stats?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${activeEntryId}`
+        : `/stats?poolId=${poolId}&entryId=${activeEntryId}`
+    }
+    className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+  >
+    Ver estadísticas
+  </Link>
+) : null}
 
                 {poolId && activeEntryId && poolSlug ? (
                   <Link
