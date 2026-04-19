@@ -563,7 +563,7 @@ export default function KnockoutBracket({
         </div>
 
         {/* Final */}
-        <div className="w-full pt-[120px]">
+        <div className="w-full pt-[100px]">
           <StageColumn
             title="Final"
             matches={finals}
@@ -576,7 +576,7 @@ export default function KnockoutBracket({
         </div>
 
         {/* Semi 102 */}
-        <div className="w-full pt-[120px]">
+        <div className="w-full pt-[100px]">
           <StageColumn
             title="Semis"
             matches={semifinals[1] ? [semifinals[1]] : []}
