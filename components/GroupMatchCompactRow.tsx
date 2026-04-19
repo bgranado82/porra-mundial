@@ -122,7 +122,7 @@ export default function GroupMatchCompactRow({
 
     onChangeHome(Number(value));
   }}
-  className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
+  className="h-8 w-8 rounded-lg border border-[var(--iberdrola-sky)] bg-white text-center text-sm font-bold text-[var(--iberdrola-forest)]"
 />
 
           <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
