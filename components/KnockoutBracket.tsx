@@ -506,7 +506,7 @@ export default function KnockoutBracket({
         </div>
 
        <div className="hidden overflow-x-auto lg:block">
-  <div className="min-w-[1180px] xl:min-w-[1240px]">
+  <div className="min-w-[1180px] xl:min-w-[1240px] scale-[0.97] origin-top-left">
     <div className="grid grid-cols-[0.78fr_0.9fr_0.82fr_0.95fr_0.82fr_0.9fr_0.9fr] gap-1.5 xl:gap-2">
       
       {/* LEFT SIDE */}
