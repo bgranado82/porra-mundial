@@ -519,10 +519,10 @@ export default function StatsPageClient() {
             {poolId ? (
               <Link
                 href={
-                  poolSlug
-                    ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
-                    : `/standings?poolId=${poolId}`
-                }
+  poolSlug
+    ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
+    : `/standings?poolId=${poolId}&entryId=${entryId}`
+}
                 className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
               >
                 Ver clasificación
