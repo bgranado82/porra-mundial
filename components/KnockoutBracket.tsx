@@ -380,6 +380,14 @@ export default function KnockoutBracket({
     .map((id) => quarterfinals.find((m) => m.id === id))
     .filter(Boolean) as KnockoutBracketMatch[];
 
+const semifinalLeft = semifinals.find((m) => m.id === "sf-1")
+  ? [semifinals.find((m) => m.id === "sf-1")!]
+  : [];
+
+const semifinalRight = semifinals.find((m) => m.id === "sf-2")
+  ? [semifinals.find((m) => m.id === "sf-2")!]
+  : [];
+
   const championInvalid =
     !!championId &&
     finals.length > 0 &&
@@ -505,108 +513,132 @@ export default function KnockoutBracket({
           </div>
         </div>
 
-        <div className="hidden overflow-x-auto lg:block">
-          <div className="min-w-[1380px]">
-            <div className="grid grid-cols-[1fr_1fr_0.9fr_1fr_1fr] gap-4 xl:gap-5">
-              <StageColumn
-                title="Round of 32"
-                matches={orderedRound32Left}
-                teams={teams}
-                picks={picks}
-                onPick={onPick}
-                realTeamsByRound={realTeamsByRound}
-                invalidPicks={invalidPicks}
-                className="pt-0"
-                matchesClassName="space-y-4"
-              />
+       <div className="hidden overflow-x-auto lg:block">
+  <div className="min-w-[1700px]">
+    <div className="grid grid-cols-[0.95fr_0.95fr_0.9fr_0.85fr_0.9fr_0.85fr_0.9fr_0.95fr_0.95fr] gap-3 xl:gap-4">
+      <StageColumn
+        title="Round of 32"
+        matches={orderedRound32Left}
+        teams={teams}
+        picks={picks}
+        onPick={onPick}
+        realTeamsByRound={realTeamsByRound}
+        invalidPicks={invalidPicks}
+        className="pt-0"
+        matchesClassName="space-y-4"
+      />
 
-              <StageColumn
-                title="Octavos"
-                matches={orderedRound16Left}
-                teams={teams}
-                picks={picks}
-                onPick={onPick}
-                realTeamsByRound={realTeamsByRound}
-                invalidPicks={invalidPicks}
-                className="pt-[72px]"
-                matchesClassName="space-y-[88px]"
-              />
+      <StageColumn
+        title="Octavos"
+        matches={orderedRound16Left}
+        teams={teams}
+        picks={picks}
+        onPick={onPick}
+        realTeamsByRound={realTeamsByRound}
+        invalidPicks={invalidPicks}
+        className="pt-[82px]"
+        matchesClassName="space-y-[96px]"
+      />
 
-              <div className="pt-[152px] space-y-8">
-                <StageColumn
-                  title="Cuartos"
-                  matches={[...orderedQuarterLeft, ...orderedQuarterRight]}
-                  teams={teams}
-                  picks={picks}
-                  onPick={onPick}
-                  realTeamsByRound={realTeamsByRound}
-                  invalidPicks={invalidPicks}
-                  matchesClassName="space-y-[120px]"
-                />
+      <StageColumn
+        title="Cuartos"
+        matches={orderedQuarterLeft}
+        teams={teams}
+        picks={picks}
+        onPick={onPick}
+        realTeamsByRound={realTeamsByRound}
+        invalidPicks={invalidPicks}
+        className="pt-[210px]"
+        matchesClassName="space-y-[220px]"
+      />
 
-                <StageColumn
-                  title="Semis"
-                  matches={semifinals}
-                  teams={teams}
-                  picks={picks}
-                  onPick={onPick}
-                  realTeamsByRound={realTeamsByRound}
-                  invalidPicks={invalidPicks}
-                  className="pt-2"
-                  matchesClassName="space-y-[88px]"
-                />
+      <StageColumn
+        title="Semis"
+        matches={semifinalLeft}
+        teams={teams}
+        picks={picks}
+        onPick={onPick}
+        realTeamsByRound={realTeamsByRound}
+        invalidPicks={invalidPicks}
+        className="pt-[380px]"
+        matchesClassName="space-y-3"
+      />
 
-                <StageColumn
-                  title="Final"
-                  matches={finals}
-                  teams={teams}
-                  picks={picks}
-                  onPick={onPick}
-                  realTeamsByRound={realTeamsByRound}
-                  invalidPicks={invalidPicks}
-                  className="pt-2"
-                  matchesClassName="space-y-3"
-                />
+      <div className="pt-[470px] space-y-6">
+        <StageColumn
+          title="Final"
+          matches={finals}
+          teams={teams}
+          picks={picks}
+          onPick={onPick}
+          realTeamsByRound={realTeamsByRound}
+          invalidPicks={invalidPicks}
+          matchesClassName="space-y-3"
+        />
 
-                <ChampionCard
-                  champion={champion}
-                  invalid={championInvalid}
-                  points={
-                    championId &&
-                    realTeamsByRound?.champion &&
-                    championId === realTeamsByRound.champion
-                      ? 120
-                      : 0
-                  }
-                />
-              </div>
+        <ChampionCard
+          champion={champion}
+          invalid={championInvalid}
+          points={
+            championId &&
+            realTeamsByRound?.champion &&
+            championId === realTeamsByRound.champion
+              ? 120
+              : 0
+          }
+        />
+      </div>
 
-              <StageColumn
-                title="Octavos"
-                matches={orderedRound16Right}
-                teams={teams}
-                picks={picks}
-                onPick={onPick}
-                realTeamsByRound={realTeamsByRound}
-                invalidPicks={invalidPicks}
-                className="pt-[72px]"
-                matchesClassName="space-y-[88px]"
-              />
+      <StageColumn
+        title="Semis"
+        matches={semifinalRight}
+        teams={teams}
+        picks={picks}
+        onPick={onPick}
+        realTeamsByRound={realTeamsByRound}
+        invalidPicks={invalidPicks}
+        className="pt-[380px]"
+        matchesClassName="space-y-3"
+      />
 
-              <StageColumn
-                title="Round of 32"
-                matches={orderedRound32Right}
-                teams={teams}
-                picks={picks}
-                onPick={onPick}
-                realTeamsByRound={realTeamsByRound}
-                invalidPicks={invalidPicks}
-                className="pt-0"
-                matchesClassName="space-y-4"
-              />
-            </div>
-          </div>
-        </div>
+      <StageColumn
+        title="Cuartos"
+        matches={orderedQuarterRight}
+        teams={teams}
+        picks={picks}
+        onPick={onPick}
+        realTeamsByRound={realTeamsByRound}
+        invalidPicks={invalidPicks}
+        className="pt-[210px]"
+        matchesClassName="space-y-[220px]"
+      />
+
+      <StageColumn
+        title="Octavos"
+        matches={orderedRound16Right}
+        teams={teams}
+        picks={picks}
+        onPick={onPick}
+        realTeamsByRound={realTeamsByRound}
+        invalidPicks={invalidPicks}
+        className="pt-[82px]"
+        matchesClassName="space-y-[96px]"
+      />
+
+      <StageColumn
+        title="Round of 32"
+        matches={orderedRound32Right}
+        teams={teams}
+        picks={picks}
+        onPick={onPick}
+        realTeamsByRound={realTeamsByRound}
+        invalidPicks={invalidPicks}
+        className="pt-0"
+        matchesClassName="space-y-4"
+      />
+    </div>
+  </div>
+</div>
       </div>
     </section>
   );
