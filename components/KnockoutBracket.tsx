@@ -380,14 +380,6 @@ export default function KnockoutBracket({
     .map((id) => quarterfinals.find((m) => m.id === id))
     .filter(Boolean) as KnockoutBracketMatch[];
 
-const semifinalLeft = semifinals.find((m) => m.id === "sf-1")
-  ? [semifinals.find((m) => m.id === "sf-1")!]
-  : [];
-
-const semifinalRight = semifinals.find((m) => m.id === "sf-2")
-  ? [semifinals.find((m) => m.id === "sf-2")!]
-  : [];
-
   const championInvalid =
     !!championId &&
     finals.length > 0 &&
@@ -514,8 +506,10 @@ const semifinalRight = semifinals.find((m) => m.id === "sf-2")
         </div>
 
        <div className="hidden overflow-x-auto lg:block">
-  <div className="min-w-[1700px]">
-    <div className="grid grid-cols-[0.95fr_0.95fr_0.9fr_0.85fr_0.9fr_0.85fr_0.9fr_0.95fr_0.95fr] gap-3 xl:gap-4">
+  <div className="min-w-[1380px]">
+    <div className="grid grid-cols-[0.9fr_0.9fr_0.82fr_0.95fr_0.82fr_0.9fr_0.9fr] gap-3 xl:gap-4">
+      
+      {/* LEFT SIDE */}
       <StageColumn
         title="Round of 32"
         matches={orderedRound32Left}
@@ -552,55 +546,65 @@ const semifinalRight = semifinals.find((m) => m.id === "sf-2")
         matchesClassName="space-y-[540px]"
       />
 
-      <StageColumn
-        title="Semis"
-        matches={semifinalLeft}
-        teams={teams}
-        picks={picks}
-        onPick={onPick}
-        realTeamsByRound={realTeamsByRound}
-        invalidPicks={invalidPicks}
-        className="pt-[580px]"
-        matchesClassName="space-y-3"
-      />
+      {/* CENTER COLUMN (SEMIS + FINAL + CHAMPION) */}
+      <div className="flex flex-col items-center">
 
-      <div className="pt-[780px] space-y-6">
-        <StageColumn
-          title="Final"
-          matches={finals}
-          teams={teams}
-          picks={picks}
-          onPick={onPick}
-          realTeamsByRound={realTeamsByRound}
-          invalidPicks={invalidPicks}
-          matchesClassName="space-y-3"
-        />
+        {/* Semi 101 */}
+        <div className="w-full pt-[430px]">
+          <StageColumn
+            title="Semis"
+            matches={semifinals[0] ? [semifinals[0]] : []}
+            teams={teams}
+            picks={picks}
+            onPick={onPick}
+            realTeamsByRound={realTeamsByRound}
+            invalidPicks={invalidPicks}
+          />
+        </div>
 
-        <ChampionCard
-          champion={champion}
-          invalid={championInvalid}
-          points={
-            championId &&
-            realTeamsByRound?.champion &&
-            championId === realTeamsByRound.champion
-              ? 120
-              : 0
-          }
-        />
+        {/* Final */}
+        <div className="w-full pt-[120px]">
+          <StageColumn
+            title="Final"
+            matches={finals}
+            teams={teams}
+            picks={picks}
+            onPick={onPick}
+            realTeamsByRound={realTeamsByRound}
+            invalidPicks={invalidPicks}
+          />
+        </div>
+
+        {/* Semi 102 */}
+        <div className="w-full pt-[120px]">
+          <StageColumn
+            title="Semis"
+            matches={semifinals[1] ? [semifinals[1]] : []}
+            teams={teams}
+            picks={picks}
+            onPick={onPick}
+            realTeamsByRound={realTeamsByRound}
+            invalidPicks={invalidPicks}
+          />
+        </div>
+
+        {/* Champion */}
+        <div className="w-full pt-[140px]">
+          <ChampionCard
+            champion={champion}
+            invalid={championInvalid}
+            points={
+              championId &&
+              realTeamsByRound?.champion &&
+              championId === realTeamsByRound.champion
+                ? 120
+                : 0
+            }
+          />
+        </div>
       </div>
 
-      <StageColumn
-        title="Semis"
-        matches={semifinalRight}
-        teams={teams}
-        picks={picks}
-        onPick={onPick}
-        realTeamsByRound={realTeamsByRound}
-        invalidPicks={invalidPicks}
-        className="pt-[580px]"
-        matchesClassName="space-y-3"
-      />
-
+      {/* RIGHT SIDE */}
       <StageColumn
         title="Cuartos"
         matches={orderedQuarterRight}
@@ -636,6 +640,7 @@ const semifinalRight = semifinals.find((m) => m.id === "sf-2")
         className="pt-0"
         matchesClassName="space-y-4"
       />
+
     </div>
   </div>
 </div>
