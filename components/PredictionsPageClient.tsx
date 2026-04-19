@@ -764,6 +764,44 @@ export default function PredictionsPageClient({ entryId }: Props) {
     ]
   );
 
+const validTeamsByMatch = useMemo(() => {
+  const map: Record<string, Set<string>> = {};
+
+  const allMatches = [
+    ...userBracket.round32,
+    ...userBracket.round16,
+    ...userBracket.quarterfinals,
+    ...userBracket.semifinals,
+    ...userBracket.finals,
+  ];
+
+  allMatches.forEach((match) => {
+    const teams = [match.homeTeamId, match.awayTeamId].filter(
+      (teamId): teamId is string => !!teamId
+    );
+
+    map[match.id] = new Set(teams);
+  });
+
+  return map;
+}, [userBracket]);
+
+const invalidKnockoutPicks = useMemo(() => {
+  const result: Record<string, boolean> = {};
+
+  Object.entries(knockoutPredictions).forEach(([matchId, pickedTeamId]) => {
+    if (!pickedTeamId) return;
+
+    const validTeams = validTeamsByMatch[matchId];
+
+    if (!validTeams || !validTeams.has(pickedTeamId)) {
+      result[matchId] = true;
+    }
+  });
+
+  return result;
+}, [knockoutPredictions, validTeamsByMatch]);
+
   const realBracket = useMemo(
     () =>
       buildRealKnockoutBracket(
@@ -1584,19 +1622,20 @@ export default function PredictionsPageClient({ entryId }: Props) {
         />
 
         <KnockoutBracket
-          title={t.knockoutBracket}
-          subtitle={t.realBracketPending}
-          round32={userBracket.round32}
-          round16={userBracket.round16}
-          quarterfinals={userBracket.quarterfinals}
-          semifinals={userBracket.semifinals}
-          finals={userBracket.finals}
-          championId={userBracket.championId}
-          teams={teams}
-          picks={knockoutPredictions}
-          onPick={canEditPredictions ? updateKnockoutPrediction : undefined}
-          realTeamsByRound={realTeamsByRound}
-        />
+  title={t.knockoutBracket}
+  subtitle={t.realBracketPending}
+  round32={userBracket.round32}
+  round16={userBracket.round16}
+  quarterfinals={userBracket.quarterfinals}
+  semifinals={userBracket.semifinals}
+  finals={userBracket.finals}
+  championId={userBracket.championId}
+  teams={teams}
+  picks={knockoutPredictions}
+  onPick={canEditPredictions ? updateKnockoutPrediction : undefined}
+  realTeamsByRound={realTeamsByRound}
+  invalidPicks={invalidKnockoutPicks}
+/>
 
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">

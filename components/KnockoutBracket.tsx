@@ -20,6 +20,7 @@ type Props = {
     finals: Set<string>;
     champion: string | null;
   };
+invalidPicks?: Record<string, boolean>;
 };
 
 function getOfficialMatchNumber(id: string) {
@@ -97,6 +98,7 @@ function TeamButton({
   team,
   label,
   selected,
+  invalid = false,
   onClick,
   interactive,
   points,
@@ -104,6 +106,7 @@ function TeamButton({
   team: Team | null;
   label?: string;
   selected: boolean;
+  invalid?: boolean;
   onClick?: () => void;
   interactive: boolean;
   points?: number;
@@ -117,10 +120,12 @@ function TeamButton({
       onClick={onClick}
       disabled={!clickable}
       className={`w-full rounded-xl border px-3 py-3 text-left text-sm font-bold transition ${
-        selected
-          ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green)]/10 text-[var(--iberdrola-forest)]"
-          : "border-[var(--iberdrola-sky)] bg-white text-[var(--iberdrola-forest)]"
-      } ${clickable ? "hover:bg-[var(--iberdrola-sand)]" : "cursor-default opacity-85"}`}
+  invalid
+    ? "border-red-400 bg-red-50 text-red-700"
+    : selected
+    ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green)]/10 text-[var(--iberdrola-forest)]"
+    : "border-[var(--iberdrola-sky)] bg-white text-[var(--iberdrola-forest)]"
+} ${clickable ? "hover:bg-[var(--iberdrola-sand)]" : "cursor-default opacity-85"}`}
     >
       <div className="flex items-center justify-between gap-3">
         <span className="min-w-0 break-words">{getDisplayText(team, label)}</span>
@@ -130,11 +135,15 @@ function TeamButton({
               +{points}
             </span>
           ) : null}
-          {selected ? (
-            <span className="ml-2 rounded-full bg-[var(--iberdrola-forest)] px-2 py-1 text-[10px] font-black text-white">
-              ✓
-            </span>
-          ) : null}
+          {invalid ? (
+  <span className="ml-2 rounded-full bg-red-600 px-2 py-1 text-[10px] font-black text-white">
+    ⚠
+  </span>
+) : selected ? (
+  <span className="ml-2 rounded-full bg-[var(--iberdrola-forest)] px-2 py-1 text-[10px] font-black text-white">
+    ✓
+  </span>
+) : null}
         </span>
       </div>
     </button>
@@ -147,16 +156,21 @@ function MatchCard({
   picks,
   onPick,
   realTeamsByRound,
+  invalidPicks,
 }: {
   match: KnockoutBracketMatch;
   teams: Team[];
   picks: KnockoutPredictionMap;
   onPick?: (matchId: string, teamId: string | null) => void;
   realTeamsByRound?: Props["realTeamsByRound"];
+  invalidPicks?: Record<string, boolean>;
 }) {
   const homeTeam = teams.find((t) => t.id === match.homeTeamId) ?? null;
   const awayTeam = teams.find((t) => t.id === match.awayTeamId) ?? null;
   const selected = picks[match.id] ?? null;
+  const matchHasInvalidPick = !!invalidPicks?.[match.id];
+const homeInvalid = matchHasInvalidPick && selected === homeTeam?.id;
+const awayInvalid = matchHasInvalidPick && selected === awayTeam?.id;
   const interactive = Boolean(onPick);
   const officialNumber = getOfficialMatchNumber(match.id);
   const roundKey = getRoundKey(match.stage);
@@ -180,25 +194,27 @@ function MatchCard({
 
       <div className="space-y-2">
         <TeamButton
-          team={homeTeam}
-          label={match.homeLabel}
-          selected={selected === homeTeam?.id}
-          onClick={() =>
-            onPick?.(match.id, selected === homeTeam?.id ? null : homeTeam?.id ?? null)
-          }
-          interactive={interactive}
-          points={homeHit ? pointsPerTeam : 0}
-        />
+  team={homeTeam}
+  label={match.homeLabel}
+  selected={selected === homeTeam?.id}
+  invalid={homeInvalid}
+  onClick={() =>
+    onPick?.(match.id, selected === homeTeam?.id ? null : homeTeam?.id ?? null)
+  }
+  interactive={interactive}
+  points={homeHit ? pointsPerTeam : 0}
+/>
         <TeamButton
-          team={awayTeam}
-          label={match.awayLabel}
-          selected={selected === awayTeam?.id}
-          onClick={() =>
-            onPick?.(match.id, selected === awayTeam?.id ? null : awayTeam?.id ?? null)
-          }
-          interactive={interactive}
-          points={awayHit ? pointsPerTeam : 0}
-        />
+  team={awayTeam}
+  label={match.awayLabel}
+  selected={selected === awayTeam?.id}
+  invalid={awayInvalid}
+  onClick={() =>
+    onPick?.(match.id, selected === awayTeam?.id ? null : awayTeam?.id ?? null)
+  }
+  interactive={interactive}
+  points={awayHit ? pointsPerTeam : 0}
+/>
       </div>
     </div>
   );
@@ -219,6 +235,7 @@ function StageColumn({
   picks,
   onPick,
   realTeamsByRound,
+  invalidPicks,
 }: {
   title: string;
   matches: KnockoutBracketMatch[];
@@ -226,19 +243,21 @@ function StageColumn({
   picks: KnockoutPredictionMap;
   onPick?: (matchId: string, teamId: string | null) => void;
   realTeamsByRound?: Props["realTeamsByRound"];
+  invalidPicks?: Record<string, boolean>;
 }) {
   return (
     <div className="space-y-3">
       <StageTitle>{title}</StageTitle>
       {matches.map((match) => (
         <MatchCard
-          key={match.id}
-          match={match}
-          teams={teams}
-          picks={picks}
-          onPick={onPick}
-          realTeamsByRound={realTeamsByRound}
-        />
+  key={match.id}
+  match={match}
+  teams={teams}
+  picks={picks}
+  onPick={onPick}
+  realTeamsByRound={realTeamsByRound}
+  invalidPicks={invalidPicks}
+/>
       ))}
     </div>
   );
@@ -247,29 +266,45 @@ function StageColumn({
 function ChampionCard({
   champion,
   points,
+  invalid = false,
 }: {
   champion: Team | null;
   points?: number;
+  invalid?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] p-4 text-center shadow-sm">
+    <div
+      className={`rounded-2xl border p-4 text-center shadow-sm ${
+        invalid
+          ? "border-red-400 bg-red-50"
+          : "border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]"
+      }`}
+    >
       <div className="text-xs font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
         Campeón
       </div>
+
       <div className="mt-2 text-lg font-black text-[var(--iberdrola-forest)]">
         {champion ? (
-  <span className="flex items-center justify-center gap-2">
-    <img
-      src={champion.flagUrl}
-      alt={champion.name}
-      className="h-5 w-7 rounded-[2px] border border-gray-200 object-cover"
-    />
-    {champion.name}
-  </span>
-) : (
-  "Por definir"
-)}
+          <div className="flex items-center justify-center gap-2">
+            <img
+              src={champion.flagUrl}
+              alt={champion.name}
+              className="h-5 w-7 rounded-[2px] border border-gray-200 object-cover"
+            />
+            <span>{champion.name}</span>
+          </div>
+        ) : (
+          "Por definir"
+        )}
       </div>
+
+      {invalid ? (
+        <div className="mt-2 inline-flex rounded-full bg-red-600 px-3 py-1 text-xs font-black text-white">
+          ⚠ Inválido
+        </div>
+      ) : null}
+
       {points && points > 0 ? (
         <div className="mt-2 inline-flex rounded-full bg-[var(--iberdrola-green)] px-3 py-1 text-xs font-black text-white">
           +{points}
@@ -292,6 +327,7 @@ export default function KnockoutBracket({
   picks,
   onPick,
   realTeamsByRound,
+  invalidPicks,
 }: Props) {
   const champion = teams.find((team) => team.id === championId) ?? null;
 
@@ -361,6 +397,7 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
             <StageColumn
               title="Octavos"
@@ -369,6 +406,7 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
             <StageColumn
               title="Cuartos"
@@ -377,6 +415,7 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
           </div>
 
@@ -389,6 +428,7 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
             <StageColumn
               title="Octavos"
@@ -397,6 +437,7 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
             <StageColumn
               title="Cuartos"
@@ -405,6 +446,7 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
           </div>
 
@@ -416,6 +458,7 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
             <StageColumn
               title="Final"
@@ -424,9 +467,18 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
             <ChampionCard
   champion={champion}
+  invalid={
+    !!championId &&
+    finals.length > 0 &&
+    !finals.some(
+      (match) =>
+        match.homeTeamId === championId || match.awayTeamId === championId
+    )
+  }
   points={
     championId &&
     realTeamsByRound?.champion &&
@@ -446,6 +498,7 @@ export default function KnockoutBracket({
             picks={picks}
             onPick={onPick}
             realTeamsByRound={realTeamsByRound}
+            invalidPicks={invalidPicks}
           />
 
           <StageColumn
@@ -455,6 +508,7 @@ export default function KnockoutBracket({
             picks={picks}
             onPick={onPick}
             realTeamsByRound={realTeamsByRound}
+            invalidPicks={invalidPicks}
           />
 
           <div className="space-y-4">
@@ -465,6 +519,7 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
             <StageColumn
               title="Semis"
@@ -473,6 +528,7 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
             <StageColumn
               title="Final"
@@ -481,9 +537,18 @@ export default function KnockoutBracket({
               picks={picks}
               onPick={onPick}
               realTeamsByRound={realTeamsByRound}
+              invalidPicks={invalidPicks}
             />
             <ChampionCard
   champion={champion}
+  invalid={
+    !!championId &&
+    finals.length > 0 &&
+    !finals.some(
+      (match) =>
+        match.homeTeamId === championId || match.awayTeamId === championId
+    )
+  }
   points={
     championId &&
     realTeamsByRound?.champion &&
@@ -501,6 +566,7 @@ export default function KnockoutBracket({
             picks={picks}
             onPick={onPick}
             realTeamsByRound={realTeamsByRound}
+            invalidPicks={invalidPicks}
           />
 
           <StageColumn
@@ -510,6 +576,7 @@ export default function KnockoutBracket({
             picks={picks}
             onPick={onPick}
             realTeamsByRound={realTeamsByRound}
+            invalidPicks={invalidPicks}
           />
         </div>
       </div>
