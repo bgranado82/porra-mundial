@@ -1496,24 +1496,26 @@ const invalidKnockoutPicks = useMemo(() => {
 
                   return (
                     <GroupMatchCompactRow
-                      key={match.id}
-                      day={match.day}
-                      group={match.group ?? null}
-                      kickoff={match.kickoff ?? null}
-                      homeTeam={homeTeam}
-                      awayTeam={awayTeam}
-                      homePrediction={prediction.homeGoals}
-                      awayPrediction={prediction.awayGoals}
-                      officialHomeGoals={match.homeGoals}
-                      officialAwayGoals={match.awayGoals}
-                      points={score.points}
-                      onChangeHome={(value) =>
-                        updatePrediction(match.id, "homeGoals", value)
-                      }
-                      onChangeAway={(value) =>
-                        updatePrediction(match.id, "awayGoals", value)
-                      }
-                    />
+  key={match.id}
+  day={match.day}
+  group={match.group ?? null}
+  kickoff={match.kickoff ?? null}
+  homeTeam={homeTeam}
+  awayTeam={awayTeam}
+  homePrediction={prediction.homeGoals}
+  awayPrediction={prediction.awayGoals}
+  officialHomeGoals={match.homeGoals}
+  officialAwayGoals={match.awayGoals}
+  points={score.points}
+  onChangeHome={(value) =>
+    updatePrediction(match.id, "homeGoals", value)
+  }
+  onChangeAway={(value) =>
+    updatePrediction(match.id, "awayGoals", value)
+  }
+  officialLabel={t.officialLabel}
+  pointsShortLabel={t.pointsShort}
+/>
                   );
                 })}
               </div>
@@ -1540,28 +1542,29 @@ const invalidKnockoutPicks = useMemo(() => {
 
                   return (
                     <GroupMatchRow
-                      key={match.id}
-                      day={match.day}
-                      group={match.group ?? null}
-                      matchNumber={match.matchNumber ?? 0}
-                      kickoff={match.kickoff ?? null}
-                      homeTeam={homeTeam}
-                      awayTeam={awayTeam}
-                      homePrediction={prediction.homeGoals}
-                      awayPrediction={prediction.awayGoals}
-                      officialHomeGoals={match.homeGoals}
-                      officialAwayGoals={match.awayGoals}
-                      points={score.points}
-                      pointsShortLabel={t.pointsShort}
-                      officialLabel={t.officialLabel}
-                      officialPendingLabel={t.officialPending}
-                      onChangeHome={(value) =>
-                        updatePrediction(match.id, "homeGoals", value)
-                      }
-                      onChangeAway={(value) =>
-                        updatePrediction(match.id, "awayGoals", value)
-                      }
-                    />
+  key={match.id}
+  day={match.day}
+  group={match.group ?? null}
+  matchNumber={match.matchNumber ?? 0}
+  kickoff={match.kickoff ?? null}
+  homeTeam={homeTeam}
+  awayTeam={awayTeam}
+  homePrediction={prediction.homeGoals}
+  awayPrediction={prediction.awayGoals}
+  officialHomeGoals={match.homeGoals}
+  officialAwayGoals={match.awayGoals}
+  points={score.points}
+  pointsShortLabel={t.pointsShort}
+  officialLabel={t.officialLabel}
+  officialPendingLabel={t.officialPending}
+  matchLabel={t.matchLabel}
+  onChangeHome={(value) =>
+    updatePrediction(match.id, "homeGoals", value)
+  }
+  onChangeAway={(value) =>
+    updatePrediction(match.id, "awayGoals", value)
+  }
+/>
                   );
                 })}
               </div>
@@ -1649,6 +1652,19 @@ const invalidKnockoutPicks = useMemo(() => {
   onPick={canEditPredictions ? updateKnockoutPrediction : undefined}
   realTeamsByRound={realTeamsByRound}
   invalidPicks={invalidKnockoutPicks}
+  labels={{
+  matchLabel: t.matchLabel,
+  championLabel: t.champion,
+  undefinedLabel: t.undefinedLabel,
+  invalidLabel: t.invalidLabel,
+  leftSideLabel: t.leftSideLabel,
+  rightSideLabel: t.rightSideLabel,
+  round32Label: t.round32,
+  round16Label: t.round16,
+  quarterfinalsLabel: t.quarterfinals,
+  semifinalsLabel: t.semifinals,
+  finalLabel: t.finalLabel,
+}}
 />
 
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">

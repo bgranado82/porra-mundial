@@ -165,6 +165,11 @@ playerFallback: string;
 classificationCardTitle: string;
 classificationMovementLabel: string;
 classificationPending: string;
+matchLabel: string;
+undefinedLabel: string;
+invalidLabel: string;
+leftSideLabel: string;
+rightSideLabel: string;
 };
 
 
@@ -341,6 +346,11 @@ playerFallback: "Jugador",
 classificationCardTitle: "Clasificación",
 classificationMovementLabel: "Variación respecto a la última clasificación",
 classificationPending: "Pendiente de inicio",
+matchLabel: "Partido",
+undefinedLabel: "Por definir",
+invalidLabel: "Inválido",
+leftSideLabel: "Lado izquierdo",
+rightSideLabel: "Lado derecho",
 
   },
 
@@ -509,6 +519,11 @@ playerFallback: "Player",
 classificationCardTitle: "Standings",
 classificationMovementLabel: "Change compared to the latest standings",
 classificationPending: "Pending start",
+matchLabel: "Match",
+undefinedLabel: "To be decided",
+invalidLabel: "Invalid",
+leftSideLabel: "Left side",
+rightSideLabel: "Right side",
   },
 
   pt: {
@@ -675,5 +690,10 @@ playerFallback: "Jogador",
 classificationCardTitle: "Classificação",
 classificationMovementLabel: "Variação em relação à última classificação",
 classificationPending: "Aguardando início",
+matchLabel: "Partida",
+undefinedLabel: "Por definir",
+invalidLabel: "Inválido",
+leftSideLabel: "Lado esquerdo",
+rightSideLabel: "Lado direito",
   },
 };

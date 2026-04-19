@@ -20,6 +20,8 @@ type Props = {
   points: number;
   onChangeHome: (value: number | null) => void;
   onChangeAway: (value: number | null) => void;
+  officialLabel: string;
+  pointsShortLabel: string;
 };
 
 function formatKickoff(kickoff: string | null) {
@@ -59,6 +61,8 @@ export default function GroupMatchCompactRow({
   points,
   onChangeHome,
   onChangeAway,
+  officialLabel,
+  pointsShortLabel,
 }: Props) {
   const hasOfficialResult =
     officialHomeGoals !== null && officialAwayGoals !== null;
@@ -69,12 +73,12 @@ export default function GroupMatchCompactRow({
     ? "bg-[var(--iberdrola-green)] text-white"
     : "bg-gray-100 text-gray-500";
 
-  const pointsLabel = !hasOfficialResult ? "- pts" : `${points} pts`;
+  const pointsLabel = !hasOfficialResult
+    ? `- ${pointsShortLabel}`
+    : `${points} ${pointsShortLabel}`;
 
   return (
     <div className="grid h-[52px] grid-cols-[132px_minmax(0,1fr)_82px] items-center gap-2 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
-      
-      {/* INFO */}
       <div className="flex flex-col justify-center leading-tight">
         <span className="text-[12px] font-bold text-[var(--iberdrola-forest)]">
           J{day} · {group ?? "-"}
@@ -85,17 +89,14 @@ export default function GroupMatchCompactRow({
         </span>
 
         <span className="whitespace-nowrap text-[10px] font-semibold text-[var(--iberdrola-forest)]/75">
-          Oficial:{" "}
+          {officialLabel}:{" "}
           {hasOfficialResult
             ? `${officialHomeGoals}-${officialAwayGoals}`
             : "-"}
         </span>
       </div>
 
-      {/* MATCH */}
       <div className="grid grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)] items-center gap-2 -ml-8">
-        
-        {/* HOME */}
         <div className="flex min-w-0 items-center justify-start gap-1.5">
           <TeamFlag team={homeTeam} />
           <span className="truncate text-left text-[13px] font-semibold text-[var(--iberdrola-forest)]">
@@ -103,52 +104,50 @@ export default function GroupMatchCompactRow({
           </span>
         </div>
 
-        {/* INPUTS */}
         <div className="flex items-center justify-center gap-2">
           <input
-  type="text"
-  inputMode="numeric"
-  pattern="[0-9]*"
-  value={homePrediction ?? ""}
-  onChange={(e) => {
-    const value = e.target.value;
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={homePrediction ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
 
-    if (!/^\d*$/.test(value)) return;
+              if (!/^\d*$/.test(value)) return;
 
-    if (value === "") {
-      onChangeHome(null);
-      return;
-    }
+              if (value === "") {
+                onChangeHome(null);
+                return;
+              }
 
-    onChangeHome(Number(value));
-  }}
-  className="h-8 w-8 rounded-lg border border-[var(--iberdrola-sky)] bg-white text-center text-sm font-bold text-[var(--iberdrola-forest)]"
-/>
+              onChangeHome(Number(value));
+            }}
+            className="h-8 w-8 rounded-lg border border-[var(--iberdrola-sky)] bg-white text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+          />
 
           <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
 
           <input
-  type="text"
-  inputMode="numeric"
-  pattern="[0-9]*"
-  value={awayPrediction ?? ""}
-  onChange={(e) => {
-    const value = e.target.value;
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={awayPrediction ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
 
-    if (!/^\d*$/.test(value)) return;
+              if (!/^\d*$/.test(value)) return;
 
-    if (value === "") {
-      onChangeAway(null);
-      return;
-    }
+              if (value === "") {
+                onChangeAway(null);
+                return;
+              }
 
-    onChangeAway(Number(value));
-  }}
-  className="h-8 w-8 rounded-lg border border-[var(--iberdrola-sky)] bg-white text-center text-sm font-bold text-[var(--iberdrola-forest)]"
-/>
+              onChangeAway(Number(value));
+            }}
+            className="h-8 w-8 rounded-lg border border-[var(--iberdrola-sky)] bg-white text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+          />
         </div>
 
-        {/* AWAY */}
         <div className="flex min-w-0 items-center justify-end gap-1.5">
           <span className="truncate text-right text-[13px] font-semibold text-[var(--iberdrola-forest)]">
             {awayTeam.name}
@@ -157,7 +156,6 @@ export default function GroupMatchCompactRow({
         </div>
       </div>
 
-      {/* POINTS */}
       <div className="flex justify-end">
         <span
           className={`inline-flex rounded-full px-3 py-1 text-xs font-black ${pointsBadgeClass}`}

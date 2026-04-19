@@ -8,9 +8,8 @@ type Team = {
 };
 
 type Props = {
-    day: number;
-      group: string | null;
-
+  day: number;
+  group: string | null;
   matchNumber?: number | null;
   kickoff?: string | null;
   homeTeam: Team;
@@ -23,6 +22,7 @@ type Props = {
   pointsShortLabel: string;
   officialLabel: string;
   officialPendingLabel: string;
+  matchLabel: string;
   onChangeHome: (value: number | null) => void;
   onChangeAway: (value: number | null) => void;
 };
@@ -66,6 +66,7 @@ export default function GroupMatchRow({
   pointsShortLabel,
   officialLabel,
   officialPendingLabel,
+  matchLabel,
   onChangeHome,
   onChangeAway,
 }: Props) {
@@ -81,14 +82,14 @@ export default function GroupMatchRow({
   const pointsBadgeClass = !hasOfficialResult
     ? "bg-gray-100 text-gray-500"
     : points > 0
-      ? "bg-[var(--iberdrola-green)] text-white"
-      : "bg-gray-100 text-gray-500";
+    ? "bg-[var(--iberdrola-green)] text-white"
+    : "bg-gray-100 text-gray-500";
 
   return (
     <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3 shadow-sm">
       <div className="mb-2 flex items-center justify-between gap-3">
         <div className="min-w-0 text-xs font-semibold text-[var(--iberdrola-forest)]/65">
-          {matchNumber ? `Partido ${matchNumber}` : ""}
+          {matchNumber ? `${matchLabel} ${matchNumber}` : ""}
           {kickoffInfo.short ? ` · ${kickoffInfo.short}` : ""}
         </div>
 
@@ -109,24 +110,24 @@ export default function GroupMatchRow({
           </div>
 
           <input
-  type="text"
-  inputMode="numeric"
-  pattern="[0-9]*"
-  value={homePrediction ?? ""}
-  onChange={(e) => {
-    const value = e.target.value;
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={homePrediction ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
 
-    if (!/^\d*$/.test(value)) return;
+              if (!/^\d*$/.test(value)) return;
 
-    if (value === "") {
-      onChangeHome(null);
-      return;
-    }
+              if (value === "") {
+                onChangeHome(null);
+                return;
+              }
 
-    onChangeHome(Number(value));
-  }}
-  className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
-/>
+              onChangeHome(Number(value));
+            }}
+            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
+          />
         </div>
 
         <div className="grid grid-cols-[1fr_auto] items-center gap-3">
@@ -138,24 +139,24 @@ export default function GroupMatchRow({
           </div>
 
           <input
-  type="text"
-  inputMode="numeric"
-  pattern="[0-9]*"
-  value={awayPrediction ?? ""}
-  onChange={(e) => {
-    const value = e.target.value;
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={awayPrediction ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
 
-    if (!/^\d*$/.test(value)) return;
+              if (!/^\d*$/.test(value)) return;
 
-    if (value === "") {
-      onChangeAway(null);
-      return;
-    }
+              if (value === "") {
+                onChangeAway(null);
+                return;
+              }
 
-    onChangeAway(Number(value));
-  }}
-  className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
-/>
+              onChangeAway(Number(value));
+            }}
+            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
+          />
         </div>
       </div>
 
