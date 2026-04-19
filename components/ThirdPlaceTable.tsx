@@ -67,9 +67,6 @@ export default function ThirdPlaceTable({
                   {labels.goalsAgainst}
                 </th>
                 <th className="px-2 py-2 text-center font-black">
-                  {labels.goalDifference}
-                </th>
-                <th className="px-2 py-2 text-center font-black">
                   {labels.pointsShort}
                 </th>
                 <th className="px-3 py-2 text-left font-black">{labels.status}</th>
@@ -107,7 +104,6 @@ export default function ThirdPlaceTable({
                     <td className="px-2 py-2 text-center">{row.lost}</td>
                     <td className="px-2 py-2 text-center">{row.goalsFor}</td>
                     <td className="px-2 py-2 text-center">{row.goalsAgainst}</td>
-                    <td className="px-2 py-2 text-center">{row.goalDifference}</td>
                     <td className="px-2 py-2 text-center font-black">{row.points}</td>
                     <td className="px-3 py-2">
                       <span
