@@ -543,7 +543,7 @@ export default function KnockoutBracket({
         realTeamsByRound={realTeamsByRound}
         invalidPicks={invalidPicks}
         className="pt-[250px]"
-        matchesClassName="space-y-[540px]"
+        matchesClassName="space-y-[500px]"
       />
 
       {/* CENTER COLUMN (SEMIS + FINAL + CHAMPION) */}
@@ -563,7 +563,7 @@ export default function KnockoutBracket({
         </div>
 
         {/* Final */}
-        <div className="w-full pt-[100px]">
+        <div className="w-full pt-[80px]">
           <StageColumn
             title="Final"
             matches={finals}
@@ -576,7 +576,7 @@ export default function KnockoutBracket({
         </div>
 
         {/* Semi 102 */}
-        <div className="w-full pt-[100px]">
+        <div className="w-full pt-[80px]">
           <StageColumn
             title="Semis"
             matches={semifinals[1] ? [semifinals[1]] : []}
@@ -614,7 +614,7 @@ export default function KnockoutBracket({
         realTeamsByRound={realTeamsByRound}
         invalidPicks={invalidPicks}
         className="pt-[250px]"
-        matchesClassName="space-y-[540px]"
+        matchesClassName="space-y-[500px]"
       />
 
       <StageColumn
