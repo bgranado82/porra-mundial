@@ -537,7 +537,7 @@ const semifinalRight = semifinals.find((m) => m.id === "sf-2")
         realTeamsByRound={realTeamsByRound}
         invalidPicks={invalidPicks}
         className="pt-[82px]"
-        matchesClassName="space-y-[170px]"
+        matchesClassName="space-y-[180px]"
       />
 
       <StageColumn
@@ -548,8 +548,8 @@ const semifinalRight = semifinals.find((m) => m.id === "sf-2")
         onPick={onPick}
         realTeamsByRound={realTeamsByRound}
         invalidPicks={invalidPicks}
-        className="pt-[210px]"
-        matchesClassName="space-y-[220px]"
+        className="pt-[250px]"
+        matchesClassName="space-y-[300px]"
       />
 
       <StageColumn
@@ -609,8 +609,8 @@ const semifinalRight = semifinals.find((m) => m.id === "sf-2")
         onPick={onPick}
         realTeamsByRound={realTeamsByRound}
         invalidPicks={invalidPicks}
-        className="pt-[210px]"
-        matchesClassName="space-y-[220px]"
+        className="pt-[250px]"
+        matchesClassName="space-y-[300px]"
       />
 
       <StageColumn
@@ -622,7 +622,7 @@ const semifinalRight = semifinals.find((m) => m.id === "sf-2")
         realTeamsByRound={realTeamsByRound}
         invalidPicks={invalidPicks}
         className="pt-[82px]"
-        matchesClassName="space-y-[170px]"
+        matchesClassName="space-y-[180px]"
       />
 
       <StageColumn
