@@ -70,9 +70,6 @@ export default function GroupStandingsTable({
                   {labels.goalsAgainst}
                 </th>
                 <th className="px-2 py-2 text-center font-black">
-                  {labels.goalDifference}
-                </th>
-                <th className="px-2 py-2 text-center font-black">
                   {labels.pointsShort}
                 </th>
                 {showTiebreak ? (
@@ -113,7 +110,6 @@ export default function GroupStandingsTable({
                     <td className="px-2 py-2 text-center">{row.lost}</td>
                     <td className="px-2 py-2 text-center">{row.goalsFor}</td>
                     <td className="px-2 py-2 text-center">{row.goalsAgainst}</td>
-                    <td className="px-2 py-2 text-center">{row.goalDifference}</td>
                     <td className="px-2 py-2 text-center font-black">
                       {row.points}
                     </td>
