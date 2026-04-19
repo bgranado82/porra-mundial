@@ -120,7 +120,7 @@ function TeamButton({
       type="button"
       onClick={onClick}
       disabled={!clickable}
-      className={`w-full rounded-xl border px-2.5 py-2 text-left text-[13px] font-bold transition ${
+      className={`w-full rounded-xl border px-2 py-1.5 text-left text-[12px] font-bold transition ${
         invalid
           ? "border-red-400 bg-red-50 text-red-700"
           : selected
@@ -137,11 +137,11 @@ function TeamButton({
             </span>
           ) : null}
           {invalid ? (
-            <span className="ml-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[9px] font-black text-white">
+            <span className="ml-0.5 rounded-full bg-red-600 px-1 py-0.5 text-[9px] font-black text-white">
               ⚠
             </span>
           ) : selected ? (
-            <span className="ml-1 rounded-full bg-[var(--iberdrola-forest)] px-1.5 py-0.5 text-[9px] font-black text-white">
+            <span className="ml-0.5 rounded-full bg-[var(--iberdrola-forest)] px-1 py-0.5 text-[9px] font-black text-white">
               ✓
             </span>
           ) : null}
@@ -506,8 +506,8 @@ export default function KnockoutBracket({
         </div>
 
        <div className="hidden overflow-x-auto lg:block">
-  <div className="min-w-[1260px] xl:min-w-[1320px]">
-    <div className="grid grid-cols-[0.82fr_0.9fr_0.82fr_0.95fr_0.82fr_0.9fr_0.9fr] gap-2 xl:gap-3">
+  <div className="min-w-[1180px] xl:min-w-[1240px]">
+    <div className="grid grid-cols-[0.78fr_0.9fr_0.82fr_0.95fr_0.82fr_0.9fr_0.9fr] gap-1.5 xl:gap-2">
       
       {/* LEFT SIDE */}
       <StageColumn
