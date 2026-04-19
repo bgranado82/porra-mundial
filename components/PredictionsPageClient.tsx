@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -23,7 +22,6 @@ import { createClient } from "@/utils/supabase/client";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import GroupMatchCompactRow from "@/components/GroupMatchCompactRow";
 
-
 type PredictionMap = Record<
   string,
   { homeGoals: number | null; awayGoals: number | null }
@@ -35,15 +33,19 @@ type OfficialGroupRow = {
   away_goals: number | null;
 };
 
-type OfficialKnockoutRow = {
-  match_id: string;
-  picked_team_id: string | null;
-};
-
 type ExtraPredictionRow = {
   question_key: string;
   predicted_value: string | null;
 };
+
+type EntryTiebreakRow = {
+  scope: "group" | "third_place";
+  scope_value: string;
+  team_id: string;
+  priority: number;
+};
+
+type UserTiebreakMap = Record<string, number>;
 
 type StandingSummary = {
   entry_id: string;
@@ -105,6 +107,14 @@ function normalizeExtraValue(value: string) {
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
+}
+
+function getTiebreakKey(
+  scope: "group" | "third_place",
+  scopeValue: string,
+  teamId: string
+) {
+  return `${scope}:${scopeValue}:${teamId}`;
 }
 
 function HeaderPill({
@@ -211,12 +221,13 @@ function ClassificationHeaderCard({
             </div>
           </>
         ) : (
-<div className="flex flex-col items-center">
-  <div className="text-3xl font-black text-[var(--iberdrola-green)]">-</div>
-  <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/50">
-    Pendiente de inicio
-  </div>
-</div>        )}
+          <div className="flex flex-col items-center">
+            <div className="text-3xl font-black text-[var(--iberdrola-green)]">-</div>
+            <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/50">
+              Pendiente de inicio
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -233,7 +244,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [knockoutPredictions, setKnockoutPredictions] =
     useState<KnockoutPredictionMap>({});
   const [realKnockoutPredictions, setRealKnockoutPredictions] =
-  useState<KnockoutPredictionMap>({});
+    useState<KnockoutPredictionMap>({});
   const [officialMatches, setOfficialMatches] = useState<Match[]>(initialMatches);
   const [locale, setLocale] = useState<Locale>("es");
   const [authUserEmail, setAuthUserEmail] = useState("");
@@ -255,13 +266,14 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [extraPredictions, setExtraPredictions] = useState<Record<string, string>>({});
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid">("pending");
   const [officialExtraResults, setOfficialExtraResults] = useState<Record<string, string>>({});
+  const [userTiebreaks, setUserTiebreaks] = useState<UserTiebreakMap>({});
 
-useEffect(() => {
-  const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
-  if (savedLocale === "es" || savedLocale === "en" || savedLocale === "pt") {
-    setLocale(savedLocale);
-  }
-}, []);
+  useEffect(() => {
+    const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
+    if (savedLocale === "es" || savedLocale === "en" || savedLocale === "pt") {
+      setLocale(savedLocale);
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(LOCALE_KEY, locale);
@@ -301,28 +313,28 @@ useEffect(() => {
             ""
         );
 
-       const { data: rawEntry, error: entryError } = await supabase
-  .from("entries")
-  .select(`
-    id,
-    status,
-    user_id,
-    pool_id,
-    entry_number,
-    payment_status,
-    created_at,
-    pools (
-      name,
-      slug,
-      is_registration_open,
-      is_predictions_editable,
-      is_submission_enabled,
-      classification_visibility,
-      statistics_visibility,
-      transparency_visibility,
-      submission_deadline
-    )
-  `)
+        const { data: rawEntry, error: entryError } = await supabase
+          .from("entries")
+          .select(`
+            id,
+            status,
+            user_id,
+            pool_id,
+            entry_number,
+            payment_status,
+            created_at,
+            pools (
+              name,
+              slug,
+              is_registration_open,
+              is_predictions_editable,
+              is_submission_enabled,
+              classification_visibility,
+              statistics_visibility,
+              transparency_visibility,
+              submission_deadline
+            )
+          `)
           .eq("id", entryId)
           .eq("user_id", user.id)
           .maybeSingle();
@@ -337,6 +349,7 @@ useEffect(() => {
           setPredictions({});
           setKnockoutPredictions({});
           setExtraPredictions({});
+          setUserTiebreaks({});
           setSubmitMessage("No se ha encontrado la porra seleccionada.");
           setLoadingEntry(false);
           return;
@@ -351,22 +364,23 @@ useEffect(() => {
         setPoolId(entry.pool_id ?? null);
         setPoolSlug(pool?.slug ?? "");
         setPaymentStatus((entry.payment_status ?? "pending") as "pending" | "paid");
-setPoolSettings(
-  pool
-    ? {
-        name: pool.name ?? "",
-        slug: pool.slug ?? "",
-        is_registration_open: pool.is_registration_open ?? true,
-        is_predictions_editable: pool.is_predictions_editable ?? true,
-        is_submission_enabled: pool.is_submission_enabled ?? true,
-        classification_visibility:
-          pool.classification_visibility ?? "after_submit",
-        statistics_visibility: pool.statistics_visibility ?? "hidden",
-        transparency_visibility: pool.transparency_visibility ?? "hidden",
-        submission_deadline: pool.submission_deadline ?? null,
-      }
-    : null
-);
+        setPoolSettings(
+          pool
+            ? {
+                name: pool.name ?? "",
+                slug: pool.slug ?? "",
+                is_registration_open: pool.is_registration_open ?? true,
+                is_predictions_editable: pool.is_predictions_editable ?? true,
+                is_submission_enabled: pool.is_submission_enabled ?? true,
+                classification_visibility:
+                  pool.classification_visibility ?? "after_submit",
+                statistics_visibility: pool.statistics_visibility ?? "hidden",
+                transparency_visibility: pool.transparency_visibility ?? "hidden",
+                submission_deadline: pool.submission_deadline ?? null,
+              }
+            : null
+        );
+
         const { data: groupRows, error: groupError } = await supabase
           .from("entry_group_predictions")
           .select("entry_id, match_id, home_goals, away_goals")
@@ -397,30 +411,43 @@ setPoolSettings(
         setKnockoutPredictions(nextKo);
 
         const { data: extraRows, error: extraError } = await supabase
-        .from("entry_extra_predictions")
+          .from("entry_extra_predictions")
           .select("question_key, predicted_value")
-                    .eq("entry_id", entry.id);
-if (extraError) console.error(extraError);
+          .eq("entry_id", entry.id);
 
-const { data: extraResults, error: extraResultsError } = await supabase
-  .from("official_extra_results")
-  .select("question_key, official_value");
+        if (extraError) console.error(extraError);
 
-if (extraResultsError) console.error(extraResultsError);
+        const { data: extraResults, error: extraResultsError } = await supabase
+          .from("official_extra_results")
+          .select("question_key, official_value");
 
-const officialExtraMap: Record<string, string> = {};
+        if (extraResultsError) console.error(extraResultsError);
 
-(extraResults ?? []).forEach((row) => {
-  officialExtraMap[row.question_key] = row.official_value;
-});
+        const officialExtraMap: Record<string, string> = {};
+        (extraResults ?? []).forEach((row) => {
+          officialExtraMap[row.question_key] = row.official_value;
+        });
+        setOfficialExtraResults(officialExtraMap);
 
-setOfficialExtraResults(officialExtraMap);
+        const nextExtraPredictions: Record<string, string> = {};
+        (extraRows as ExtraPredictionRow[] | null)?.forEach((row) => {
+          nextExtraPredictions[row.question_key] = row.predicted_value ?? "";
+        });
+        setExtraPredictions(nextExtraPredictions);
 
-const nextExtraPredictions: Record<string, string> = {};
-(extraRows as ExtraPredictionRow[] | null)?.forEach((row) => {
-  nextExtraPredictions[row.question_key] = row.predicted_value ?? "";
-});
-setExtraPredictions(nextExtraPredictions);
+        const { data: tiebreakRows, error: tiebreakError } = await supabase
+          .from("entry_tiebreaks")
+          .select("scope, scope_value, team_id, priority")
+          .eq("entry_id", entry.id);
+
+        if (tiebreakError) console.error(tiebreakError);
+
+        const nextTiebreaks: UserTiebreakMap = {};
+        ((tiebreakRows ?? []) as EntryTiebreakRow[]).forEach((row) => {
+          const key = getTiebreakKey(row.scope, row.scope_value, row.team_id);
+          nextTiebreaks[key] = row.priority;
+        });
+        setUserTiebreaks(nextTiebreaks);
 
         const { data: officialGroupRows, error: officialGroupError } =
           await supabase
@@ -452,11 +479,10 @@ setExtraPredictions(nextExtraPredictions);
 
         if (officialKnockoutError) console.error(officialKnockoutError);
 
-       const nextRealKo: KnockoutPredictionMap = {};
-
-(officialKnockoutRows ?? []).forEach((row) => {
-  nextRealKo[row.match_id] = row.picked_team_id ?? null;
-});
+        const nextRealKo: KnockoutPredictionMap = {};
+        (officialKnockoutRows ?? []).forEach((row) => {
+          nextRealKo[row.match_id] = row.picked_team_id ?? null;
+        });
 
         setRealKnockoutPredictions(nextRealKo);
       } catch (err) {
@@ -471,34 +497,75 @@ setExtraPredictions(nextExtraPredictions);
   }, [entryId, supabase]);
 
   useEffect(() => {
-  async function loadStandings() {
-    if (!poolId) return;
+    async function loadStandings() {
+      if (!poolId) return;
 
-    setLoadingStandings(true);
+      setLoadingStandings(true);
 
-    try {
-      const res = await fetch(`/api/standings?poolId=${poolId}`, {
-        cache: "no-store",
-      });
+      try {
+        const res = await fetch(`/api/standings?poolId=${poolId}`, {
+          cache: "no-store",
+        });
 
-      if (!res.ok) {
-        throw new Error("Error cargando clasificación");
+        if (!res.ok) {
+          throw new Error("Error cargando clasificación");
+        }
+
+        const data = await res.json();
+        setStandings((data?.standings ?? []) as StandingSummary[]);
+        setLastStandingsUpdate(data?.lastUpdate ?? null);
+      } catch (err) {
+        console.error(err);
+        setStandings([]);
+        setLastStandingsUpdate(null);
+      } finally {
+        setLoadingStandings(false);
       }
-
-      const data = await res.json();
-      setStandings((data?.standings ?? []) as StandingSummary[]);
-      setLastStandingsUpdate(data?.lastUpdate ?? null);
-    } catch (err) {
-      console.error(err);
-      setStandings([]);
-      setLastStandingsUpdate(null);
-    } finally {
-      setLoadingStandings(false);
     }
-  }
 
-  loadStandings();
-}, [poolId]);
+    loadStandings();
+  }, [poolId]);
+
+  const t = messages[locale];
+  const teamMap = new Map(teams.map((team) => [team.id, team]));
+  const groups = [...new Set(teams.map((team) => team.group).filter(Boolean))] as string[];
+
+  const now = new Date();
+
+  const submissionDeadlineDate =
+    poolSettings?.submission_deadline
+      ? new Date(poolSettings.submission_deadline)
+      : null;
+
+  const isDeadlinePassed =
+    !!submissionDeadlineDate &&
+    !Number.isNaN(submissionDeadlineDate.getTime()) &&
+    now > submissionDeadlineDate;
+
+  const canEditPredictions =
+    entryStatus !== "submitted" &&
+    !!poolSettings?.is_predictions_editable &&
+    !isDeadlinePassed;
+
+  const canSubmitPredictions =
+    entryStatus !== "submitted" &&
+    !!poolSettings?.is_submission_enabled &&
+    !isDeadlinePassed;
+
+  const canSeeClassification =
+    poolSettings?.classification_visibility === "always" ||
+    (poolSettings?.classification_visibility === "after_submit" &&
+      entryStatus === "submitted");
+
+  const canSeeStatistics =
+    poolSettings?.statistics_visibility === "always" ||
+    (poolSettings?.statistics_visibility === "after_submit" &&
+      entryStatus === "submitted");
+
+  const canSeeTransparency =
+    poolSettings?.transparency_visibility === "always" ||
+    (poolSettings?.transparency_visibility === "after_submit" &&
+      entryStatus === "submitted");
 
   function updatePrediction(
     matchId: string,
@@ -527,37 +594,246 @@ setExtraPredictions(nextExtraPredictions);
   }
 
   function updateExtraPrediction(questionKey: string, value: string) {
-  if (!canEditPredictions) return;
+    if (!canEditPredictions) return;
 
-  setExtraPredictions((current) => ({
-    ...current,
-    [questionKey]: value,
-  }));
-}
+    setExtraPredictions((current) => ({
+      ...current,
+      [questionKey]: value,
+    }));
+  }
+
+  function updateGroupTiebreak(group: string, teamId: string, value: string) {
+    if (!canEditPredictions) return;
+    if (!/^\d*$/.test(value)) return;
+
+    const key = getTiebreakKey("group", group, teamId);
+
+    setUserTiebreaks((prev) => {
+      const next = { ...prev };
+
+      if (value === "") {
+        delete next[key];
+      } else {
+        next[key] = Number(value);
+      }
+
+      return next;
+    });
+  }
+
+  function updateThirdPlaceTiebreak(teamId: string, value: string) {
+    if (!canEditPredictions) return;
+    if (!/^\d*$/.test(value)) return;
+
+    const key = getTiebreakKey("third_place", "overall", teamId);
+
+    setUserTiebreaks((prev) => {
+      const next = { ...prev };
+
+      if (value === "") {
+        delete next[key];
+      } else {
+        next[key] = Number(value);
+      }
+
+      return next;
+    });
+  }
 
   async function refreshStandings() {
-  if (!poolId) return;
+    if (!poolId) return;
 
-  try {
-    const res = await fetch(`/api/standings?poolId=${poolId}`, {
-      cache: "no-store",
+    try {
+      const res = await fetch(`/api/standings?poolId=${poolId}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setStandings((data?.standings ?? []) as StandingSummary[]);
+      setLastStandingsUpdate(data?.lastUpdate ?? null);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  const predictedGroupMatches = useMemo(
+    () =>
+      officialMatches.map((match) => {
+        if (match.stage !== "group") return match;
+        return {
+          ...match,
+          homeGoals: predictions[match.id]?.homeGoals ?? null,
+          awayGoals: predictions[match.id]?.awayGoals ?? null,
+        };
+      }),
+    [officialMatches, predictions]
+  );
+
+  const groupUserTiebreaks = useMemo(() => {
+    const result: Record<string, Record<string, number>> = {};
+
+    Object.entries(userTiebreaks).forEach(([key, rank]) => {
+      const [scope, group, teamId] = key.split(":");
+      if (scope !== "group") return;
+
+      if (!result[group]) result[group] = {};
+      result[group][teamId] = rank;
     });
 
-    if (!res.ok) return;
+    return result;
+  }, [userTiebreaks]);
 
-    const data = await res.json();
-    setStandings((data?.standings ?? []) as StandingSummary[]);
-    setLastStandingsUpdate(data?.lastUpdate ?? null);
-  } catch (err) {
-    console.error(err);
-  }
-}
+  const thirdPlaceUserTiebreaks = useMemo(() => {
+    const result: Record<string, number> = {};
+
+    Object.entries(userTiebreaks).forEach(([key, rank]) => {
+      const [scope, , teamId] = key.split(":");
+      if (scope !== "third_place") return;
+
+      result[teamId] = rank;
+    });
+
+    return result;
+  }, [userTiebreaks]);
+
+  const predictedThirdPlaced = useMemo(
+    () =>
+      getBestThirdPlacedTeams(
+        teams,
+        predictedGroupMatches,
+        groups,
+        8,
+        undefined,
+        thirdPlaceUserTiebreaks,
+        groupUserTiebreaks
+      ),
+    [predictedGroupMatches, groups, thirdPlaceUserTiebreaks, groupUserTiebreaks]
+  );
+
+  const orderedGroupMatches = useMemo(
+    () =>
+      officialMatches
+        .filter((match) => match.stage === "group")
+        .sort((a, b) => {
+          if ((a.order ?? 0) !== (b.order ?? 0)) {
+            return (a.order ?? 0) - (b.order ?? 0);
+          }
+          return (a.matchNumber ?? 0) - (b.matchNumber ?? 0);
+        }),
+    [officialMatches]
+  );
+
+  const standingsByGroup = useMemo(
+    () =>
+      groups.map((groupCode) => ({
+        groupCode,
+        rows: calculatePredictedStandings(
+          teams,
+          officialMatches,
+          predictions,
+          groupCode,
+          undefined,
+          groupUserTiebreaks[groupCode]
+        ),
+      })),
+    [groups, officialMatches, predictions, groupUserTiebreaks]
+  );
+
+  const userBracket = useMemo(
+    () =>
+      buildUserKnockoutBracket(
+        teams,
+        officialMatches,
+        groups,
+        predictions,
+        knockoutPredictions,
+        {
+          groupUserTiebreaks,
+          thirdPlaceUserTiebreaks,
+        }
+      ),
+    [
+      officialMatches,
+      groups,
+      predictions,
+      knockoutPredictions,
+      groupUserTiebreaks,
+      thirdPlaceUserTiebreaks,
+    ]
+  );
+
+  const realBracket = useMemo(
+    () =>
+      buildRealKnockoutBracket(
+        teams,
+        officialMatches,
+        groups,
+        realKnockoutPredictions
+      ),
+    [officialMatches, groups, realKnockoutPredictions]
+  );
+
+  const groupPointsTotal = officialMatches
+    .filter((match) => match.stage === "group")
+    .reduce((sum, match) => {
+      const prediction = predictions[match.id] ?? {
+        homeGoals: null,
+        awayGoals: null,
+      };
+
+      const score = calculateMatchPredictionScore(
+        match.homeGoals,
+        match.awayGoals,
+        prediction.homeGoals,
+        prediction.awayGoals,
+        scoreSettings
+      );
+
+      return sum + score.points;
+    }, 0);
+
+  const knockoutScore = useMemo(
+    () => calculateKnockoutScore(scoreSettings, userBracket, realBracket),
+    [userBracket, realBracket]
+  );
+
+  const realTeamsByRound = useMemo(
+    () => ({
+      round32: getTeamsInRound(realBracket.round32),
+      round16: getTeamsInRound(realBracket.round16),
+      quarterfinals: getTeamsInRound(realBracket.quarterfinals),
+      semifinals: getTeamsInRound(realBracket.semifinals),
+      finals: getTeamsInRound(realBracket.finals),
+      champion: realBracket.championId,
+    }),
+    [realBracket]
+  );
+
+  const extraPointsTotal = useMemo(() => {
+    return EXTRA_QUESTIONS.reduce((sum, question) => {
+      const currentValue = extraPredictions[question.key] ?? "";
+      const officialValue = officialExtraResults[question.key] ?? "";
+
+      const isCorrect =
+        !!officialValue &&
+        normalizeExtraValue(currentValue) === normalizeExtraValue(officialValue);
+
+      const points =
+        (scoreSettings[
+          question.pointsKey as keyof typeof scoreSettings
+        ] as number) ?? 0;
+
+      return sum + (isCorrect ? points : 0);
+    }, 0);
+  }, [extraPredictions, officialExtraResults]);
 
   async function handleSaveEntry() {
     if (!activeEntryId) {
-  setSubmitMessage("No hay entry activa.");
-  throw new Error("No hay entry activa.");
-}
+      setSubmitMessage("No hay entry activa.");
+      throw new Error("No hay entry activa.");
+    }
 
     setSaveLoading(true);
     setSubmitMessage("");
@@ -578,12 +854,19 @@ setExtraPredictions(nextExtraPredictions);
       if (deleteKoError) throw deleteKoError;
 
       const { error: deleteExtraError } = await supabase
-  .from("entry_extra_predictions")
-  .delete()
-  .eq("entry_id", activeEntryId);
+        .from("entry_extra_predictions")
+        .delete()
+        .eq("entry_id", activeEntryId);
 
-if (deleteExtraError) throw deleteExtraError;
-      
+      if (deleteExtraError) throw deleteExtraError;
+
+      const { error: deleteTiebreakError } = await supabase
+        .from("entry_tiebreaks")
+        .delete()
+        .eq("entry_id", activeEntryId);
+
+      if (deleteTiebreakError) throw deleteTiebreakError;
+
       const groupRows = Object.entries(predictions).map(([matchId, value]) => ({
         entry_id: activeEntryId,
         match_id: matchId,
@@ -615,274 +898,133 @@ if (deleteExtraError) throw deleteExtraError;
         if (insertKoError) throw insertKoError;
       }
 
-     const extraRows = EXTRA_QUESTIONS.map((question) => {
-  const predictedValue = extraPredictions[question.key]?.trim() ?? "";
+      const extraRows = EXTRA_QUESTIONS.map((question) => {
+        const predictedValue = extraPredictions[question.key]?.trim() ?? "";
 
-  return {
-    entry_id: activeEntryId,
-    question_key: question.key,
-    predicted_value: predictedValue,
-    normalized_value: predictedValue ? normalizeExtraValue(predictedValue) : null,
-  };
-});
+        return {
+          entry_id: activeEntryId,
+          question_key: question.key,
+          predicted_value: predictedValue,
+          normalized_value: predictedValue ? normalizeExtraValue(predictedValue) : null,
+        };
+      });
 
-if (extraRows.length > 0) {
-  const { error: insertExtraError } = await supabase
-    .from("entry_extra_predictions")
-    .insert(extraRows);
+      if (extraRows.length > 0) {
+        const { error: insertExtraError } = await supabase
+          .from("entry_extra_predictions")
+          .insert(extraRows);
 
-  if (insertExtraError) throw insertExtraError;
-} 
+        if (insertExtraError) throw insertExtraError;
+      }
+
+      const tiebreakRows = Object.entries(userTiebreaks).map(([key, priority]) => {
+        const [scope, scope_value, team_id] = key.split(":");
+
+        return {
+          entry_id: activeEntryId,
+          scope,
+          scope_value,
+          team_id,
+          priority,
+        };
+      });
+
+      if (tiebreakRows.length > 0) {
+        const { error: insertTiebreakError } = await supabase
+          .from("entry_tiebreaks")
+          .insert(tiebreakRows);
+
+        if (insertTiebreakError) throw insertTiebreakError;
+      }
 
       setSubmitMessage("Porra guardada correctamente.");
       await refreshStandings();
     } catch (err) {
-  console.error(err);
-  setSubmitMessage("Error guardando la porra.");
-  throw err;
-} finally {
+      console.error(err);
+      setSubmitMessage("Error guardando la porra.");
+      throw err;
+    } finally {
       setSaveLoading(false);
     }
   }
 
-function isPredictionComplete() {
-  const allGroupsFilled = orderedGroupMatches.every((match) => {
-    const prediction = predictions[match.id];
-    return (
-      prediction &&
-      prediction.homeGoals !== null &&
-      prediction.awayGoals !== null
-    );
-  });
+  function isPredictionComplete() {
+    const allGroupsFilled = orderedGroupMatches.every((match) => {
+      const prediction = predictions[match.id];
+      return (
+        prediction &&
+        prediction.homeGoals !== null &&
+        prediction.awayGoals !== null
+      );
+    });
 
-  const allKnockoutFilled =
-    userBracket.round32.every((m) => knockoutPredictions[m.id]) &&
-    userBracket.round16.every((m) => knockoutPredictions[m.id]) &&
-    userBracket.quarterfinals.every((m) => knockoutPredictions[m.id]) &&
-    userBracket.semifinals.every((m) => knockoutPredictions[m.id]) &&
-    userBracket.finals.every((m) => knockoutPredictions[m.id]) &&
-    !!userBracket.championId;
+    const allKnockoutFilled =
+      userBracket.round32.every((m) => knockoutPredictions[m.id]) &&
+      userBracket.round16.every((m) => knockoutPredictions[m.id]) &&
+      userBracket.quarterfinals.every((m) => knockoutPredictions[m.id]) &&
+      userBracket.semifinals.every((m) => knockoutPredictions[m.id]) &&
+      userBracket.finals.every((m) => knockoutPredictions[m.id]) &&
+      !!userBracket.championId;
 
-  const allExtrasFilled = EXTRA_QUESTIONS.every((question) => {
-    return (extraPredictions[question.key] ?? "").trim() !== "";
-  });
+    const allExtrasFilled = EXTRA_QUESTIONS.every((question) => {
+      return (extraPredictions[question.key] ?? "").trim() !== "";
+    });
 
-  return allGroupsFilled && allKnockoutFilled && allExtrasFilled;
-}
+    return allGroupsFilled && allKnockoutFilled && allExtrasFilled;
+  }
 
   async function handleSubmitEntry() {
-  if (!activeEntryId) {
-    setSubmitMessage("No se ha encontrado la entry activa.");
-    return;
+    if (!activeEntryId) {
+      setSubmitMessage("No se ha encontrado la entry activa.");
+      return;
+    }
+
+    if (!isPredictionComplete()) {
+      setSubmitMessage("Tienes que completar toda la porra antes de enviarla.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "¿Seguro que quieres enviar la porra? Después no podrás modificarla."
+    );
+
+    if (!confirmed) return;
+
+    setSubmitLoading(true);
+    setSubmitMessage("");
+
+    try {
+      await handleSaveEntry();
+
+      const { error: updateError } = await supabase
+        .from("entries")
+        .update({
+          status: "submitted",
+          submitted_at: new Date().toISOString(),
+        })
+        .eq("id", activeEntryId);
+
+      if (updateError) throw updateError;
+
+      setEntryStatus("submitted");
+      setSubmitMessage("Porra enviada correctamente.");
+      await refreshStandings();
+    } catch (err) {
+      console.error(err);
+      setSubmitMessage("Error al enviar la porra.");
+    } finally {
+      setSubmitLoading(false);
+    }
   }
-
-if (!isPredictionComplete()) {
-  setSubmitMessage("Tienes que completar toda la porra antes de enviarla.");
-  return;
-}
-
-  const confirmed = window.confirm(
-    "¿Seguro que quieres enviar la porra? Después no podrás modificarla."
-  );
-
-  if (!confirmed) return;
-
-  setSubmitLoading(true);
-  setSubmitMessage("");
-
-  try {
-    await handleSaveEntry();
-
-    const { error: updateError } = await supabase
-  .from("entries")
-  .update({
-    status: "submitted",
-    submitted_at: new Date().toISOString(),
-  })
-  .eq("id", activeEntryId);
-
-    if (updateError) throw updateError;
-
-    setEntryStatus("submitted");
-    setSubmitMessage("Porra enviada correctamente.");
-    await refreshStandings();
-  } catch (err) {
-    console.error(err);
-    setSubmitMessage("Error al enviar la porra.");
-  } finally {
-    setSubmitLoading(false);
-  }
-}
 
   async function handleLogout() {
     await supabase.auth.signOut();
     window.location.href = "/";
   }
 
-  const t = messages[locale];
-  const teamMap = new Map(teams.map((team) => [team.id, team]));
-  const groups = [...new Set(teams.map((team) => team.group).filter(Boolean))] as string[];
-
-  const groupPointsTotal = officialMatches
-    .filter((match) => match.stage === "group")
-    .reduce((sum, match) => {
-      const prediction = predictions[match.id] ?? {
-        homeGoals: null,
-        awayGoals: null,
-      };
-
-      const score = calculateMatchPredictionScore(
-        match.homeGoals,
-        match.awayGoals,
-        prediction.homeGoals,
-        prediction.awayGoals,
-        scoreSettings
-      );
-
-      return sum + score.points;
-    }, 0);
-
-  const predictedGroupMatches = useMemo(
-    () =>
-      officialMatches.map((match) => {
-        if (match.stage !== "group") return match;
-        return {
-          ...match,
-          homeGoals: predictions[match.id]?.homeGoals ?? null,
-          awayGoals: predictions[match.id]?.awayGoals ?? null,
-        };
-      }),
-    [officialMatches, predictions]
-  );
-
-  const predictedThirdPlaced = useMemo(
-    () => getBestThirdPlacedTeams(teams, predictedGroupMatches, groups, 8),
-    [predictedGroupMatches, groups]
-  );
-
-const orderedGroupMatches = useMemo(
-  () =>
-    officialMatches
-      .filter((match) => match.stage === "group")
-      .sort((a, b) => {
-        if ((a.order ?? 0) !== (b.order ?? 0)) {
-          return (a.order ?? 0) - (b.order ?? 0);
-        }
-        return (a.matchNumber ?? 0) - (b.matchNumber ?? 0);
-      }),
-  [officialMatches]
-);
-
-const standingsByGroup = useMemo(
-  () =>
-    groups.map((groupCode) => ({
-      groupCode,
-      rows: calculatePredictedStandings(
-        teams,
-        officialMatches,
-        predictions,
-        groupCode
-      ),
-    })),
-  [groups, officialMatches, predictions]
-);
-
-  const userBracket = useMemo(
-    () =>
-      buildUserKnockoutBracket(
-        teams,
-        officialMatches,
-        groups,
-        predictions,
-        knockoutPredictions
-      ),
-    [officialMatches, groups, predictions, knockoutPredictions]
-  );
-
-  const realBracket = useMemo(
-    () =>
-      buildRealKnockoutBracket(
-        teams,
-        officialMatches,
-        groups,
-        realKnockoutPredictions
-      ),
-    [officialMatches, groups, realKnockoutPredictions]
-  );
-
-  const knockoutScore = useMemo(
-    () => calculateKnockoutScore(scoreSettings, userBracket, realBracket),
-    [userBracket, realBracket]
-  );
-
-  const realTeamsByRound = useMemo(
-    () => ({
-      round32: getTeamsInRound(realBracket.round32),
-      round16: getTeamsInRound(realBracket.round16),
-      quarterfinals: getTeamsInRound(realBracket.quarterfinals),
-      semifinals: getTeamsInRound(realBracket.semifinals),
-      finals: getTeamsInRound(realBracket.finals),
-      champion: realBracket.championId,
-    }),
-    [realBracket]
-  );
-
-const extraPointsTotal = useMemo(() => {
-  return EXTRA_QUESTIONS.reduce((sum, question) => {
-    const currentValue = extraPredictions[question.key] ?? "";
-    const officialValue = officialExtraResults[question.key] ?? "";
-
-    const isCorrect =
-      !!officialValue &&
-      normalizeExtraValue(currentValue) === normalizeExtraValue(officialValue);
-
-    const points =
-      (scoreSettings[
-        question.pointsKey as keyof typeof scoreSettings
-      ] as number) ?? 0;
-
-    return sum + (isCorrect ? points : 0);
-  }, 0);
-}, [extraPredictions, officialExtraResults]);
-
   const totalPoints = groupPointsTotal + knockoutScore.total + extraPointsTotal;
   const greetingName = authUserName?.trim() || authUserEmail?.trim() || "Jugador";
-const now = new Date();
 
-const submissionDeadlineDate =
-  poolSettings?.submission_deadline
-    ? new Date(poolSettings.submission_deadline)
-    : null;
-
-const isDeadlinePassed =
-  !!submissionDeadlineDate &&
-  !Number.isNaN(submissionDeadlineDate.getTime()) &&
-  now > submissionDeadlineDate;
-
-const canEditPredictions =
-  entryStatus !== "submitted" &&
-  !!poolSettings?.is_predictions_editable &&
-  !isDeadlinePassed;
-
-const canSubmitPredictions =
-  entryStatus !== "submitted" &&
-  !!poolSettings?.is_submission_enabled &&
-  !isDeadlinePassed;
-
-const canSeeClassification =
-  poolSettings?.classification_visibility === "always" ||
-  (poolSettings?.classification_visibility === "after_submit" &&
-    entryStatus === "submitted");
-
-const canSeeStatistics =
-  poolSettings?.statistics_visibility === "always" ||
-  (poolSettings?.statistics_visibility === "after_submit" &&
-    entryStatus === "submitted");
-
-const canSeeTransparency =
-  poolSettings?.transparency_visibility === "always" ||
-  (poolSettings?.transparency_visibility === "after_submit" &&
-    entryStatus === "submitted");
   const currentUserStanding = useMemo(
     () => standings.find((row) => row.entry_id === activeEntryId) ?? null,
     [standings, activeEntryId]
@@ -930,20 +1072,20 @@ const canSeeTransparency =
                   </div>
                 </div>
 
-<div className="mt-2">
-  <span
-    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
-      paymentStatus === "paid"
-        ? "bg-green-50 text-green-700"
-        : "bg-amber-50 text-amber-700"
-    }`}
-  >
-    {paymentStatus === "paid" ? "💳" : "⏳"}{" "}
-    {paymentStatus === "paid"
-      ? t.paymentStatus.paid
-      : t.paymentStatus.pending}
-  </span>
-</div>
+                <div className="mt-2">
+                  <span
+                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
+                      paymentStatus === "paid"
+                        ? "bg-green-50 text-green-700"
+                        : "bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    {paymentStatus === "paid" ? "💳" : "⏳"}{" "}
+                    {paymentStatus === "paid"
+                      ? t.paymentStatus.paid
+                      : t.paymentStatus.pending}
+                  </span>
+                </div>
 
                 <div className="mt-4">
                   <div className="text-sm font-semibold text-[var(--iberdrola-forest)]/65">
@@ -966,13 +1108,13 @@ const canSeeTransparency =
 
             <div className="mt-5 grid gap-3 lg:grid-cols-[1.3fr_0.8fr_auto]">
               <HeaderPill
-  label={t.totalPoints}
-  value={canSeeClassification ? totalPoints : "-"}
-  big
-/>
-             <ClassificationHeaderCard
-  currentUserStanding={canSeeClassification ? currentUserStanding : null}
-/>
+                label={t.totalPoints}
+                value={canSeeClassification ? totalPoints : "-"}
+                big
+              />
+              <ClassificationHeaderCard
+                currentUserStanding={canSeeClassification ? currentUserStanding : null}
+              />
 
               <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
                 <button
@@ -1012,103 +1154,141 @@ const canSeeTransparency =
                 {submitMessage}
               </div>
             ) : null}
-            {isDeadlinePassed ? (
-  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-    El plazo de envío de esta porra ha terminado.
-  </div>
-) : null}
 
-{!canEditPredictions && entryStatus !== "submitted" && !isDeadlinePassed ? (
-  <div className="mt-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
-    La edición de la porra está desactivada.
-  </div>
-) : null}
+            {isDeadlinePassed ? (
+              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+                El plazo de envío de esta porra ha terminado.
+              </div>
+            ) : null}
+
+            {!canEditPredictions && entryStatus !== "submitted" && !isDeadlinePassed ? (
+              <div className="mt-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
+                La edición de la porra está desactivada.
+              </div>
+            ) : null}
           </div>
         </section>
-{canSeeClassification ? (
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-          <div className="p-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
-                  Resumen clasificación
-                </div>
-                <div className="mt-1 text-lg font-black text-[var(--iberdrola-forest)]">
-                  Top 3 y último puesto
-                </div>
-                <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                  Consulta rápida de la clasificación general actual.
-                                  </div>
+
+        {canSeeClassification ? (
+          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+            <div className="p-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+                    Resumen clasificación
+                  </div>
+                  <div className="mt-1 text-lg font-black text-[var(--iberdrola-forest)]">
+                    Top 3 y último puesto
+                  </div>
+                  <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+                    Consulta rápida de la clasificación general actual.
+                  </div>
 
                   {lastStandingsUpdate ? (
-  <div className="mt-2 text-xs font-medium text-[var(--iberdrola-forest)]/55">
-    Última actualización:{" "}
-    {new Date(lastStandingsUpdate).toLocaleString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    })}
-  </div>
-) : null}
-              </div>
-
-              {poolId ? (
-    <Link
-      href={poolSlug ? `/stats?poolId=${poolId}&poolSlug=${poolSlug}` : `/stats?poolId=${poolId}`}
-      className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
-    >
-      Ver estadísticas
-    </Link>
-  ) : null}
-              {poolId && activeEntryId && poolSlug ? (
-                <Link
-                  href={`/standings?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
-                  className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
-                >
-                  Ver clasificación completa
-                </Link>
-              ) : null}
-            </div>
-
-            <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-              <div>
-                <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
-                  Top 3
+                    <div className="mt-2 text-xs font-medium text-[var(--iberdrola-forest)]/55">
+                      Última actualización:{" "}
+                      {new Date(lastStandingsUpdate).toLocaleString("es-ES", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  ) : null}
                 </div>
 
-                <div className="space-y-2">
-                  {loadingStandings ? (
-                    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
-                      Cargando clasificación...
-                    </div>
-                  ) : top3Standings.length > 0 ? (
-                    top3Standings.map((row) => (
-                      <div
-                        key={row.entry_id}
-                        className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3"
-                      >
-                        <div className="min-w-0 pr-3">
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[var(--iberdrola-green-light)] px-2 text-sm font-black text-[var(--iberdrola-forest)]">
-                              {row.position}
-                            </span>
-                            <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] sm:text-base">
-                              {row.name || row.email || "Jugador"}
-                            </span>
+                {poolId ? (
+                  <Link
+                    href={poolSlug ? `/stats?poolId=${poolId}&poolSlug=${poolSlug}` : `/stats?poolId=${poolId}`}
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+                  >
+                    Ver estadísticas
+                  </Link>
+                ) : null}
+
+                {poolId && activeEntryId && poolSlug ? (
+                  <Link
+                    href={`/standings?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+                  >
+                    Ver clasificación completa
+                  </Link>
+                ) : null}
+              </div>
+
+              <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
+                <div>
+                  <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+                    Top 3
+                  </div>
+
+                  <div className="space-y-2">
+                    {loadingStandings ? (
+                      <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
+                        Cargando clasificación...
+                      </div>
+                    ) : top3Standings.length > 0 ? (
+                      top3Standings.map((row) => (
+                        <div
+                          key={row.entry_id}
+                          className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3"
+                        >
+                          <div className="min-w-0 pr-3">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[var(--iberdrola-green-light)] px-2 text-sm font-black text-[var(--iberdrola-forest)]">
+                                {row.position}
+                              </span>
+                              <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] sm:text-base">
+                                {row.name || row.email || "Jugador"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="shrink-0 text-right">
+                            <div className="text-lg font-black text-[var(--iberdrola-green)]">
+                              {row.total_points}
+                            </div>
+                            <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
+                              puntos
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
+                        No hay clasificación disponible todavía.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+                    Último
+                  </div>
+
+                  {lastStanding ? (
+                    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="truncate text-base font-black text-[var(--iberdrola-forest)]">
+                            {lastStanding.name || lastStanding.email || "Jugador"}
+                          </div>
+                          <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+                            Puesto {lastStanding.position}
                           </div>
                         </div>
 
-                        <div className="shrink-0 text-right">
-                          <div className="text-lg font-black text-[var(--iberdrola-green)]">
-                            {row.total_points}
+                        <div className="text-right">
+                          <div className="text-2xl font-black text-[var(--iberdrola-green)]">
+                            {lastStanding.total_points}
                           </div>
                           <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
                             puntos
                           </div>
                         </div>
                       </div>
-                    ))
+                    </div>
                   ) : (
                     <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
                       No hay clasificación disponible todavía.
@@ -1116,43 +1296,8 @@ const canSeeTransparency =
                   )}
                 </div>
               </div>
-
-              <div>
-                <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
-                  Último
-                </div>
-
-                {lastStanding ? (
-                  <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="truncate text-base font-black text-[var(--iberdrola-forest)]">
-                          {lastStanding.name || lastStanding.email || "Jugador"}
-                        </div>
-                        <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                          Puesto {lastStanding.position}
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <div className="text-2xl font-black text-[var(--iberdrola-green)]">
-                          {lastStanding.total_points}
-                        </div>
-                        <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
-                          puntos
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
-                    No hay clasificación disponible todavía.
-                  </div>
-                )}
-              </div>
             </div>
-          </div>
-        </section>
+          </section>
         ) : null}
 
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
@@ -1215,205 +1360,210 @@ const canSeeTransparency =
           </div>
         </section>
 
+        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+            <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+              Preguntas extra
+            </h2>
+            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+              Puntuación de premios individuales y goleadores.
+            </p>
+          </div>
 
-<section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-  <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-    <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-      Preguntas extra
-    </h2>
-    <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-      Puntuación de premios individuales y goleadores.
-    </p>
-  </div>
+          <div className="p-4">
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+              <RulePill
+                label={t.extras.first_goal_scorer_world}
+                value={`${scoreSettings.firstGoalScorerWorldPoints} ${t.points}`}
+              />
+              <RulePill
+                label={t.extras.first_goal_scorer_spain}
+                value={`${scoreSettings.firstGoalScorerSpainPoints} ${t.points}`}
+              />
+              <RulePill
+                label={t.extras.golden_boot}
+                value={`${scoreSettings.goldenBootPoints} ${t.points}`}
+              />
+              <RulePill
+                label={t.extras.golden_ball}
+                value={`${scoreSettings.goldenBallPoints} ${t.points}`}
+              />
+              <RulePill
+                label={t.extras.best_young_player}
+                value={`${scoreSettings.bestYoungPlayerPoints} ${t.points}`}
+              />
+              <RulePill
+                label={t.extras.golden_glove}
+                value={`${scoreSettings.goldenGlovePoints} ${t.points}`}
+              />
+              <RulePill
+                label={t.extras.top_spanish_scorer}
+                value={`${scoreSettings.topSpanishScorerPoints} ${t.points}`}
+              />
+            </div>
+          </div>
+        </section>
 
-  <div className="p-4">
-    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-      <RulePill
-        label={t.extras.first_goal_scorer_world}
-        value={`${scoreSettings.firstGoalScorerWorldPoints} ${t.points}`}
-      />
-      <RulePill
-        label={t.extras.first_goal_scorer_spain}
-        value={`${scoreSettings.firstGoalScorerSpainPoints} ${t.points}`}
-      />
-      <RulePill
-        label={t.extras.golden_boot}
-        value={`${scoreSettings.goldenBootPoints} ${t.points}`}
-      />
-      <RulePill
-        label={t.extras.golden_ball}
-        value={`${scoreSettings.goldenBallPoints} ${t.points}`}
-      />
-      <RulePill
-        label={t.extras.best_young_player}
-        value={`${scoreSettings.bestYoungPlayerPoints} ${t.points}`}
-      />
-      <RulePill
-        label={t.extras.golden_glove}
-        value={`${scoreSettings.goldenGlovePoints} ${t.points}`}
-      />
-      <RulePill
-        label={t.extras.top_spanish_scorer}
-        value={`${scoreSettings.topSpanishScorerPoints} ${t.points}`}
-      />
-    </div>
-  </div>
-</section>
+        <div className="grid gap-4 lg:grid-cols-[1.65fr_0.95fr]">
+          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+            <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+              <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+                Fase de grupos
+              </h2>
+              <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+                Partidos en orden cronológico.
+              </p>
+            </div>
 
-   <div className="grid gap-4 lg:grid-cols-[1.65fr_0.95fr]">
-  <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-    <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-      <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-        Fase de grupos
-      </h2>
-      <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-        Partidos en orden cronológico.
-      </p>
-    </div>
+            <div className="p-4">
+              <div className="hidden lg:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
+                <div className="grid grid-cols-[140px_minmax(0,1fr)_80px] gap-3 bg-[var(--iberdrola-sand)]/40 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
+                  <div>J / G / Fecha</div>
+                  <div className="text-center">Pronóstico</div>
+                  <div className="text-right">Puntos</div>
+                </div>
 
-    <div className="p-4">
- <div className="hidden lg:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
-  <div className="grid grid-cols-[140px_minmax(0,1fr)_80px] gap-3 bg-[var(--iberdrola-sand)]/40 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
-    <div>J / G / Fecha</div>
-    <div className="text-center">Pronóstico</div>
-    <div className="text-right">Puntos</div>
-  </div>
+                {orderedGroupMatches.map((match) => {
+                  const homeTeam = teamMap.get(match.homeTeamId ?? "");
+                  const awayTeam = teamMap.get(match.awayTeamId ?? "");
 
-  {orderedGroupMatches.map((match) => {
-    const homeTeam = teamMap.get(match.homeTeamId ?? "");
-    const awayTeam = teamMap.get(match.awayTeamId ?? "");
+                  if (!homeTeam || !awayTeam) return null;
 
-    if (!homeTeam || !awayTeam) return null;
+                  const prediction = predictions[match.id] ?? {
+                    homeGoals: null,
+                    awayGoals: null,
+                  };
 
-    const prediction = predictions[match.id] ?? {
-      homeGoals: null,
-      awayGoals: null,
-    };
+                  const score = calculateMatchPredictionScore(
+                    match.homeGoals,
+                    match.awayGoals,
+                    prediction.homeGoals,
+                    prediction.awayGoals,
+                    scoreSettings
+                  );
 
-    const score = calculateMatchPredictionScore(
-      match.homeGoals,
-      match.awayGoals,
-      prediction.homeGoals,
-      prediction.awayGoals,
-      scoreSettings
-    );
+                  return (
+                    <GroupMatchCompactRow
+                      key={match.id}
+                      day={match.day}
+                      group={match.group ?? null}
+                      kickoff={match.kickoff ?? null}
+                      homeTeam={homeTeam}
+                      awayTeam={awayTeam}
+                      homePrediction={prediction.homeGoals}
+                      awayPrediction={prediction.awayGoals}
+                      officialHomeGoals={match.homeGoals}
+                      officialAwayGoals={match.awayGoals}
+                      points={score.points}
+                      onChangeHome={(value) =>
+                        updatePrediction(match.id, "homeGoals", value)
+                      }
+                      onChangeAway={(value) =>
+                        updatePrediction(match.id, "awayGoals", value)
+                      }
+                    />
+                  );
+                })}
+              </div>
 
-    return (
-      <GroupMatchCompactRow
-        key={match.id}
-        day={match.day}
-        group={match.group ?? null}
-        kickoff={match.kickoff ?? null}
-        homeTeam={homeTeam}
-        awayTeam={awayTeam}
-        homePrediction={prediction.homeGoals}
-        awayPrediction={prediction.awayGoals}
-        officialHomeGoals={match.homeGoals}
-        officialAwayGoals={match.awayGoals}
-        points={score.points}
-        onChangeHome={(value) =>
-          updatePrediction(match.id, "homeGoals", value)
-        }
-        onChangeAway={(value) =>
-          updatePrediction(match.id, "awayGoals", value)
-        }
-      />
-    );
-  })}
-</div>
+              <div className="space-y-2 lg:hidden">
+                {orderedGroupMatches.map((match) => {
+                  const homeTeam = teamMap.get(match.homeTeamId ?? "");
+                  const awayTeam = teamMap.get(match.awayTeamId ?? "");
 
- <div className="space-y-2 lg:hidden">
-    {orderedGroupMatches.map((match) => {
-      const homeTeam = teamMap.get(match.homeTeamId ?? "");
-      const awayTeam = teamMap.get(match.awayTeamId ?? "");
+                  if (!homeTeam || !awayTeam) return null;
 
-      if (!homeTeam || !awayTeam) return null;
+                  const prediction = predictions[match.id] ?? {
+                    homeGoals: null,
+                    awayGoals: null,
+                  };
 
-      const prediction = predictions[match.id] ?? {
-        homeGoals: null,
-        awayGoals: null,
-      };
+                  const score = calculateMatchPredictionScore(
+                    match.homeGoals,
+                    match.awayGoals,
+                    prediction.homeGoals,
+                    prediction.awayGoals,
+                    scoreSettings
+                  );
 
-      const score = calculateMatchPredictionScore(
-        match.homeGoals,
-        match.awayGoals,
-        prediction.homeGoals,
-        prediction.awayGoals,
-        scoreSettings
-      );
+                  return (
+                    <GroupMatchRow
+                      key={match.id}
+                      day={match.day}
+                      group={match.group ?? null}
+                      matchNumber={match.matchNumber ?? 0}
+                      kickoff={match.kickoff ?? null}
+                      homeTeam={homeTeam}
+                      awayTeam={awayTeam}
+                      homePrediction={prediction.homeGoals}
+                      awayPrediction={prediction.awayGoals}
+                      officialHomeGoals={match.homeGoals}
+                      officialAwayGoals={match.awayGoals}
+                      points={score.points}
+                      pointsShortLabel={t.pointsShort}
+                      officialLabel={t.officialLabel}
+                      officialPendingLabel={t.officialPending}
+                      onChangeHome={(value) =>
+                        updatePrediction(match.id, "homeGoals", value)
+                      }
+                      onChangeAway={(value) =>
+                        updatePrediction(match.id, "awayGoals", value)
+                      }
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          </section>
 
-      return (
-        <GroupMatchRow
-          key={match.id}
-          day={match.day}
-          group={match.group ?? null}
-          matchNumber={match.matchNumber ?? 0}
-          kickoff={match.kickoff ?? null}
-          homeTeam={homeTeam}
-          awayTeam={awayTeam}
-          homePrediction={prediction.homeGoals}
-          awayPrediction={prediction.awayGoals}
-          officialHomeGoals={match.homeGoals}
-          officialAwayGoals={match.awayGoals}
-          points={score.points}
-          pointsShortLabel={t.pointsShort}
-          officialLabel={t.officialLabel}
-          officialPendingLabel={t.officialPending}
-          onChangeHome={(value) =>
-            updatePrediction(match.id, "homeGoals", value)
-          }
-          onChangeAway={(value) =>
-            updatePrediction(match.id, "awayGoals", value)
-          }
-        />
+          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
+            <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+              <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+                Clasificaciones
+              </h2>
+              <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+                Clasificación actualizada por grupo.
+              </p>
+            </div>
 
-    );
-  })}
-</div>
-    </div>
-  </section>
-
-  <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
-    <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-      <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-        Clasificaciones
-      </h2>
-      <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-        Clasificación actualizada por grupo.
-      </p>
-    </div>
-
-    <div className="p-4 space-y-3">
-      {standingsByGroup.map(({ groupCode, rows }) => (
-        <div
-          key={groupCode}
-          className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
-        >
-          <GroupStandingsTable
-            title={`${t.group} ${groupCode}`}
-            rows={rows}
-            labels={{
-              team: t.team,
-              played: t.played,
-              won: t.won,
-              drawn: t.drawn,
-              lost: t.lost,
-              goalsFor: t.goalsFor,
-              goalsAgainst: t.goalsAgainst,
-              goalDifference: t.goalDifference,
-              pointsShort: t.pointsShort,
-            }}
-          />
+            <div className="p-4 space-y-3">
+              {standingsByGroup.map(({ groupCode, rows }) => (
+                <div
+                  key={groupCode}
+                  className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
+                >
+                  <GroupStandingsTable
+                    title={`${t.group} ${groupCode}`}
+                    groupCode={groupCode}
+                    rows={rows}
+                    tiebreaks={userTiebreaks}
+                    onChangeTiebreak={updateGroupTiebreak}
+                    showTiebreak
+                    labels={{
+                      team: t.team,
+                      played: t.played,
+                      won: t.won,
+                      drawn: t.drawn,
+                      lost: t.lost,
+                      goalsFor: t.goalsFor,
+                      goalsAgainst: t.goalsAgainst,
+                      goalDifference: t.goalDifference,
+                      pointsShort: t.pointsShort,
+                      tiebreak: "TB",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
-      ))}
-    </div>
-  </section>
-</div>
 
         <ThirdPlaceTable
           title={`${t.bestThirdPlaced}`}
           subtitle={t.bestThirdPlacedSubtitle}
           rows={predictedThirdPlaced}
+          tiebreaks={userTiebreaks}
+          onChangeTiebreak={updateThirdPlaceTiebreak}
           labels={{
             position: t.position,
             group: t.group,
@@ -1429,6 +1579,7 @@ const canSeeTransparency =
             status: t.status,
             qualified: t.qualified,
             eliminated: t.eliminated,
+            tiebreak: "TB",
           }}
         />
 
@@ -1446,85 +1597,85 @@ const canSeeTransparency =
           onPick={canEditPredictions ? updateKnockoutPrediction : undefined}
           realTeamsByRound={realTeamsByRound}
         />
-<section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-  <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-    <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-      {t.extras.title}
-    </h2>
-    <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-      {t.extras.subtitle}
-    </p>
-  </div>
 
-  <div className="p-4">
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {EXTRA_QUESTIONS.map((question) => {
-  const currentValue = extraPredictions[question.key] ?? "";
-  const officialValue = officialExtraResults[question.key] ?? "";
-
-  const points =
-    (scoreSettings[
-      question.pointsKey as keyof typeof scoreSettings
-    ] as number) ?? 0;
-
-  const isCorrect =
-    !!officialValue &&
-    normalizeExtraValue(currentValue) === normalizeExtraValue(officialValue);
-
-  return (
-    <div
-      key={question.key}
-      className={`rounded-2xl border px-4 py-4 ${
-        isCorrect
-          ? "border-green-400 bg-green-50"
-          : "border-[var(--iberdrola-sky)] bg-white"
-      }`}
-    >
-      <div className="mb-2 flex items-start gap-2 text-sm font-bold text-[var(--iberdrola-forest)]">
-        <span className="text-lg leading-none">{question.icon}</span>
-        <span>{t.extras[question.key as keyof typeof t.extras]}</span>
-      </div>
-
-      <input
-        type="text"
-        value={currentValue}
-        onChange={(e) => updateExtraPrediction(question.key, e.target.value)}
-        placeholder={t.extras.placeholder}
-        disabled={!canEditPredictions}
-        maxLength={60}
-        className="w-full rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)] outline-none transition focus:ring-2 focus:ring-[var(--iberdrola-green)] disabled:cursor-not-allowed disabled:opacity-70"
-      />
-
-      {question.key === "best_young_player" ? (
-        <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/60">
-          {t.extras.help_best_young}
-        </div>
-      ) : null}
-
-      {officialValue ? (
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <div className="text-xs text-[var(--iberdrola-forest)]/65">
-            Oficial: {officialValue}
+        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+            <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+              {t.extras.title}
+            </h2>
+            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+              {t.extras.subtitle}
+            </p>
           </div>
 
-          <span
-            className={`rounded-full px-2 py-1 text-xs font-black ${
-              isCorrect
-                ? "bg-[var(--iberdrola-green)] text-white"
-                : "bg-gray-100 text-gray-500"
-            }`}
-          >
-            {isCorrect ? `+${points}` : "0"}
-          </span>
-        </div>
-      ) : null}
-    </div>
-  );
-})}
-    </div>
-  </div>
-</section>
+          <div className="p-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {EXTRA_QUESTIONS.map((question) => {
+                const currentValue = extraPredictions[question.key] ?? "";
+                const officialValue = officialExtraResults[question.key] ?? "";
 
+                const points =
+                  (scoreSettings[
+                    question.pointsKey as keyof typeof scoreSettings
+                  ] as number) ?? 0;
+
+                const isCorrect =
+                  !!officialValue &&
+                  normalizeExtraValue(currentValue) === normalizeExtraValue(officialValue);
+
+                return (
+                  <div
+                    key={question.key}
+                    className={`rounded-2xl border px-4 py-4 ${
+                      isCorrect
+                        ? "border-green-400 bg-green-50"
+                        : "border-[var(--iberdrola-sky)] bg-white"
+                    }`}
+                  >
+                    <div className="mb-2 flex items-start gap-2 text-sm font-bold text-[var(--iberdrola-forest)]">
+                      <span className="text-lg leading-none">{question.icon}</span>
+                      <span>{t.extras[question.key as keyof typeof t.extras]}</span>
+                    </div>
+
+                    <input
+                      type="text"
+                      value={currentValue}
+                      onChange={(e) => updateExtraPrediction(question.key, e.target.value)}
+                      placeholder={t.extras.placeholder}
+                      disabled={!canEditPredictions}
+                      maxLength={60}
+                      className="w-full rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)] outline-none transition focus:ring-2 focus:ring-[var(--iberdrola-green)] disabled:cursor-not-allowed disabled:opacity-70"
+                    />
+
+                    {question.key === "best_young_player" ? (
+                      <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/60">
+                        {t.extras.help_best_young}
+                      </div>
+                    ) : null}
+
+                    {officialValue ? (
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <div className="text-xs text-[var(--iberdrola-forest)]/65">
+                          Oficial: {officialValue}
+                        </div>
+
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs font-black ${
+                            isCorrect
+                              ? "bg-[var(--iberdrola-green)] text-white"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
+                          {isCorrect ? `+${points}` : "0"}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );

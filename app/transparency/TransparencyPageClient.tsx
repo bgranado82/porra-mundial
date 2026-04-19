@@ -545,20 +545,24 @@ export default function TransparencyPageClient() {
                 className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
               >
                 <GroupStandingsTable
-                  title={`Grupo ${groupCode}`}
-                  rows={rows}
-                  labels={{
-                    team: "Equipo",
-                    played: "PJ",
-                    won: "PG",
-                    drawn: "PE",
-                    lost: "PP",
-                    goalsFor: "GF",
-                    goalsAgainst: "GC",
-                    goalDifference: "DG",
-                    pointsShort: "Pts",
-                  }}
-                />
+  title={`Grupo ${groupCode}`}
+  groupCode={groupCode}
+  rows={rows}
+  tiebreaks={{}} // aquí vacío porque es solo visualización
+  showTiebreak={false} // importante: aquí no quieres editar
+  labels={{
+    team: "Equipo",
+    played: "PJ",
+    won: "PG",
+    drawn: "PE",
+    lost: "PP",
+    goalsFor: "GF",
+    goalsAgainst: "GC",
+    goalDifference: "DG",
+    pointsShort: "Pts",
+    tiebreak: "TB",
+  }}
+/>
               </div>
             ))}
           </div>

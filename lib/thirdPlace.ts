@@ -1,4 +1,3 @@
-
 import { Match, Team } from "@/types";
 import { calculateStandings, StandingRow } from "@/lib/standings";
 

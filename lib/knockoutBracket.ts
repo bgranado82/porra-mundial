@@ -25,18 +25,26 @@ function buildPredictedMatches(
   });
 }
 
+type UserBracketTiebreaks = {
+  groupUserTiebreaks?: Record<string, Record<string, number>>;
+  thirdPlaceUserTiebreaks?: Record<string, number>;
+};
+
 export function buildUserKnockoutBracket(
   teams: Team[],
   matches: Match[],
   groups: string[],
   groupPredictions: Record<string, { homeGoals: number | null; awayGoals: number | null }>,
-  knockoutPredictions: KnockoutPredictionMap
+  knockoutPredictions: KnockoutPredictionMap,
+  tiebreaks?: UserBracketTiebreaks
 ) {
   const predictedMatches = buildPredictedMatches(matches, groupPredictions);
 
   const round32 = generateRound32(teams, predictedMatches, groups, {
     requireCompleteGroupsForQualifiedTeams: true,
     requireWholeGroupStageForThirds: true,
+    groupAdminTiebreaks: tiebreaks?.groupUserTiebreaks,
+    thirdPlaceAdminTiebreaks: tiebreaks?.thirdPlaceUserTiebreaks,
   }).map((m) => ({
     id: m.id,
     stage: "round32" as const,
