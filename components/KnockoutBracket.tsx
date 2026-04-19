@@ -550,7 +550,7 @@ export default function KnockoutBracket({
       <div className="flex flex-col items-center">
 
         {/* Semi 101 */}
-        <div className="w-full pt-[430px]">
+        <div className="w-full pt-[360px]">
           <StageColumn
             title="Semis"
             matches={semifinals[0] ? [semifinals[0]] : []}
