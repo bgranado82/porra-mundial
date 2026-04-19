@@ -126,18 +126,31 @@ export default function StandingsTable({ days, standings }: Props) {
 
   return (
     <section className="space-y-4">
-      <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-4 shadow-sm">
-        <div className="flex flex-wrap gap-3">
-          <TabButton active={tab === "groups"} onClick={() => setTab("groups")}>
-            Fase de grupos
-          </TabButton>
+      {/* BOTONES */}
+    <div className="flex gap-2">
+      <button
+        onClick={() => setTab("groups")}
+        className={`rounded-full px-4 py-2 text-sm font-semibold ${
+          tab === "groups"
+            ? "bg-[var(--iberdrola-green)] text-white"
+            : "border border-[var(--iberdrola-green)] bg-white text-[var(--iberdrola-forest)]"
+        }`}
+      >
+        Fase de grupos
+      </button>
 
-          <TabButton active={tab === "general"} onClick={() => setTab("general")}>
-            General
-          </TabButton>
-        </div>
-      </div>
-
+      <button
+        onClick={() => setTab("general")}
+        className={`rounded-full px-4 py-2 text-sm font-semibold ${
+          tab === "general"
+            ? "bg-[var(--iberdrola-green)] text-white"
+            : "border border-[var(--iberdrola-green)] bg-white text-[var(--iberdrola-forest)]"
+        }`}
+      >
+        General
+      </button>
+    </div>
+     
       <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white shadow-sm">
         <div className="overflow-x-auto rounded-3xl">
           {tab === "groups" ? (
