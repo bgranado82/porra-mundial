@@ -564,7 +564,7 @@ const semifinalRight = semifinals.find((m) => m.id === "sf-2")
         matchesClassName="space-y-3"
       />
 
-      <div className="pt-[580px] space-y-6">
+      <div className="pt-[780px] space-y-6">
         <StageColumn
           title="Final"
           matches={finals}
