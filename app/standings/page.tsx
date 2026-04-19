@@ -2,6 +2,12 @@
 import Link from "next/link";
 import StandingsTable from "@/components/StandingsTable";
 import { headers } from "next/headers";
+const QUOTE_OF_THE_DAY = {
+  es: "Hoy no se gana la porra, pero se puede perder.",
+  en: "You don’t win the pool today, but you can lose it.",
+  pt: "Hoje não se ganha o bolão, mas se pode perder.",
+};
+
 
 type PageProps = {
   searchParams: Promise<{
@@ -101,7 +107,23 @@ export default async function StandingsPage({ searchParams }: PageProps) {
             </Link>
           </div>
         </section>
+<section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white px-5 py-4 shadow-sm">
+  <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+    Quote of the day
+  </div>
 
+  <div className="mt-2 text-center text-[var(--iberdrola-forest)]">
+    <div className="text-base font-bold italic">
+      🇪🇸 “{QUOTE_OF_THE_DAY.es}”
+    </div>
+    <div className="text-sm italic mt-1 opacity-80">
+      🇬🇧 “{QUOTE_OF_THE_DAY.en}”
+    </div>
+    <div className="text-sm italic mt-1 opacity-80">
+      🇧🇷 “{QUOTE_OF_THE_DAY.pt}”
+    </div>
+  </div>
+</section>
         <StandingsTable days={data.days} standings={data.standings} />
       </div>
     </main>
