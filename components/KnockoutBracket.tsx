@@ -71,7 +71,7 @@ function getDisplayText(team: Team | null, label?: string) {
       <img
         src={team.flagUrl}
         alt={team.name}
-        className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+        className="h-3.5 w-5 rounded-[2px] border border-gray-200 object-cover"
       />
       {team.name}
     </span>
@@ -120,7 +120,7 @@ function TeamButton({
       type="button"
       onClick={onClick}
       disabled={!clickable}
-      className={`w-full rounded-xl border px-3 py-3 text-left text-sm font-bold transition ${
+      className={`w-full rounded-xl border px-2.5 py-2 text-left text-[13px] font-bold transition ${
         invalid
           ? "border-red-400 bg-red-50 text-red-700"
           : selected
@@ -137,11 +137,11 @@ function TeamButton({
             </span>
           ) : null}
           {invalid ? (
-            <span className="ml-2 rounded-full bg-red-600 px-2 py-1 text-[10px] font-black text-white">
+            <span className="ml-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[9px] font-black text-white">
               ⚠
             </span>
           ) : selected ? (
-            <span className="ml-2 rounded-full bg-[var(--iberdrola-forest)] px-2 py-1 text-[10px] font-black text-white">
+            <span className="ml-1 rounded-full bg-[var(--iberdrola-forest)] px-1.5 py-0.5 text-[9px] font-black text-white">
               ✓
             </span>
           ) : null}
@@ -188,8 +188,8 @@ function MatchCard({
     realTeamsByRound[roundKey].has(awayTeam.id);
 
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3 shadow-sm">
-      <div className="mb-3 text-xs font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-2.5 shadow-sm">
+      <div className="mb-2 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
         {officialNumber ? `Partido ${officialNumber}` : match.id.toUpperCase()}
       </div>
 
@@ -506,8 +506,8 @@ export default function KnockoutBracket({
         </div>
 
        <div className="hidden overflow-x-auto lg:block">
-  <div className="min-w-[1380px]">
-    <div className="grid grid-cols-[0.9fr_0.9fr_0.82fr_0.95fr_0.82fr_0.9fr_0.9fr] gap-3 xl:gap-4">
+  <div className="min-w-[1260px] xl:min-w-[1320px]">
+    <div className="grid grid-cols-[0.82fr_0.9fr_0.82fr_0.95fr_0.82fr_0.9fr_0.9fr] gap-2 xl:gap-3">
       
       {/* LEFT SIDE */}
       <StageColumn
