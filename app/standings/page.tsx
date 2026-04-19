@@ -107,12 +107,12 @@ export default async function StandingsPage({ searchParams }: PageProps) {
             </Link>
           </div>
         </section>
-<section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white px-5 py-4 shadow-sm">
+<section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white px-5 py-3 shadow-sm">
   <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
     Quote of the day
   </div>
 
-  <div className="mt-2 text-center text-[var(--iberdrola-forest)]">
+  <div className="mt-1 text-center text-[var(--iberdrola-forest)]">
     <div className="text-base font-bold italic">
       🇪🇸 “{QUOTE_OF_THE_DAY.es}”
     </div>
