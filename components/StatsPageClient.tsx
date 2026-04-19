@@ -604,7 +604,7 @@ useEffect(() => {
 
         <ExtraQuestionListCard
           icon={EXTRA_ICONS.golden_ball}
-          title={extraMap.get("golden_ball")?.title ?? "Balón de Oro"}
+          title={extraMap.get("golden_ball")?.title ?? t.extras.golden_ball}
           items={extraMap.get("golden_ball")?.items ?? []}
           notEnoughDataLabel={t.stats.notEnoughData}
 
