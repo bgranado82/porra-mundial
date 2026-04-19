@@ -92,7 +92,7 @@ export default function GroupStandingsTable({
                 return (
                   <tr key={row.teamId} className="border-b border-gray-100">
                     <td className="px-2 py-2 font-semibold">{index + 1}</td>
-                    <td className="whitespace-nowrap px-2 py-2 font-medium">
+                    <td className="whitespace-nowrap px-2 py-2 font-bold">
                       <div className="flex items-center gap-2">
                         {row.teamFlag ? (
                           <img
