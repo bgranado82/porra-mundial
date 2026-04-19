@@ -93,7 +93,7 @@ export default function GroupMatchCompactRow({
       </div>
 
       {/* MATCH */}
-      <div className="grid grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)] items-center gap-2 -ml-12">
+      <div className="grid grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)] items-center gap-2 -ml-8">
         
         {/* HOME */}
         <div className="flex min-w-0 items-center justify-start gap-1.5">
