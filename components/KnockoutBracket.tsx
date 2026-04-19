@@ -537,7 +537,7 @@ const semifinalRight = semifinals.find((m) => m.id === "sf-2")
         realTeamsByRound={realTeamsByRound}
         invalidPicks={invalidPicks}
         className="pt-[82px]"
-        matchesClassName="space-y-[140px]"
+        matchesClassName="space-y-[170px]"
       />
 
       <StageColumn
@@ -622,7 +622,7 @@ const semifinalRight = semifinals.find((m) => m.id === "sf-2")
         realTeamsByRound={realTeamsByRound}
         invalidPicks={invalidPicks}
         className="pt-[82px]"
-        matchesClassName="space-y-[140px]"
+        matchesClassName="space-y-[170px]"
       />
 
       <StageColumn
