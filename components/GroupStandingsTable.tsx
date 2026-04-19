@@ -101,9 +101,9 @@ export default function GroupStandingsTable({
                             className="h-4 w-6 rounded-sm object-cover"
                           />
                         ) : null}
-                        <span className="text-[13px] font-medium">
-  {row.teamName ?? row.teamId}
-</span>
+                        <span className="text-[13px] font-bold">
+                        {row.teamName ?? row.teamId}
+                        </span>
                       </div>
                     </td>
                     <td className="px-2 py-2 text-center">{row.played}</td>
