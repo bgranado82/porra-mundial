@@ -150,7 +150,7 @@ export default function StandingsTable({ days, standings }: Props) {
         General
       </button>
     </div>
-     
+        
       <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white shadow-sm">
         <div className="overflow-x-auto rounded-3xl">
           {tab === "groups" ? (

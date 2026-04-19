@@ -108,7 +108,66 @@ type Messages = {
     paid: string;
     pending: string;
   };
+  entryStatusDraft: string;
+entryStatusSubmitted: string;
+
+welcomeUser: string;
+
+saveEntry: string;
+savingEntry: string;
+submitEntry: string;
+submittingEntry: string;
+entrySubmitted: string;
+logout: string;
+
+selectedEntryNotFound: string;
+loadEntryError: string;
+loadStandingsError: string;
+noActiveEntry: string;
+entrySaved: string;
+saveEntryError: string;
+activeEntryNotFound: string;
+predictionIncomplete: string;
+submitEntryConfirm: string;
+submitEntrySuccess: string;
+submitEntryError: string;
+loadingPool: string;
+
+deadlinePassed: string;
+editingDisabled: string;
+
+classificationSummary: string;
+top3AndLast: string;
+classificationQuickView: string;
+lastUpdate: string;
+viewStats: string;
+viewFullStandings: string;
+top3: string;
+loadingStandings: string;
+noStandingsYet: string;
+lastPlace: string;
+positionLabel: string;
+
+groupStageSection: string;
+matchesChronological: string;
+matchTableInfoHeader: string;
+predictionHeader: string;
+pointsHeader: string;
+
+groupStandingsSection: string;
+groupStandingsUpdated: string;
+
+extraQuestionsRulesTitle: string;
+extraQuestionsRulesSubtitle: string;
+
+playerFallback: string;
+
+classificationCardTitle: string;
+classificationMovementLabel: string;
+classificationPending: string;
 };
+
+
 
 export const messages: Record<Locale, Messages> = {
   es: {
@@ -225,6 +284,64 @@ export const messages: Record<Locale, Messages> = {
       paid: "Pagado",
       pending: "Pendiente de pago",
     },
+  entryStatusDraft: "Borrador",
+entryStatusSubmitted: "Enviada",
+
+welcomeUser: "Bienvenido",
+
+saveEntry: "Guardar porra",
+savingEntry: "Guardando...",
+submitEntry: "Enviar porra",
+submittingEntry: "Enviando...",
+entrySubmitted: "Porra enviada",
+logout: "Cerrar sesión",
+
+selectedEntryNotFound: "No se ha encontrado la porra seleccionada.",
+loadEntryError: "Error cargando la porra.",
+loadStandingsError: "Error cargando clasificación",
+noActiveEntry: "No hay entry activa.",
+entrySaved: "Porra guardada correctamente.",
+saveEntryError: "Error guardando la porra.",
+activeEntryNotFound: "No se ha encontrado la entry activa.",
+predictionIncomplete: "Tienes que completar toda la porra antes de enviarla.",
+submitEntryConfirm: "¿Seguro que quieres enviar la porra? Después no podrás modificarla.",
+submitEntrySuccess: "Porra enviada correctamente.",
+submitEntryError: "Error al enviar la porra.",
+loadingPool: "Cargando porra...",
+
+deadlinePassed: "El plazo de envío de esta porra ha terminado.",
+editingDisabled: "La edición de la porra está desactivada.",
+
+classificationSummary: "Resumen clasificación",
+top3AndLast: "Top 3 y último puesto",
+classificationQuickView: "Consulta rápida de la clasificación general actual.",
+lastUpdate: "Última actualización",
+viewStats: "Ver estadísticas",
+viewFullStandings: "Ver clasificación completa",
+top3: "Top 3",
+loadingStandings: "Cargando clasificación...",
+noStandingsYet: "No hay clasificación disponible todavía.",
+lastPlace: "Último",
+positionLabel: "Puesto",
+
+groupStageSection: "Fase de grupos",
+matchesChronological: "Partidos en orden cronológico.",
+matchTableInfoHeader: "J / G / Fecha",
+predictionHeader: "Pronóstico",
+pointsHeader: "Puntos",
+
+groupStandingsSection: "Clasificaciones",
+groupStandingsUpdated: "Clasificación actualizada por grupo.",
+
+extraQuestionsRulesTitle: "Preguntas extra",
+extraQuestionsRulesSubtitle: "Puntuación de premios individuales y goleadores.",
+
+playerFallback: "Jugador",
+
+classificationCardTitle: "Clasificación",
+classificationMovementLabel: "Variación respecto a la última clasificación",
+classificationPending: "Pendiente de inicio",
+
   },
 
   en: {
@@ -335,6 +452,63 @@ export const messages: Record<Locale, Messages> = {
       paid: "Paid",
       pending: "Pending",
     },
+    entryStatusDraft: "Draft",
+entryStatusSubmitted: "Submitted",
+
+welcomeUser: "Welcome",
+
+saveEntry: "Save entry",
+savingEntry: "Saving...",
+submitEntry: "Submit entry",
+submittingEntry: "Submitting...",
+entrySubmitted: "Entry submitted",
+logout: "Log out",
+
+selectedEntryNotFound: "Selected entry was not found.",
+loadEntryError: "Error loading entry.",
+loadStandingsError: "Error loading standings",
+noActiveEntry: "No active entry.",
+entrySaved: "Entry saved successfully.",
+saveEntryError: "Error saving entry.",
+activeEntryNotFound: "Active entry was not found.",
+predictionIncomplete: "You must complete the whole entry before submitting.",
+submitEntryConfirm: "Are you sure you want to submit your entry? You will not be able to edit it afterwards.",
+submitEntrySuccess: "Entry submitted successfully.",
+submitEntryError: "Error submitting entry.",
+loadingPool: "Loading entry...",
+
+deadlinePassed: "The submission deadline for this pool has passed.",
+editingDisabled: "Entry editing is disabled.",
+
+classificationSummary: "Standings summary",
+top3AndLast: "Top 3 and last place",
+classificationQuickView: "Quick view of the current overall standings.",
+lastUpdate: "Last update",
+viewStats: "View stats",
+viewFullStandings: "View full standings",
+top3: "Top 3",
+loadingStandings: "Loading standings...",
+noStandingsYet: "No standings available yet.",
+lastPlace: "Last place",
+positionLabel: "Position",
+
+groupStageSection: "Group stage",
+matchesChronological: "Matches in chronological order.",
+matchTableInfoHeader: "D / G / Date",
+predictionHeader: "Prediction",
+pointsHeader: "Points",
+
+groupStandingsSection: "Standings",
+groupStandingsUpdated: "Updated standings by group.",
+
+extraQuestionsRulesTitle: "Extra questions",
+extraQuestionsRulesSubtitle: "Scoring for individual awards and scorers.",
+
+playerFallback: "Player",
+
+classificationCardTitle: "Standings",
+classificationMovementLabel: "Change compared to the latest standings",
+classificationPending: "Pending start",
   },
 
   pt: {
@@ -444,5 +618,62 @@ export const messages: Record<Locale, Messages> = {
       paid: "Pago",
       pending: "Pendente",
     },
+  entryStatusDraft: "Rascunho",
+entryStatusSubmitted: "Enviada",
+
+welcomeUser: "Bem-vindo",
+
+saveEntry: "Salvar bolão",
+savingEntry: "Salvando...",
+submitEntry: "Enviar bolão",
+submittingEntry: "Enviando...",
+entrySubmitted: "Bolão enviado",
+logout: "Sair",
+
+selectedEntryNotFound: "Não foi possível encontrar o bolão selecionado.",
+loadEntryError: "Erro ao carregar o bolão.",
+loadStandingsError: "Erro ao carregar a classificação",
+noActiveEntry: "Não há entry ativa.",
+entrySaved: "Bolão salvo com sucesso.",
+saveEntryError: "Erro ao salvar o bolão.",
+activeEntryNotFound: "Não foi possível encontrar a entry ativa.",
+predictionIncomplete: "Você precisa completar todo o bolão antes de enviá-lo.",
+submitEntryConfirm: "Tem certeza de que deseja enviar o bolão? Depois disso não poderá modificá-lo.",
+submitEntrySuccess: "Bolão enviado com sucesso.",
+submitEntryError: "Erro ao enviar o bolão.",
+loadingPool: "Carregando bolão...",
+
+deadlinePassed: "O prazo de envio deste bolão terminou.",
+editingDisabled: "A edição do bolão está desativada.",
+
+classificationSummary: "Resumo da classificação",
+top3AndLast: "Top 3 e último lugar",
+classificationQuickView: "Visão rápida da classificação geral atual.",
+lastUpdate: "Última atualização",
+viewStats: "Ver estatísticas",
+viewFullStandings: "Ver classificação completa",
+top3: "Top 3",
+loadingStandings: "Carregando classificação...",
+noStandingsYet: "Ainda não há classificação disponível.",
+lastPlace: "Último",
+positionLabel: "Posição",
+
+groupStageSection: "Fase de grupos",
+matchesChronological: "Partidas em ordem cronológica.",
+matchTableInfoHeader: "R / G / Data",
+predictionHeader: "Palpite",
+pointsHeader: "Pontos",
+
+groupStandingsSection: "Classificações",
+groupStandingsUpdated: "Classificação atualizada por grupo.",
+
+extraQuestionsRulesTitle: "Perguntas extras",
+extraQuestionsRulesSubtitle: "Pontuação de prêmios individuais e artilheiros.",
+
+playerFallback: "Jogador",
+
+classificationCardTitle: "Classificação",
+classificationMovementLabel: "Variação em relação à última classificação",
+classificationPending: "Aguardando início",
   },
 };

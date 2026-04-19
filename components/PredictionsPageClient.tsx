@@ -193,13 +193,19 @@ function MovementMini({
 
 function ClassificationHeaderCard({
   currentUserStanding,
+  title,
+  movementLabel,
+  pendingLabel,
 }: {
   currentUserStanding: StandingSummary | null;
+  title: string;
+  movementLabel: string;
+  pendingLabel: string;
 }) {
   return (
     <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4 shadow-sm">
       <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
-        Clasificación
+        {title}
       </div>
 
       <div className="flex min-h-[110px] flex-col items-center justify-center text-center">
@@ -217,14 +223,14 @@ function ClassificationHeaderCard({
             </div>
 
             <div className="mt-2 text-xs font-medium text-[var(--iberdrola-forest)]/65">
-              Variación respecto a la última clasificación
+              {movementLabel}
             </div>
           </>
         ) : (
           <div className="flex flex-col items-center">
             <div className="text-3xl font-black text-[var(--iberdrola-green)]">-</div>
             <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/50">
-              Pendiente de inicio
+              {pendingLabel}
             </div>
           </div>
         )}
@@ -350,7 +356,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
           setKnockoutPredictions({});
           setExtraPredictions({});
           setUserTiebreaks({});
-          setSubmitMessage("No se ha encontrado la porra seleccionada.");
+          setSubmitMessage(t.selectedEntryNotFound);
           setLoadingEntry(false);
           return;
         }
@@ -487,7 +493,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
         setRealKnockoutPredictions(nextRealKo);
       } catch (err) {
         console.error(err);
-        setSubmitMessage("Error cargando la porra.");
+        setSubmitMessage(t.loadEntryError);
       } finally {
         setLoadingEntry(false);
       }
@@ -869,8 +875,8 @@ const invalidKnockoutPicks = useMemo(() => {
 
   async function handleSaveEntry() {
     if (!activeEntryId) {
-      setSubmitMessage("No hay entry activa.");
-      throw new Error("No hay entry activa.");
+      setSubmitMessage(t.noActiveEntry);
+      throw new Error(t.noActiveEntry);
     }
 
     setSaveLoading(true);
@@ -979,7 +985,7 @@ const invalidKnockoutPicks = useMemo(() => {
       await refreshStandings();
     } catch (err) {
       console.error(err);
-      setSubmitMessage("Error guardando la porra.");
+      setSubmitMessage(t.saveEntryError);
       throw err;
     } finally {
       setSaveLoading(false);
@@ -1013,17 +1019,17 @@ const invalidKnockoutPicks = useMemo(() => {
 
   async function handleSubmitEntry() {
     if (!activeEntryId) {
-      setSubmitMessage("No se ha encontrado la entry activa.");
+      setSubmitMessage(t.activeEntryNotFound);
       return;
     }
 
     if (!isPredictionComplete()) {
-      setSubmitMessage("Tienes que completar toda la porra antes de enviarla.");
+      setSubmitMessage(t.predictionIncomplete);
       return;
     }
 
     const confirmed = window.confirm(
-      "¿Seguro que quieres enviar la porra? Después no podrás modificarla."
+      t.submitEntryConfirm
     );
 
     if (!confirmed) return;
@@ -1045,11 +1051,11 @@ const invalidKnockoutPicks = useMemo(() => {
       if (updateError) throw updateError;
 
       setEntryStatus("submitted");
-      setSubmitMessage("Porra enviada correctamente.");
+      setSubmitMessage(t.submitEntrySuccess);
       await refreshStandings();
     } catch (err) {
       console.error(err);
-      setSubmitMessage("Error al enviar la porra.");
+      setSubmitMessage(t.submitEntryError);
     } finally {
       setSubmitLoading(false);
     }
@@ -1061,7 +1067,7 @@ const invalidKnockoutPicks = useMemo(() => {
   }
 
   const totalPoints = groupPointsTotal + knockoutScore.total + extraPointsTotal;
-  const greetingName = authUserName?.trim() || authUserEmail?.trim() || "Jugador";
+  const greetingName = authUserName?.trim() || authUserEmail?.trim() || t.playerFallback;
 
   const currentUserStanding = useMemo(
     () => standings.find((row) => row.entry_id === activeEntryId) ?? null,
@@ -1079,7 +1085,7 @@ const invalidKnockoutPicks = useMemo(() => {
     return (
       <main className="mx-auto max-w-7xl px-4 py-8">
         <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-6 text-center text-sm font-semibold text-[var(--iberdrola-forest)] shadow-sm">
-          Cargando porra...
+          {t.loadingPool}
         </div>
       </main>
     );
@@ -1105,7 +1111,7 @@ const invalidKnockoutPicks = useMemo(() => {
                     <p className="text-sm text-[var(--iberdrola-forest)]/70">
                       {poolName ? `${poolName} · ` : ""}
                       Porra {entryNumber ?? "-"} ·{" "}
-                      {entryStatus === "submitted" ? "Enviada" : "Borrador"}
+                      {entryStatus === "submitted" ? t.entryStatusSubmitted : t.entryStatusDraft}
                     </p>
                   </div>
                 </div>
@@ -1127,7 +1133,7 @@ const invalidKnockoutPicks = useMemo(() => {
 
                 <div className="mt-4">
                   <div className="text-sm font-semibold text-[var(--iberdrola-forest)]/65">
-                    Bienvenido
+                    {t.welcomeUser}
                   </div>
                   <div className="text-2xl font-black tracking-tight text-[var(--iberdrola-green)] sm:text-3xl">
                     {greetingName}
@@ -1151,8 +1157,11 @@ const invalidKnockoutPicks = useMemo(() => {
                 big
               />
               <ClassificationHeaderCard
-                currentUserStanding={canSeeClassification ? currentUserStanding : null}
-              />
+  currentUserStanding={canSeeClassification ? currentUserStanding : null}
+  title={t.classificationCardTitle}
+  movementLabel={t.classificationMovementLabel}
+  pendingLabel={t.classificationPending}
+/>
 
               <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
                 <button
@@ -1161,7 +1170,7 @@ const invalidKnockoutPicks = useMemo(() => {
                   disabled={saveLoading || !canEditPredictions}
                   className="rounded-2xl border border-[var(--iberdrola-forest)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {saveLoading ? "Guardando..." : "Guardar porra"}
+                  {saveLoading ? t.savingEntry : t.saveEntry}
                 </button>
 
                 <button
@@ -1171,10 +1180,11 @@ const invalidKnockoutPicks = useMemo(() => {
                   className="rounded-2xl bg-[var(--iberdrola-green)] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {entryStatus === "submitted"
-                    ? "Porra enviada"
+                    ? t.entrySubmitted
                     : submitLoading
-                      ? "Enviando..."
-                      : "Enviar porra"}
+                      ? t.submittingEntry
+                      : t.submitEntry}
+
                 </button>
 
                 <button
@@ -1182,7 +1192,7 @@ const invalidKnockoutPicks = useMemo(() => {
                   onClick={handleLogout}
                   className="rounded-2xl border border-red-200 bg-white px-4 py-3 text-sm font-bold text-red-600 shadow-sm transition hover:bg-red-50"
                 >
-                  Cerrar sesión
+                  {t.logout}
                 </button>
               </div>
             </div>
@@ -1195,13 +1205,13 @@ const invalidKnockoutPicks = useMemo(() => {
 
             {isDeadlinePassed ? (
               <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-                El plazo de envío de esta porra ha terminado.
+                {t.deadlinePassed}
               </div>
             ) : null}
 
             {!canEditPredictions && entryStatus !== "submitted" && !isDeadlinePassed ? (
               <div className="mt-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
-                La edición de la porra está desactivada.
+                {t.editingDisabled}
               </div>
             ) : null}
           </div>
@@ -1213,18 +1223,18 @@ const invalidKnockoutPicks = useMemo(() => {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
-                    Resumen clasificación
+                    {t.classificationSummary}
                   </div>
                   <div className="mt-1 text-lg font-black text-[var(--iberdrola-forest)]">
-                    Top 3 y último puesto
+                    {t.top3AndLast}
                   </div>
                   <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                    Consulta rápida de la clasificación general actual.
+                    {t.classificationQuickView}
                   </div>
 
                   {lastStandingsUpdate ? (
                     <div className="mt-2 text-xs font-medium text-[var(--iberdrola-forest)]/55">
-                      Última actualización:{" "}
+                      {t.lastUpdate}:{" "}
                       {new Date(lastStandingsUpdate).toLocaleString("es-ES", {
                         day: "2-digit",
                         month: "2-digit",
@@ -1244,7 +1254,7 @@ const invalidKnockoutPicks = useMemo(() => {
     }
     className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
   >
-    Ver estadísticas
+    {t.viewStats}
   </Link>
 ) : null}
 
@@ -1253,7 +1263,7 @@ const invalidKnockoutPicks = useMemo(() => {
                     href={`/standings?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
                     className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
                   >
-                    Ver clasificación completa
+                    {t.viewFullStandings}
                   </Link>
                 ) : null}
               </div>
@@ -1261,13 +1271,13 @@ const invalidKnockoutPicks = useMemo(() => {
               <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
                 <div>
                   <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
-                    Top 3
+                    {t.top3}
                   </div>
 
                   <div className="space-y-2">
                     {loadingStandings ? (
                       <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
-                        Cargando clasificación...
+                        {t.loadingStandings}
                       </div>
                     ) : top3Standings.length > 0 ? (
                       top3Standings.map((row) => (
@@ -1281,7 +1291,7 @@ const invalidKnockoutPicks = useMemo(() => {
                                 {row.position}
                               </span>
                               <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] sm:text-base">
-                                {row.name || row.email || "Jugador"}
+                                {row.name || row.email || t.playerFallback}
                               </span>
                             </div>
                           </div>
@@ -1291,14 +1301,14 @@ const invalidKnockoutPicks = useMemo(() => {
                               {row.total_points}
                             </div>
                             <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
-                              puntos
+                              {t.points}
                             </div>
                           </div>
                         </div>
                       ))
                     ) : (
                       <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
-                        No hay clasificación disponible todavía.
+                        {t.noStandingsYet}
                       </div>
                     )}
                   </div>
@@ -1306,7 +1316,7 @@ const invalidKnockoutPicks = useMemo(() => {
 
                 <div>
                   <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
-                    Último
+                    {t.lastPlace}
                   </div>
 
                   {lastStanding ? (
@@ -1314,10 +1324,10 @@ const invalidKnockoutPicks = useMemo(() => {
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
                           <div className="truncate text-base font-black text-[var(--iberdrola-forest)]">
-                            {lastStanding.name || lastStanding.email || "Jugador"}
+                            {lastStanding.name || lastStanding.email || t.playerFallback}
                           </div>
                           <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                            Puesto {lastStanding.position}
+                            {t.positionLabel} {lastStanding.position}
                           </div>
                         </div>
 
@@ -1326,14 +1336,14 @@ const invalidKnockoutPicks = useMemo(() => {
                             {lastStanding.total_points}
                           </div>
                           <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
-                            puntos
+                            {t.points}
                           </div>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
-                      No hay clasificación disponible todavía.
+                      {t.noStandingsYet}
                     </div>
                   )}
                 </div>
@@ -1405,10 +1415,10 @@ const invalidKnockoutPicks = useMemo(() => {
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-              Preguntas extra
+              {t.extraQuestionsRulesTitle}
             </h2>
             <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-              Puntuación de premios individuales y goleadores.
+              {t.extraQuestionsRulesSubtitle}
             </p>
           </div>
 
@@ -1450,19 +1460,19 @@ const invalidKnockoutPicks = useMemo(() => {
           <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
             <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
               <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-                Fase de grupos
+                {t.groupStageSection}
               </h2>
               <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                Partidos en orden cronológico.
+                {t.matchesChronological}
               </p>
             </div>
 
             <div className="p-4">
               <div className="hidden lg:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
                 <div className="grid grid-cols-[140px_minmax(0,1fr)_80px] gap-3 bg-[var(--iberdrola-sand)]/40 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
-                  <div>J / G / Fecha</div>
-                  <div className="text-center">Pronóstico</div>
-                  <div className="text-right">Puntos</div>
+                  <div>{t.matchTableInfoHeader}</div>
+                  <div className="text-center">{t.predictionHeader}</div>
+                  <div className="text-right">{t.pointsHeader}</div>
                 </div>
 
                 {orderedGroupMatches.map((match) => {
@@ -1561,10 +1571,10 @@ const invalidKnockoutPicks = useMemo(() => {
           <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
             <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
               <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-                Clasificaciones
+                {t.groupStandingsSection}
               </h2>
               <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                Clasificación actualizada por grupo.
+                {t.groupStandingsUpdated}
               </p>
             </div>
 
