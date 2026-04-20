@@ -2,12 +2,18 @@
 import Link from "next/link";
 import StandingsTable from "@/components/StandingsTable";
 import { headers } from "next/headers";
+
 const QUOTE_OF_THE_DAY = {
   es: "Hoy no se gana la porra, pero se puede perder.",
   en: "You don’t win the pool today, but you can lose it.",
   pt: "Hoje não se ganha o bolão, mas se pode perder.",
 };
 
+const QUOTE_FLAGS = {
+  es: "https://flagcdn.com/es.svg",
+  en: "https://flagcdn.com/gb.svg",
+  pt: "https://flagcdn.com/br.svg",
+};
 
 type PageProps = {
   searchParams: Promise<{
@@ -107,23 +113,42 @@ export default async function StandingsPage({ searchParams }: PageProps) {
             </Link>
           </div>
         </section>
-<section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white px-5 py-3 shadow-sm">
-  <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-    Quote of the day
-  </div>
 
-  <div className="mt-1 text-center text-[var(--iberdrola-forest)]">
-    <div className="text-base font-bold italic">
-      🇪🇸 “{QUOTE_OF_THE_DAY.es}”
-    </div>
-    <div className="text-sm italic mt-1 opacity-80">
-      🇬🇧 “{QUOTE_OF_THE_DAY.en}”
-    </div>
-    <div className="text-sm italic mt-1 opacity-80">
-      🇧🇷 “{QUOTE_OF_THE_DAY.pt}”
-    </div>
-  </div>
-</section>
+        <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white px-5 py-3 shadow-sm">
+          <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+            Quote of the day
+          </div>
+
+          <div className="mt-1 text-center text-[var(--iberdrola-forest)]">
+            <div className="flex items-center justify-center gap-2 text-base font-bold italic">
+              <img
+                src={QUOTE_FLAGS.es}
+                alt="España"
+                className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+              />
+              <span>“{QUOTE_OF_THE_DAY.es}”</span>
+            </div>
+
+            <div className="mt-1 flex items-center justify-center gap-2 text-sm italic opacity-80">
+              <img
+                src={QUOTE_FLAGS.en}
+                alt="English"
+                className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+              />
+              <span>“{QUOTE_OF_THE_DAY.en}”</span>
+            </div>
+
+            <div className="mt-1 flex items-center justify-center gap-2 text-sm italic opacity-80">
+              <img
+                src={QUOTE_FLAGS.pt}
+                alt="Brasil"
+                className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+              />
+              <span>“{QUOTE_OF_THE_DAY.pt}”</span>
+            </div>
+          </div>
+        </section>
+
         <StandingsTable days={data.days} standings={data.standings} />
       </div>
     </main>
