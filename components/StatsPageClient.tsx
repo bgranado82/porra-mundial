@@ -631,7 +631,7 @@ useEffect(() => {
 
         <ExtraQuestionListCard
           icon={EXTRA_ICONS.golden_ball}
-          title={extraMap.get("golden_ball")?.title ?? t.extras.golden_ball}
+          title={t.extras.golden_ball}
           items={extraMap.get("golden_ball")?.items ?? []}
           notEnoughDataLabel={t.stats.notEnoughData}
           picksUnit={t.stats.picksUnit}
@@ -642,7 +642,7 @@ useEffect(() => {
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <ExtraQuestionBarCard
           icon={EXTRA_ICONS.golden_boot}
-          title={extraMap.get("golden_boot")?.title ?? t.extras.golden_boot}
+          title={t.extras.golden_boot}
           items={extraMap.get("golden_boot")?.items ?? []}
           othersLabel={t.stats.others}
 picksUnit={t.stats.picksUnit}
@@ -650,7 +650,7 @@ picksUnit={t.stats.picksUnit}
 
         <ExtraQuestionBarCard
           icon={EXTRA_ICONS.golden_glove}
-          title={extraMap.get("golden_glove")?.title ?? t.extras.golden_glove}
+          title={t.extras.golden_glove}
           items={extraMap.get("golden_glove")?.items ?? []}
           othersLabel={t.stats.others}
 picksUnit={t.stats.picksUnit}
@@ -658,9 +658,7 @@ picksUnit={t.stats.picksUnit}
 
         <ExtraQuestionListCard
           icon={EXTRA_ICONS.best_young_player}
-          title={
-            extraMap.get("best_young_player")?.title ?? t.extras.best_young_player
-          }
+          title={t.extras.best_young_player}
           items={extraMap.get("best_young_player")?.items ?? []}
           notEnoughDataLabel={t.stats.notEnoughData}
           picksUnit={t.stats.picksUnit}
