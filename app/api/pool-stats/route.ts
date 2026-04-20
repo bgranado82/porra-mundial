@@ -34,19 +34,80 @@ function prettifyValue(value: string) {
   return value.trim();
 }
 
-const EXTRA_LABELS: Record<string, string> = {
-  first_goal_scorer_world: "Primer goleador del Mundial",
-  first_goal_scorer_spain: "Primer goleador de España",
-  golden_boot: "Bota de Oro",
-  golden_ball: "Balón de Oro",
-  best_young_player: "Mejor jugador joven",
-  golden_glove: "Guante de Oro",
-  top_spanish_scorer: "Máximo goleador de España",
+function getText(locale: string) {
+  const lang = locale === "en" || locale === "pt" ? locale : "es";
+
+  return {
+    es: {
+      championInsight: (label: string, percentage: number) =>
+        `${label} es la selección más elegida como campeona con un ${percentage.toFixed(1)}% de los pronósticos.`,
+      strongestExtraInsight: (title: string, label: string, percentage: number) =>
+        `La predicción más concentrada en preguntas extra es "${title}": ${label} lidera con un ${percentage.toFixed(1)}%.`,
+      mostOpenExtraInsight: (title: string, percentage: number) =>
+        `"${title}" es la categoría más abierta: su opción líder solo alcanza un ${percentage.toFixed(1)}%.`,
+    },
+    en: {
+      championInsight: (label: string, percentage: number) =>
+        `${label} is the most selected champion with ${percentage.toFixed(1)}% of the picks.`,
+      strongestExtraInsight: (title: string, label: string, percentage: number) =>
+        `The most concentrated extra-question prediction is "${title}": ${label} leads with ${percentage.toFixed(1)}%.`,
+      mostOpenExtraInsight: (title: string, percentage: number) =>
+        `"${title}" is the most open category: its leading option only reaches ${percentage.toFixed(1)}%.`,
+    },
+    pt: {
+      championInsight: (label: string, percentage: number) =>
+        `${label} é a seleção mais escolhida como campeã com ${percentage.toFixed(1)}% dos palpites.`,
+      strongestExtraInsight: (title: string, label: string, percentage: number) =>
+        `A previsão mais concentrada nas perguntas extras é "${title}": ${label} lidera com ${percentage.toFixed(1)}%.`,
+      mostOpenExtraInsight: (title: string, percentage: number) =>
+        `"${title}" é a categoria mais aberta: sua opção líder alcança apenas ${percentage.toFixed(1)}%.`,
+    },
+  }[lang];
+}
+
+const EXTRA_LABELS: Record<string, Record<"es" | "en" | "pt", string>> = {
+  first_goal_scorer_world: {
+    es: "Primer goleador del Mundial",
+    en: "First World Cup scorer",
+    pt: "Primeiro goleador do Mundial",
+  },
+  first_goal_scorer_spain: {
+    es: "Primer goleador de España",
+    en: "First Spain scorer",
+    pt: "Primeiro goleador da Espanha",
+  },
+  golden_boot: {
+    es: "Bota de Oro",
+    en: "Golden Boot",
+    pt: "Chuteira de Ouro",
+  },
+  golden_ball: {
+    es: "Balón de Oro",
+    en: "Golden Ball",
+    pt: "Bola de Ouro",
+  },
+  best_young_player: {
+    es: "Mejor jugador joven",
+    en: "Best young player",
+    pt: "Melhor jogador jovem",
+  },
+  golden_glove: {
+    es: "Guante de Oro",
+    en: "Golden Glove",
+    pt: "Luva de Ouro",
+  },
+  top_spanish_scorer: {
+    es: "Máximo goleador de España",
+    en: "Top Spain scorer",
+    pt: "Maior goleador da Espanha",
+  },
 };
 
 export async function GET(request: NextRequest) {
   const supabase = createAdminClient();
   const poolId = request.nextUrl.searchParams.get("poolId");
+const locale = request.nextUrl.searchParams.get("locale") ?? "es";
+const text = getText(locale);
 
   if (!poolId) {
     return NextResponse.json({ error: "Missing poolId" }, { status: 400 });
@@ -205,7 +266,7 @@ export async function GET(request: NextRequest) {
 
         return {
           questionKey: question.key,
-          title: EXTRA_LABELS[question.key] ?? question.key,
+          title: EXTRA_LABELS[question.key]?.[locale as "es" | "en" | "pt"] ?? question.key,
           total: participants,
           items,
         };
@@ -217,8 +278,8 @@ export async function GET(request: NextRequest) {
     if (championItems.length > 0) {
       const topChampion = championItems[0];
       insights.push(
-        `${topChampion.label} es la selección más elegida como campeona con un ${topChampion.percentage.toFixed(1)}% de los picks.`
-      );
+  text.championInsight(topChampion.label, topChampion.percentage)
+);
     }
 
     const strongestExtra = extras
@@ -231,8 +292,12 @@ export async function GET(request: NextRequest) {
 
     if (strongestExtra?.item) {
       insights.push(
-        `La predicción más concentrada en preguntas extra es "${strongestExtra.title}": ${strongestExtra.item.label} lidera con un ${strongestExtra.item.percentage.toFixed(1)}%.`
-      );
+  text.strongestExtraInsight(
+    strongestExtra.title,
+    strongestExtra.item.label,
+    strongestExtra.item.percentage
+  )
+);
     }
 
     const mostOpenExtra = extras
@@ -245,8 +310,11 @@ export async function GET(request: NextRequest) {
 
     if (mostOpenExtra?.item) {
       insights.push(
-        `"${mostOpenExtra.title}" es la categoría más abierta: su opción líder solo alcanza un ${mostOpenExtra.item.percentage.toFixed(1)}%.`
-      );
+  text.mostOpenExtraInsight(
+    mostOpenExtra.title,
+    mostOpenExtra.item.percentage
+  )
+);
     }
 
     const response = {

@@ -476,9 +476,9 @@ useEffect(() => {
           return;
         }
 
-        const res = await fetch(`/api/pool-stats?poolId=${poolId}`, {
-          cache: "no-store",
-        });
+        const res = await fetch(`/api/pool-stats?poolId=${poolId}&locale=${locale}`, {
+  cache: "no-store",
+});
 
         const json = await res.json();
 
