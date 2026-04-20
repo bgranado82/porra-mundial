@@ -601,7 +601,7 @@ export default function KnockoutBracket({
                 realTeamsByRound={realTeamsByRound}
                 invalidPicks={invalidPicks}
                 labels={labels}
-                className="pt-[220px]"
+                className="pt-[230px]"
                 matchesClassName="space-y-[400px]"
               />
 
@@ -672,7 +672,7 @@ export default function KnockoutBracket({
                 realTeamsByRound={realTeamsByRound}
                 invalidPicks={invalidPicks}
                 labels={labels}
-                className="pt-[220px]"
+                className="pt-[230px]"
                 matchesClassName="space-y-[400px]"
               />
 
