@@ -589,7 +589,7 @@ export default function KnockoutBracket({
                 invalidPicks={invalidPicks}
                 labels={labels}
                 className="pt-[82px]"
-                matchesClassName="space-y-[180px]"
+                matchesClassName="space-y-[150px]"
               />
 
               <StageColumn
@@ -686,7 +686,7 @@ export default function KnockoutBracket({
                 invalidPicks={invalidPicks}
                 labels={labels}
                 className="pt-[82px]"
-                matchesClassName="space-y-[180px]"
+                matchesClassName="space-y-[150px]"
               />
 
               <StageColumn
