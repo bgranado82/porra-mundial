@@ -669,10 +669,7 @@ picksUnit={t.stats.picksUnit}
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <ExtraQuestionBarCard
           icon={EXTRA_ICONS.first_goal_scorer_world}
-          title={
-            extraMap.get("first_goal_scorer_world")?.title ??
-            t.extras.first_goal_scorer_world
-          }
+          title={t.extras.first_goal_scorer_world}
           items={extraMap.get("first_goal_scorer_world")?.items ?? []}
           othersLabel={t.stats.others}
 picksUnit={t.stats.picksUnit}
@@ -680,10 +677,7 @@ picksUnit={t.stats.picksUnit}
 
         <ExtraQuestionBarCard
           icon={EXTRA_ICONS.first_goal_scorer_spain}
-          title={
-            extraMap.get("first_goal_scorer_spain")?.title ??
-            t.extras.first_goal_scorer_spain
-          }
+          title={t.extras.first_goal_scorer_spain}
           items={extraMap.get("first_goal_scorer_spain")?.items ?? []}
           othersLabel={t.stats.others}
 picksUnit={t.stats.picksUnit}
@@ -691,10 +685,7 @@ picksUnit={t.stats.picksUnit}
 
         <ExtraQuestionBarCard
           icon={EXTRA_ICONS.top_spanish_scorer}
-          title={
-            extraMap.get("top_spanish_scorer")?.title ??
-            t.extras.top_spanish_scorer
-          }
+          title={t.extras.top_spanish_scorer}
           items={extraMap.get("top_spanish_scorer")?.items ?? []}
           othersLabel={t.stats.others}
 picksUnit={t.stats.picksUnit}
