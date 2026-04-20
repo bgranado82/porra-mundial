@@ -105,38 +105,46 @@ function PrizesCard({
   firstPrize,
   secondPrize,
   thirdPrize,
+  labels,
 }: {
   loserRefund: number;
   firstPrize: number;
   secondPrize: number;
   thirdPrize: number;
+  labels: {
+    prizes: string;
+    firstPlace: string;
+    secondPlace: string;
+    thirdPlace: string;
+    lastPlace: string;
+  };
 }) {
   return (
     <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-5 shadow-sm">
       <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-        Premios
+        {labels.prizes}
       </div>
       <div className="mt-3 grid gap-2 text-sm font-semibold text-[var(--iberdrola-forest)]">
         <div className="flex items-center justify-between">
-          <span>🥇 1º</span>
+          <span>🥇 {labels.firstPlace}</span>
           <span className="font-black text-[var(--iberdrola-green)]">
             {formatEuro(firstPrize)}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span>🥈 2º</span>
+          <span>🥈 {labels.secondPlace}</span>
           <span className="font-black text-[var(--iberdrola-green)]">
             {formatEuro(secondPrize)}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span>🥉 3º</span>
+          <span>🥉 {labels.thirdPlace}</span>
           <span className="font-black text-[var(--iberdrola-green)]">
             {formatEuro(thirdPrize)}
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span>🔙 Último</span>
+          <span>🔙 {labels.lastPlace}</span>
           <span className="font-black text-[var(--iberdrola-forest)]">
             {formatEuro(loserRefund)}
           </span>
@@ -167,10 +175,14 @@ function ChampionDonutCard({
   title,
   items,
   notEnoughDataLabel,
+  picksUnit,
+  picksLabel,
 }: {
   title: string;
   items: StatsResponse["champion"]["items"];
   notEnoughDataLabel: string;
+  picksUnit: string;
+  picksLabel: string;
 }) {
   const topItems = items.slice(0, 5);
   const teamMap = new Map(teams.map((team) => [team.id, team]));
@@ -203,13 +215,13 @@ function ChampionDonutCard({
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value) => [`${value} picks`, "Picks"]}
-                contentStyle={{
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #d9e7dc",
-                  borderRadius: 12,
-                }}
-              />
+  formatter={(value) => [`${value} ${picksUnit}`, picksLabel]}
+  contentStyle={{
+    backgroundColor: "#ffffff",
+    border: "1px solid #d9e7dc",
+    borderRadius: 12,
+  }}
+/>
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -236,7 +248,7 @@ function ChampionDonutCard({
                       <span className="truncate">{item.label}</span>
                     </div>
                     <div className="text-xs text-[var(--iberdrola-forest)]/60">
-                      {item.count} picks
+                      {item.count} {picksUnit}
                     </div>
                   </div>
                   <div className="shrink-0 text-right text-lg font-black text-[var(--iberdrola-green)]">
@@ -260,10 +272,14 @@ function ExtraQuestionBarCard({
   title,
   icon,
   items,
+  othersLabel,
+  picksUnit,
 }: {
   title: string;
   icon?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
+  othersLabel: string;
+  picksUnit: string;
 }) {
   const topItems = items.slice(0, 5);
   const otherItems = items.slice(5);
@@ -283,7 +299,7 @@ function ExtraQuestionBarCard({
     ...(othersCount > 0
       ? [
           {
-            name: "Otros",
+            name: othersLabel,
             percentage: Number(othersPercentage.toFixed(1)),
             count: othersCount,
           },
@@ -316,7 +332,7 @@ function ExtraQuestionBarCard({
               <Tooltip
                 formatter={(value, _name, props) => {
                   const count = props.payload.count;
-                  return [`${value}% · ${count} picks`, ""];
+                  return [`${value}% · ${count} ${picksUnit}`, ""];
                 }}
                 contentStyle={{
                   backgroundColor: "#ffffff",
@@ -345,11 +361,13 @@ function ExtraQuestionListCard({
   icon,
   items,
   notEnoughDataLabel,
+  picksUnit,
 }: {
   title: string;
   icon?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
   notEnoughDataLabel: string;
+  picksUnit: string;
 }) {
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
@@ -375,7 +393,7 @@ function ExtraQuestionListCard({
                     {item.percentage.toFixed(1)}%
                   </div>
                   <div className="text-xs text-[var(--iberdrola-forest)]/55">
-                    {item.count} picks
+                    {item.count} {picksUnit}
                   </div>
                 </div>
               </div>
@@ -453,7 +471,7 @@ useEffect(() => {
         setError("");
 
         if (!poolId) {
-          setError("Falta el poolId.");
+          setError(t.stats.missingPoolId);
           setLoading(false);
           return;
         }
@@ -465,20 +483,20 @@ useEffect(() => {
         const json = await res.json();
 
         if (!res.ok) {
-          throw new Error(json?.error || "Error cargando estadísticas");
+          throw new Error(json?.error || t.stats.loadError);
         }
 
         setData(json as StatsResponse);
       } catch (err) {
         console.error(err);
-        setError("No se pudieron cargar las estadísticas.");
+        setError(t.stats.loadError);
       } finally {
         setLoading(false);
       }
     }
 
     load();
-  }, [poolId]);
+  }, [poolId, locale]);
 
   const extraMap = useMemo(() => {
     const map = new Map<string, StatsResponse["extras"][number]>();
@@ -500,7 +518,7 @@ useEffect(() => {
     return (
       <main className="mx-auto max-w-[1600px] px-4 py-6">
         <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 text-sm font-semibold text-[var(--iberdrola-forest)]">
-          Cargando estadísticas...
+          {t.stats.loading}
         </div>
       </main>
     );
@@ -510,7 +528,7 @@ useEffect(() => {
     return (
       <main className="mx-auto max-w-[1600px] px-4 py-6">
         <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 text-sm font-semibold text-[var(--iberdrola-forest)]">
-          {error || "No hay datos disponibles."}
+          {error || t.stats.noData}
         </div>
       </main>
     );
@@ -524,20 +542,20 @@ useEffect(() => {
              <div className="flex items-center gap-3">
               <img
                 src="/icon-512.png"
-                alt="Porra Mundial 2026"
+                alt={t.stats.title}
                  className="h-12 w-12 rounded-xl object-contain sm:h-14 sm:w-14"
               />
             </div>
 
             <div>
               <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                Estadísticas del pool
+                {t.stats.sectionEyebrow}
               </div>
               <h1 className="text-2xl font-black text-[var(--iberdrola-forest)]">
-                Porra Mundial 2026
+                {t.stats.title}
               </h1>
               <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                Transparencia y tendencias del pool.
+                {t.stats.subtitle}
               </p>
             </div>
           </div>
@@ -588,25 +606,35 @@ useEffect(() => {
         <KpiCard label={t.stats.countries} value={data.summary.countries} />
         <KpiCard label={t.stats.potTotal} value={formatEuro(data.summary.potTotal)} />
         <PrizesCard
-          loserRefund={data.summary.loserRefund}
-          firstPrize={data.summary.firstPrize}
-          secondPrize={data.summary.secondPrize}
-          thirdPrize={data.summary.thirdPrize}
-        />
+  loserRefund={data.summary.loserRefund}
+  firstPrize={data.summary.firstPrize}
+  secondPrize={data.summary.secondPrize}
+  thirdPrize={data.summary.thirdPrize}
+  labels={{
+    prizes: t.stats.prizes,
+    firstPlace: t.stats.firstPlace,
+    secondPlace: t.stats.secondPlace,
+    thirdPlace: t.stats.thirdPlace,
+    lastPlace: t.stats.lastPlace,
+  }}
+/>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
         <ChampionDonutCard
-          title={t.stats.championFavorites}
-          items={data.champion.items}
-          notEnoughDataLabel={t.stats.notEnoughData}
-        />
+  title={t.stats.championFavorites}
+  items={data.champion.items}
+  notEnoughDataLabel={t.stats.notEnoughData}
+  picksUnit={t.stats.picksUnit}
+  picksLabel={t.stats.picksLabel}
+/>
 
         <ExtraQuestionListCard
           icon={EXTRA_ICONS.golden_ball}
           title={extraMap.get("golden_ball")?.title ?? t.extras.golden_ball}
           items={extraMap.get("golden_ball")?.items ?? []}
           notEnoughDataLabel={t.stats.notEnoughData}
+          picksUnit={t.stats.picksUnit}
 
         />
       </section>
@@ -614,23 +642,28 @@ useEffect(() => {
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <ExtraQuestionBarCard
           icon={EXTRA_ICONS.golden_boot}
-          title={extraMap.get("golden_boot")?.title ?? "Bota de Oro"}
+          title={extraMap.get("golden_boot")?.title ?? t.extras.golden_boot}
           items={extraMap.get("golden_boot")?.items ?? []}
+          othersLabel={t.stats.others}
+picksUnit={t.stats.picksUnit}
         />
 
         <ExtraQuestionBarCard
           icon={EXTRA_ICONS.golden_glove}
-          title={extraMap.get("golden_glove")?.title ?? "Guante de Oro"}
+          title={extraMap.get("golden_glove")?.title ?? t.extras.golden_glove}
           items={extraMap.get("golden_glove")?.items ?? []}
+          othersLabel={t.stats.others}
+picksUnit={t.stats.picksUnit}
         />
 
         <ExtraQuestionListCard
           icon={EXTRA_ICONS.best_young_player}
           title={
-            extraMap.get("best_young_player")?.title ?? "Mejor jugador joven"
+            extraMap.get("best_young_player")?.title ?? t.extras.best_young_player
           }
           items={extraMap.get("best_young_player")?.items ?? []}
           notEnoughDataLabel={t.stats.notEnoughData}
+          picksUnit={t.stats.picksUnit}
 
         />
       </section>
@@ -640,27 +673,33 @@ useEffect(() => {
           icon={EXTRA_ICONS.first_goal_scorer_world}
           title={
             extraMap.get("first_goal_scorer_world")?.title ??
-            "Primer goleador del Mundial"
+            t.extras.first_goal_scorer_world
           }
           items={extraMap.get("first_goal_scorer_world")?.items ?? []}
+          othersLabel={t.stats.others}
+picksUnit={t.stats.picksUnit}
         />
 
         <ExtraQuestionBarCard
           icon={EXTRA_ICONS.first_goal_scorer_spain}
           title={
             extraMap.get("first_goal_scorer_spain")?.title ??
-            "Primer goleador de España"
+            t.extras.first_goal_scorer_spain
           }
           items={extraMap.get("first_goal_scorer_spain")?.items ?? []}
+          othersLabel={t.stats.others}
+picksUnit={t.stats.picksUnit}
         />
 
         <ExtraQuestionBarCard
           icon={EXTRA_ICONS.top_spanish_scorer}
           title={
             extraMap.get("top_spanish_scorer")?.title ??
-            "Máximo goleador de España"
+            t.extras.top_spanish_scorer
           }
           items={extraMap.get("top_spanish_scorer")?.items ?? []}
+          othersLabel={t.stats.others}
+picksUnit={t.stats.picksUnit}
         />
       </section>
 
