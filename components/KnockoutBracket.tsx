@@ -601,8 +601,8 @@ export default function KnockoutBracket({
                 realTeamsByRound={realTeamsByRound}
                 invalidPicks={invalidPicks}
                 labels={labels}
-                className="pt-[250px]"
-                matchesClassName="space-y-[500px]"
+                className="pt-[220px]"
+                matchesClassName="space-y-[400px]"
               />
 
               <div className="flex flex-col items-center">
@@ -672,8 +672,8 @@ export default function KnockoutBracket({
                 realTeamsByRound={realTeamsByRound}
                 invalidPicks={invalidPicks}
                 labels={labels}
-                className="pt-[250px]"
-                matchesClassName="space-y-[500px]"
+                className="pt-[220px]"
+                matchesClassName="space-y-[400px]"
               />
 
               <StageColumn
