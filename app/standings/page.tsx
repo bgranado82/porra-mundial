@@ -4,9 +4,9 @@ import StandingsTable from "@/components/StandingsTable";
 import { headers } from "next/headers";
 
 const QUOTE_OF_THE_DAY = {
-  es: "Hazlo o no lo hagas, pero no lo intentes.",
-  en: "Do or do not, there is no try.",
-  pt: "Faça ou não faça, mas não tente.",
+  es: "Lo que hacemos en la vida tiene su eco en la eternidad.",
+  en: "What we do in life echoes in eternity.",
+  pt: "O que fazemos na vida ecoa na eternidade.",
 };
 
 const QUOTE_FLAGS = {

@@ -14,6 +14,8 @@ import GroupMatchRow from "@/components/GroupMatchRow";
 import GroupStandingsTable from "@/components/GroupStandingsTable";
 import KnockoutBracket from "@/components/KnockoutBracket";
 import { Match, KnockoutPredictionMap } from "@/types";
+import { scoreSettings } from "@/data/settings";
+import { calculateMatchPredictionScore } from "@/lib/scoring";
 
 type TransparencyEntryListItem = {
   id: string;
@@ -469,25 +471,31 @@ export default function TransparencyPageClient() {
                   homeGoals: null,
                   awayGoals: null,
                 };
-
+const score = calculateMatchPredictionScore(
+  match.homeGoals,
+  match.awayGoals,
+  prediction.homeGoals,
+  prediction.awayGoals,
+  scoreSettings
+);
                 return (
                   <GroupMatchCompactRow
-  key={match.id}
-  day={match.day}
-  group={match.group ?? null}
-  kickoff={match.kickoff ?? null}
-  homeTeam={homeTeam}
-  awayTeam={awayTeam}
-  homePrediction={prediction.homeGoals}
-  awayPrediction={prediction.awayGoals}
-  officialHomeGoals={match.homeGoals}
-  officialAwayGoals={match.awayGoals}
-  points={0}
-  onChangeHome={() => {}}
-  onChangeAway={() => {}}
-  officialLabel="Oficial"
-  pointsShortLabel="pts"
-/>
+    key={match.id}
+    day={match.day}
+    group={match.group ?? null}
+    kickoff={match.kickoff ?? null}
+    homeTeam={homeTeam}
+    awayTeam={awayTeam}
+    homePrediction={prediction.homeGoals}
+    awayPrediction={prediction.awayGoals}
+    officialHomeGoals={match.homeGoals}
+    officialAwayGoals={match.awayGoals}
+    points={score.points}
+    onChangeHome={() => {}}
+    onChangeAway={() => {}}
+    officialLabel="Oficial"
+    pointsShortLabel="pts"
+  />
                 );
               })}
             </div>
@@ -500,31 +508,38 @@ export default function TransparencyPageClient() {
                 if (!homeTeam || !awayTeam) return null;
 
                 const prediction = predictions[match.id] ?? {
-                  homeGoals: null,
-                  awayGoals: null,
-                };
+  homeGoals: null,
+  awayGoals: null,
+};
+const score = calculateMatchPredictionScore(
+  match.homeGoals,
+  match.awayGoals,
+  prediction.homeGoals,
+  prediction.awayGoals,
+  scoreSettings
+);
 
                 return (
                   <GroupMatchRow
-  key={match.id}
-  day={match.day}
-  group={match.group ?? null}
-  matchNumber={match.matchNumber ?? 0}
-  kickoff={match.kickoff ?? null}
-  homeTeam={homeTeam}
-  awayTeam={awayTeam}
-  homePrediction={prediction.homeGoals}
-  awayPrediction={prediction.awayGoals}
-  officialHomeGoals={match.homeGoals}
-  officialAwayGoals={match.awayGoals}
-  points={0}
-  pointsShortLabel="pts"
-  officialLabel="Oficial"
-  officialPendingLabel="Pendiente"
-  matchLabel="Partido"
-  onChangeHome={() => {}}
-  onChangeAway={() => {}}
-/>
+    key={match.id}
+    day={match.day}
+    group={match.group ?? null}
+    matchNumber={match.matchNumber ?? 0}
+    kickoff={match.kickoff ?? null}
+    homeTeam={homeTeam}
+    awayTeam={awayTeam}
+    homePrediction={prediction.homeGoals}
+    awayPrediction={prediction.awayGoals}
+    officialHomeGoals={match.homeGoals}
+    officialAwayGoals={match.awayGoals}
+    points={score.points}
+    pointsShortLabel="pts"
+    officialLabel="Oficial"
+    officialPendingLabel="Pendiente"
+    matchLabel="Partido"
+    onChangeHome={() => {}}
+    onChangeAway={() => {}}
+  />
                 );
               })}
             </div>
