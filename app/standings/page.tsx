@@ -4,9 +4,9 @@ import StandingsTable from "@/components/StandingsTable";
 import { headers } from "next/headers";
 
 const QUOTE_OF_THE_DAY = {
-  es: "Hoy no se gana la porra, pero se puede perder.",
-  en: "You don’t win the pool today, but you can lose it.",
-  pt: "Hoje não se ganha o bolão, mas se pode perder.",
+  es: "Hazlo o no lo hagas, pero no lo intentes.",
+  en: "Do or do not, there is no try.",
+  pt: "Faça ou não faça, mas não tente.",
 };
 
 const QUOTE_FLAGS = {
