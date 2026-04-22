@@ -85,6 +85,15 @@ function getTeamsInRound(
   });
   return set;
 }
+function normalizeExtraValue(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 
 export default function TransparencyPageClient() {
   const searchParams = useSearchParams();
@@ -224,6 +233,16 @@ export default function TransparencyPageClient() {
     });
     return map;
   }, [data]);
+
+  const officialExtraMap = useMemo(() => {
+  const map: Record<string, string> = {};
+
+  (data?.officialExtraResults ?? []).forEach((row) => {
+    map[row.question_key] = row.official_value ?? "";
+  });
+
+  return map;
+}, [data]);
 
   const officialMatches = useMemo<Match[]>(() => {
     return initialMatches.map((match) => {
@@ -630,30 +649,66 @@ const score = calculateMatchPredictionScore(
 
         <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
           {EXTRA_QUESTIONS.map((question: any) => {
-            const answer =
-              data.extraPredictions.find(
-                (row: any) => row.question_key === question.key
-              )?.predicted_value ?? "-";
+  const answer =
+    data.extraPredictions.find(
+      (row: any) => row.question_key === question.key
+    )?.predicted_value ?? "-";
 
-            return (
-              <div
-                key={question.key}
-                className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4"
-              >
-                <div className="mb-2 text-sm font-bold text-[var(--iberdrola-forest)]">
-  {EXTRA_LABELS[question.key] ||
-    question.label ||
-    question.title ||
-    question.text ||
-    question.key}
-</div>
+  const officialValue = officialExtraMap[question.key] ?? "";
 
-                <div className="rounded-xl border border-[var(--iberdrola-green)]/30 bg-[var(--iberdrola-sand)]/20 px-3 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
-                  {answer}
-                </div>
-              </div>
-            );
-          })}
+  const isCorrect =
+    !!officialValue &&
+    answer !== "-" &&
+    normalizeExtraValue(answer) === normalizeExtraValue(officialValue);
+
+  const points =
+    isCorrect
+      ? ((scoreSettings[
+          question.pointsKey as keyof typeof scoreSettings
+        ] as number) ?? 0)
+      : 0;
+
+  return (
+    <div
+      key={question.key}
+      className={`rounded-2xl border p-4 ${
+        isCorrect
+          ? "border-green-400 bg-green-50"
+          : "border-[var(--iberdrola-sky)] bg-white"
+      }`}
+    >
+      <div className="mb-2 text-sm font-bold text-[var(--iberdrola-forest)]">
+        {EXTRA_LABELS[question.key] ||
+          question.label ||
+          question.title ||
+          question.text ||
+          question.key}
+      </div>
+
+      <div className="rounded-xl border border-[var(--iberdrola-green)]/30 bg-[var(--iberdrola-sand)]/20 px-3 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
+        {answer}
+      </div>
+
+      {officialValue ? (
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <div className="text-xs text-[var(--iberdrola-forest)]/65">
+            Oficial: {officialValue}
+          </div>
+
+          <span
+            className={`rounded-full px-2 py-1 text-xs font-black ${
+              points > 0
+                ? "bg-[var(--iberdrola-green)] text-white"
+                : "bg-gray-100 text-gray-500"
+            }`}
+          >
+            {points > 0 ? `+${points}` : "0"}
+          </span>
+        </div>
+      ) : null}
+    </div>
+  );
+})}
         </div>
       </section>
     </main>
