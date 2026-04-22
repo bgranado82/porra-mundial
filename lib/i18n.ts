@@ -170,6 +170,13 @@ undefinedLabel: string;
 invalidLabel: string;
 leftSideLabel: string;
 rightSideLabel: string;
+forgotPassword: string;
+forgotPasswordNeedEmail: string;
+forgotPasswordEmailSent: string;
+updatePasswordTitle: string;
+newPassword: string;
+updatePasswordButton: string;
+updatePasswordSuccess: string;
 stats: {
   sectionEyebrow: string;
   title: string;
@@ -386,6 +393,13 @@ undefinedLabel: "Por definir",
 invalidLabel: "Inválido",
 leftSideLabel: "Lado izquierdo",
 rightSideLabel: "Lado derecho",
+forgotPassword: "¿Olvidaste tu contraseña?",
+forgotPasswordNeedEmail: "Introduce tu email para recuperar la contraseña.",
+forgotPasswordEmailSent: "Te hemos enviado un email para restablecer la contraseña.",
+updatePasswordTitle: "Nueva contraseña",
+newPassword: "Nueva contraseña",
+updatePasswordButton: "Cambiar contraseña",
+updatePasswordSuccess: "Contraseña actualizada correctamente.",
 stats: {
   sectionEyebrow: "Estadísticas del pool",
   title: "Porra Mundial 2026",
@@ -593,6 +607,13 @@ undefinedLabel: "To be decided",
 invalidLabel: "Invalid",
 leftSideLabel: "Left side",
 rightSideLabel: "Right side",
+forgotPassword: "Forgot your password?",
+forgotPasswordNeedEmail: "Enter your email to recover your password.",
+forgotPasswordEmailSent: "We have sent you an email to reset your password.",
+updatePasswordTitle: "New password",
+newPassword: "New password",
+updatePasswordButton: "Change password",
+updatePasswordSuccess: "Password updated successfully.",
 stats: {
   sectionEyebrow: "Pool stats",
   title: "World Cup Pool 2026",
@@ -798,6 +819,13 @@ undefinedLabel: "Por definir",
 invalidLabel: "Inválido",
 leftSideLabel: "Lado esquerdo",
 rightSideLabel: "Lado direito",
+forgotPassword: "Esqueceu a sua senha?",
+forgotPasswordNeedEmail: "Introduza o seu email para recuperar a senha.",
+forgotPasswordEmailSent: "Enviámos um email para redefinir a sua senha.",
+updatePasswordTitle: "Nova senha",
+newPassword: "Nova senha",
+updatePasswordButton: "Alterar senha",
+updatePasswordSuccess: "Senha atualizada com sucesso.",
 stats: {
   sectionEyebrow: "Estatísticas do bolão",
   title: "Bolão Mundial 2026",

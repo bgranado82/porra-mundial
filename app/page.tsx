@@ -141,6 +141,29 @@ export default function Home() {
     }
   }
 
+  async function handleForgotPassword() {
+  setMessage("");
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (!normalizedEmail) {
+    setMessage(t.forgotPasswordNeedEmail);
+    return;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+    redirectTo: `${window.location.origin}/update-password`,
+  });
+
+  if (error) {
+    setMessage(error.message);
+    return;
+  }
+
+  setMessage(t.forgotPasswordEmailSent);
+}
+
+
   return (
     <main className="min-h-screen bg-[var(--iberdrola-green-light)] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
@@ -247,6 +270,16 @@ export default function Home() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+
+{mode === "login" && (
+  <button
+    type="button"
+    onClick={handleForgotPassword}
+    className="w-full text-right text-sm font-medium text-[var(--iberdrola-forest)] underline"
+  >
+    {t.forgotPassword}
+  </button>
+)}
 
             {mode === "register" && (
               <input
