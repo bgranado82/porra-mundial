@@ -98,6 +98,18 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const { data: officialExtraResults, error: officialExtraError } = await supabase
+    .from("official_extra_results")
+    .select("question_key, official_value");
+
+  if (officialExtraError) {
+    console.error(officialExtraError);
+    return NextResponse.json(
+      { error: "Error loading official extra results" },
+      { status: 500 }
+    );
+  }
+
   return NextResponse.json({
     entry,
     groupPredictions: groupPredictions ?? [],
@@ -105,5 +117,6 @@ export async function GET(request: NextRequest) {
     extraPredictions: extraPredictions ?? [],
     officialGroup: officialGroup ?? [],
     officialKO: officialKO ?? [],
+    officialExtraResults: officialExtraResults ?? [],
   });
 }

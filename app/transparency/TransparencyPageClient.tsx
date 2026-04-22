@@ -54,6 +54,10 @@ type TransparencyEntryResponse = {
     match_id: string;
     picked_team_id: string | null;
   }>;
+  officialExtraResults: Array<{
+  question_key: string;
+  official_value: string | null;
+}>;
 };
 
 type PredictionMap = Record<
