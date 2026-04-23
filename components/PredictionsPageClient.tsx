@@ -273,6 +273,8 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid">("pending");
   const [officialExtraResults, setOfficialExtraResults] = useState<Record<string, string>>({});
   const [userTiebreaks, setUserTiebreaks] = useState<UserTiebreakMap>({});
+  const [banquilloCount, setBanquilloCount] = useState(0);
+const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
 
   useEffect(() => {
     const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
@@ -531,6 +533,34 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
     loadStandings();
   }, [poolId]);
+
+  useEffect(() => {
+  async function loadBanquilloCount() {
+    if (!poolId) return;
+
+    try {
+      setLoadingBanquilloCount(true);
+
+      const res = await fetch(`/api/banquillo?poolId=${poolId}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) {
+        throw new Error("Error cargando banquillo");
+      }
+
+      const data = await res.json();
+      setBanquilloCount((data?.comments ?? []).length);
+    } catch (err) {
+      console.error(err);
+      setBanquilloCount(0);
+    } finally {
+      setLoadingBanquilloCount(false);
+    }
+  }
+
+  loadBanquilloCount();
+}, [poolId]);
 
   const t = messages[locale];
   const teamMap = new Map(teams.map((team) => [team.id, team]));
@@ -1268,13 +1298,19 @@ const invalidKnockoutPicks = useMemo(() => {
                 ) : null}
 
                 {poolId && activeEntryId && poolSlug ? (
-    <Link
-      href={`/banquillo?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
-      className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
-    >
-      {t.banquillo.title}
-    </Link>
-  ) : null}
+  <Link
+    href={`/banquillo?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
+    className="relative inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+  >
+    {t.banquillo.title}
+
+    {!loadingBanquilloCount && banquilloCount > 0 ? (
+      <span className="ml-2 inline-flex min-w-6 items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-black text-white">
+        {banquilloCount}
+      </span>
+    ) : null}
+  </Link>
+) : null}
               </div>
 
               <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
