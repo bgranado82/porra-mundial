@@ -211,7 +211,36 @@ stats: {
   others: string;
   insightsTitle: string;
 };
-
+banquillo: {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  newPostTitle: string;
+  newCommentPlaceholder: string;
+  replyPlaceholder: string;
+  send: string;
+  sendReply: string;
+  sending: string;
+  reply: string;
+  cancel: string;
+  noMessages: string;
+  loading: string;
+  reload: string;
+  errorLoading: string;
+  writeSomething: string;
+  writeReplySomething: string;
+  responses: string;
+  pinned: string;
+  showReplies: string;
+  hideReplies: string;
+  backToPrediction: string;
+  backToStats: string;
+  participantFallback: string;
+  reactionError: string;
+  postCommentError: string;
+  postReplyError: string;
+  missingPoolId: string;
+};
 };
 
 
@@ -434,6 +463,36 @@ stats: {
   others: "Otros",
   insightsTitle: "Insights del pool",
 },
+banquillo: {
+  eyebrow: "Comunidad",
+  title: "Banquillo",
+  subtitle: "Comentarios, respuestas y reacciones entre participantes.",
+  newPostTitle: "Nuevo comentario",
+  newCommentPlaceholder: "Escribe un comentario para el pool...",
+  replyPlaceholder: "Escribe una respuesta...",
+  send: "Enviar",
+  sendReply: "Enviar respuesta",
+  sending: "Enviando...",
+  reply: "Responder",
+  cancel: "Cancelar",
+  noMessages: "Todavía no hay comentarios. Sé el primero en escribir algo.",
+  loading: "Cargando banquillo...",
+  reload: "Recargar",
+  errorLoading: "No se pudo cargar el banquillo.",
+  writeSomething: "Escribe algo antes de enviar.",
+  writeReplySomething: "Escribe una respuesta antes de enviarla.",
+  responses: "respuestas",
+  pinned: "Destacado",
+  showReplies: "Ver todas",
+  hideReplies: "Ocultar",
+  backToPrediction: "Volver a la porra",
+  backToStats: "Volver a estadísticas",
+  participantFallback: "Participante",
+  reactionError: "No se pudo guardar la reacción.",
+  postCommentError: "No se pudo publicar el comentario.",
+  postReplyError: "No se pudo publicar la respuesta.",
+  missingPoolId: "Falta el poolId.",
+},
 
   },
 
@@ -648,6 +707,37 @@ stats: {
   others: "Others",
   insightsTitle: "Pool insights",
 },
+banquillo: {
+  eyebrow: "Community",
+  title: "Bench",
+  subtitle: "Comments, replies and reactions between participants.",
+  newPostTitle: "New comment",
+  newCommentPlaceholder: "Write a comment for the pool...",
+  replyPlaceholder: "Write a reply...",
+  send: "Send",
+  sendReply: "Send reply",
+  sending: "Sending...",
+  reply: "Reply",
+  cancel: "Cancel",
+  noMessages: "There are no comments yet. Be the first to post something.",
+  loading: "Loading bench...",
+  reload: "Reload",
+  errorLoading: "The bench could not be loaded.",
+  writeSomething: "Write something before sending.",
+  writeReplySomething: "Write a reply before sending it.",
+  responses: "replies",
+  pinned: "Pinned",
+  showReplies: "View all",
+  hideReplies: "Hide",
+  backToPrediction: "Back to prediction",
+  backToStats: "Back to stats",
+  participantFallback: "Participant",
+  reactionError: "The reaction could not be saved.",
+  postCommentError: "The comment could not be posted.",
+  postReplyError: "The reply could not be posted.",
+  missingPoolId: "Missing poolId.",
+},
+
   },
 
   pt: {
@@ -860,5 +950,36 @@ stats: {
   others: "Outros",
   insightsTitle: "Insights do bolão",
 },
+banquillo: {
+  eyebrow: "Comunidade",
+  title: "Banco",
+  subtitle: "Comentários, respostas e reações entre participantes.",
+  newPostTitle: "Novo comentário",
+  newCommentPlaceholder: "Escreva um comentário para o bolão...",
+  replyPlaceholder: "Escreva uma resposta...",
+  send: "Enviar",
+  sendReply: "Enviar resposta",
+  sending: "Enviando...",
+  reply: "Responder",
+  cancel: "Cancelar",
+  noMessages: "Ainda não há comentários. Seja o primeiro a escrever algo.",
+  loading: "Carregando banco...",
+  reload: "Recarregar",
+  errorLoading: "Não foi possível carregar o banco.",
+  writeSomething: "Escreva algo antes de enviar.",
+  writeReplySomething: "Escreva uma resposta antes de enviá-la.",
+  responses: "respostas",
+  pinned: "Destacado",
+  showReplies: "Ver todas",
+  hideReplies: "Ocultar",
+  backToPrediction: "Voltar ao bolão",
+  backToStats: "Voltar às estatísticas",
+  participantFallback: "Participante",
+  reactionError: "Não foi possível salvar a reação.",
+  postCommentError: "Não foi possível publicar o comentário.",
+  postReplyError: "Não foi possível publicar a resposta.",
+  missingPoolId: "Falta o poolId.",
+},
+
   },
 };

@@ -129,3 +129,26 @@ type PoolSettingsRow = {
 };
 
 type PaymentStatus = "pending" | "paid";
+
+export type BanquilloComment = {
+  id: string;
+  pool_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+};
+
+export type BanquilloReply = {
+  id: string;
+  comment_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+};
+
+export type BanquilloReaction = {
+  id: string;
+  comment_id: string;
+  user_id: string;
+  reaction: "like" | "fire" | "laugh" | "clap" | "lucky";
+};

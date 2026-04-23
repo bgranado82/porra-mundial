@@ -1266,6 +1266,15 @@ const invalidKnockoutPicks = useMemo(() => {
                     {t.viewFullStandings}
                   </Link>
                 ) : null}
+
+                {poolId && activeEntryId && poolSlug ? (
+    <Link
+      href={`/banquillo?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
+      className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+    >
+      {t.banquillo.title}
+    </Link>
+  ) : null}
               </div>
 
               <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
