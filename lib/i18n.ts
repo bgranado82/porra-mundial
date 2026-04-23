@@ -465,7 +465,7 @@ stats: {
 },
 banquillo: {
   eyebrow: "Comunidad",
-  title: "Banquillo",
+  title: "La Grada",
   subtitle: "Comentarios, respuestas y reacciones entre participantes.",
   newPostTitle: "Nuevo comentario",
   newCommentPlaceholder: "Escribe un comentario para el pool...",
@@ -709,7 +709,7 @@ stats: {
 },
 banquillo: {
   eyebrow: "Community",
-  title: "Bench",
+  title: "Fan Zone",
   subtitle: "Comments, replies and reactions between participants.",
   newPostTitle: "New comment",
   newCommentPlaceholder: "Write a comment for the pool...",
@@ -952,7 +952,7 @@ stats: {
 },
 banquillo: {
   eyebrow: "Comunidade",
-  title: "Banco",
+  title: "Zona de Adeptos",
   subtitle: "Comentários, respostas e reações entre participantes.",
   newPostTitle: "Novo comentário",
   newCommentPlaceholder: "Escreva um comentário para o bolão...",
