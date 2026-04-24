@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
-type ReactionKey = "like" | "fire" | "laugh" | "clap" | "lucky";
+type ReactionKey = "like" | "heart" | "fire" | "laugh" | "clap" | "lucky";
 
 const ALLOWED_REACTIONS: ReactionKey[] = [
   "like",
+  "heart",
   "fire",
   "laugh",
   "clap",

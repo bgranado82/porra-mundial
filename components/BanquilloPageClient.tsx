@@ -8,7 +8,7 @@ import { Locale, messages } from "@/lib/i18n";
 
 const LOCALE_KEY = "porra-mundial-locale";
 
-type ReactionKey = "like" | "fire" | "laugh" | "clap" | "lucky";
+type ReactionKey = "like" | "heart" | "fire" | "laugh" | "clap" | "lucky";
 
 type BanquilloReply = {
   id: string;
@@ -40,6 +40,7 @@ type BanquilloResponse = {
 
 const REACTION_META: Record<ReactionKey, { emoji: string }> = {
   like: { emoji: "👍" },
+  heart: { emoji: "❤️" },
   fire: { emoji: "🔥" },
   laugh: { emoji: "😂" },
   clap: { emoji: "👏" },
