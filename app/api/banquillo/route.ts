@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 
-type ReactionKey = "like" | "fire" | "laugh" | "clap" | "lucky";
+type ReactionKey = "like" | "heart" | "fire" | "laugh" | "clap" | "lucky";
 
 type PoolCommentRow = {
   id: string;
@@ -28,6 +28,7 @@ type PoolCommentReactionRow = {
 const ALLOWED_REACTIONS: ReactionKey[] = [
   "like",
   "fire",
+  "heart",
   "laugh",
   "clap",
   "lucky",
@@ -143,6 +144,7 @@ export async function GET(request: NextRequest) {
       const counts: Record<ReactionKey, number> = {
         like: 0,
         fire: 0,
+        heart: 0,
         laugh: 0,
         clap: 0,
         lucky: 0,
