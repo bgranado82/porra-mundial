@@ -501,8 +501,12 @@ export default function StandingsTable({ days, standings }: Props) {
                         {row.champion_points}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.extra_points.first_goal_scorer_spain}
-                      </td>
+  {row.extra_points.first_goal_scorer_world}
+</td>
+
+<td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
+  {row.extra_points.first_goal_scorer_spain}
+</td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         {row.extra_points.golden_boot}
                       </td>
