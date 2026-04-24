@@ -29,6 +29,7 @@ type Standing = {
   sf_points: number;
   third_points: number;
   final_points: number;
+  champion_points: number;
   extra_group_points: number;
   extra_total_points: number;
   extra_points: ExtraPointsMap;
@@ -381,7 +382,7 @@ export default function StandingsTable({ days, standings }: Props) {
                   </th>
 
                   <th
-  colSpan={14}
+  colSpan={15}
   className="top-0 z-30 border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-2 text-center font-bold text-white md:px-2"
 >
   Puntos
@@ -406,6 +407,9 @@ export default function StandingsTable({ days, standings }: Props) {
                   </th>
                   <th className="top-[44px] z-30 w-[80px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
                     Final
+                  </th>
+                  <th className="top-[44px] z-30 w-[80px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
+                    Campeón
                   </th>
 
                   <th className="top-[44px] z-30 w-[120px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
@@ -493,9 +497,8 @@ export default function StandingsTable({ days, standings }: Props) {
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         {row.final_points}
                       </td>
-
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.extra_points.first_goal_scorer_world}
+                        {row.champion_points}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
                         {row.extra_points.first_goal_scorer_spain}
