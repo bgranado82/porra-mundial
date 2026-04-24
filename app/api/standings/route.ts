@@ -1,6 +1,13 @@
 
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { matches as initialMatches } from "@/data/matches";
+import { teams } from "@/data/teams";
+import { scoreSettings } from "@/data/settings";
+import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
+import { buildRealKnockoutBracket } from "@/lib/realKnockout";
+import { calculateKnockoutScore } from "@/lib/knockoutScoring";
+import { KnockoutPredictionMap, Match } from "@/types";
 
 type EntryRow = {
   id: string;
@@ -27,6 +34,43 @@ type SnapshotRow = {
   captured_at: string;
 };
 
+type OfficialGroupRow = {
+  match_id: string;
+  home_goals: number | null;
+  away_goals: number | null;
+};
+
+type GroupPredictionRow = {
+  entry_id: string;
+  match_id: string;
+  home_goals: number | null;
+  away_goals: number | null;
+};
+
+type KnockoutPredictionRow = {
+  entry_id: string;
+  match_id: string;
+  picked_team_id: string | null;
+};
+
+type OfficialKnockoutRow = {
+  match_id: string;
+  picked_team_id: string | null;
+};
+
+type EntryTiebreakRow = {
+  entry_id: string;
+  scope: "group" | "third_place";
+  scope_value: string;
+  team_id: string;
+  priority: number;
+};
+
+type PredictionMap = Record<
+  string,
+  { homeGoals: number | null; awayGoals: number | null }
+>;
+
 type ExtraPointsMap = {
   first_goal_scorer_world: number;
   first_goal_scorer_spain: number;
@@ -52,6 +96,7 @@ type StandingRow = {
   sf_points: number;
   third_points: number;
   final_points: number;
+  champion_points: number;
   extra_group_points: number;
   extra_total_points: number;
   extra_points: ExtraPointsMap;
@@ -73,6 +118,14 @@ function createEmptyExtraPoints(): ExtraPointsMap {
   };
 }
 
+function getScoreValue(score: any, keys: string[]) {
+  for (const key of keys) {
+    const value = score?.[key];
+    if (typeof value === "number") return value;
+  }
+  return 0;
+}
+
 export async function GET(req: Request) {
   try {
     const supabase = createAdminClient();
@@ -82,6 +135,10 @@ export async function GET(req: Request) {
     if (!poolId) {
       return NextResponse.json({ error: "poolId requerido" }, { status: 400 });
     }
+
+    const groups = [
+      ...new Set(teams.map((team) => team.group).filter(Boolean)),
+    ] as string[];
 
     const { data: entries, error: entriesError } = await supabase
       .from("entries")
@@ -99,6 +156,91 @@ export async function GET(req: Request) {
 
     if (scoresError) {
       return NextResponse.json({ error: scoresError.message }, { status: 500 });
+    }
+
+    const { data: officialGroupRows, error: officialGroupError } =
+      await supabase
+        .from("official_group_results")
+        .select("match_id, home_goals, away_goals");
+
+    if (officialGroupError) {
+      return NextResponse.json(
+        { error: officialGroupError.message },
+        { status: 500 }
+      );
+    }
+
+    const officialMatches: Match[] = initialMatches.map((match) => {
+      if (match.stage !== "group") return match;
+
+      const official = (officialGroupRows as OfficialGroupRow[] | null)?.find(
+        (row) => row.match_id === match.id
+      );
+
+      return {
+        ...match,
+        homeGoals: official?.home_goals ?? null,
+        awayGoals: official?.away_goals ?? null,
+      };
+    });
+
+    const { data: allGroupPredictions, error: groupPredictionsError } =
+      await supabase
+        .from("entry_group_predictions")
+        .select("entry_id, match_id, home_goals, away_goals")
+        .in(
+          "entry_id",
+          (entries ?? []).map((entry: EntryRow) => entry.id)
+        );
+
+    if (groupPredictionsError) {
+      return NextResponse.json(
+        { error: groupPredictionsError.message },
+        { status: 500 }
+      );
+    }
+
+    const { data: allKnockoutPredictions, error: koPredictionsError } =
+      await supabase
+        .from("entry_knockout_predictions")
+        .select("entry_id, match_id, picked_team_id")
+        .in(
+          "entry_id",
+          (entries ?? []).map((entry: EntryRow) => entry.id)
+        );
+
+    if (koPredictionsError) {
+      return NextResponse.json(
+        { error: koPredictionsError.message },
+        { status: 500 }
+      );
+    }
+
+    const { data: officialKnockoutRows, error: officialKnockoutError } =
+      await supabase
+        .from("official_knockout_results")
+        .select("match_id, picked_team_id");
+
+    if (officialKnockoutError) {
+      return NextResponse.json(
+        { error: officialKnockoutError.message },
+        { status: 500 }
+      );
+    }
+
+    const { data: tiebreakRows, error: tiebreakError } = await supabase
+      .from("entry_tiebreaks")
+      .select("entry_id, scope, scope_value, team_id, priority")
+      .in(
+        "entry_id",
+        (entries ?? []).map((entry: EntryRow) => entry.id)
+      );
+
+    if (tiebreakError) {
+      return NextResponse.json(
+        { error: tiebreakError.message },
+        { status: 500 }
+      );
     }
 
     const { data: snapshots, error: snapshotsError } = await supabase
@@ -134,6 +276,7 @@ export async function GET(req: Request) {
         sf_points: 0,
         third_points: 0,
         final_points: 0,
+        champion_points: 0,
         extra_group_points: 0,
         extra_total_points: 0,
         extra_points: createEmptyExtraPoints(),
@@ -146,14 +289,16 @@ export async function GET(req: Request) {
 
     const daysSet = new Set<number>();
 
+    // Grupos + extras desde entry_scores.
+    // Knockouts NO se suman aquí para no depender de entry_scores viejos o incompletos.
     (scores ?? []).forEach((row: ScoreRow) => {
       const current = grouped.get(String(row.entry_id));
       if (!current) return;
 
       const pts = Number(row.points ?? 0);
-      current.total_points += pts;
 
       if (row.stage === "group") {
+        current.total_points += pts;
         current.group_total += pts;
 
         if (row.matchday != null) {
@@ -171,40 +316,11 @@ export async function GET(req: Request) {
         return;
       }
 
-      if (row.stage === "r32") {
-        current.r32_points += pts;
-        return;
-      }
-
-      if (row.stage === "r16") {
-        current.r16_points += pts;
-        return;
-      }
-
-      if (row.stage === "qf") {
-        current.qf_points += pts;
-        return;
-      }
-
-      if (row.stage === "sf") {
-        current.sf_points += pts;
-        return;
-      }
-
-      if (row.stage === "third") {
-        current.third_points += pts;
-        return;
-      }
-
-      if (row.stage === "final") {
-        current.final_points += pts;
-        return;
-      }
-
       if (row.stage.startsWith("extra:")) {
         const questionKey = row.stage.replace("extra:", "") as keyof ExtraPointsMap;
 
         if (questionKey in current.extra_points) {
+          current.total_points += pts;
           current.extra_points[questionKey] += pts;
           current.extra_total_points += pts;
 
@@ -218,6 +334,106 @@ export async function GET(req: Request) {
       }
     });
 
+    const realKnockoutPredictions: KnockoutPredictionMap = {};
+    ((officialKnockoutRows ?? []) as OfficialKnockoutRow[]).forEach((row) => {
+      realKnockoutPredictions[row.match_id] = row.picked_team_id;
+    });
+
+    const realBracket = buildRealKnockoutBracket(
+      teams,
+      officialMatches,
+      groups,
+      realKnockoutPredictions
+    );
+
+    for (const entry of entries ?? []) {
+      const entryId = String(entry.id);
+      const current = grouped.get(entryId);
+      if (!current) continue;
+
+      const predictions: PredictionMap = {};
+      ((allGroupPredictions ?? []) as GroupPredictionRow[])
+        .filter((row) => row.entry_id === entryId)
+        .forEach((row) => {
+          predictions[row.match_id] = {
+            homeGoals: row.home_goals,
+            awayGoals: row.away_goals,
+          };
+        });
+
+      const knockoutPredictions: KnockoutPredictionMap = {};
+      ((allKnockoutPredictions ?? []) as KnockoutPredictionRow[])
+        .filter((row) => row.entry_id === entryId)
+        .forEach((row) => {
+          knockoutPredictions[row.match_id] = row.picked_team_id;
+        });
+
+      const groupUserTiebreaks: Record<string, Record<string, number>> = {};
+      const thirdPlaceUserTiebreaks: Record<string, number> = {};
+
+      ((tiebreakRows ?? []) as EntryTiebreakRow[])
+        .filter((row) => row.entry_id === entryId)
+        .forEach((row) => {
+          if (row.scope === "group") {
+            if (!groupUserTiebreaks[row.scope_value]) {
+              groupUserTiebreaks[row.scope_value] = {};
+            }
+
+            groupUserTiebreaks[row.scope_value][row.team_id] = row.priority;
+          }
+
+          if (row.scope === "third_place") {
+            thirdPlaceUserTiebreaks[row.team_id] = row.priority;
+          }
+        });
+
+      const userBracket = buildUserKnockoutBracket(
+        teams,
+        officialMatches,
+        groups,
+        predictions,
+        knockoutPredictions,
+        {
+          groupUserTiebreaks,
+          thirdPlaceUserTiebreaks,
+        }
+      );
+
+      const knockoutScore = calculateKnockoutScore(
+        scoreSettings,
+        userBracket,
+        realBracket
+      ) as any;
+
+      current.r32_points = getScoreValue(knockoutScore, ["round32", "r32"]);
+      current.r16_points = getScoreValue(knockoutScore, ["round16", "r16"]);
+      current.qf_points = getScoreValue(knockoutScore, [
+        "quarterfinals",
+        "quarterfinal",
+        "qf",
+      ]);
+      current.sf_points = getScoreValue(knockoutScore, [
+        "semifinals",
+        "semifinal",
+        "sf",
+      ]);
+      current.third_points = getScoreValue(knockoutScore, [
+        "thirdPlace",
+        "third",
+      ]);
+      current.final_points = getScoreValue(knockoutScore, ["final"]);
+      current.champion_points = getScoreValue(knockoutScore, ["champion"]);
+
+      current.total_points +=
+        current.r32_points +
+        current.r16_points +
+        current.qf_points +
+        current.sf_points +
+        current.third_points +
+        current.final_points +
+        current.champion_points;
+    }
+
     const days = Array.from(daysSet).sort((a, b) => a - b);
 
     const currentStandings = Array.from(grouped.values()).sort((a, b) => {
@@ -230,8 +446,8 @@ export async function GET(req: Request) {
     const snapshotTimes = Array.from(
       new Set((snapshots ?? []).map((s: SnapshotRow) => s.captured_at))
     ).sort((a, b) => (a < b ? 1 : -1));
-    const lastUpdate = snapshotTimes[0] ?? null;
 
+    const lastUpdate = snapshotTimes[0] ?? null;
     const prevTime = snapshotTimes[1];
     const prevMap = new Map<string, number>();
 
@@ -274,7 +490,7 @@ export async function GET(req: Request) {
       };
     });
 
-    return NextResponse.json({ days, standings, lastUpdate});
+    return NextResponse.json({ days, standings, lastUpdate });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
