@@ -1,7 +1,7 @@
 
 export type Locale = "es" | "en" | "pt";
 
-type Messages = {
+export type Messages = {
   appTitle: string;
   groupStage: string;
   language: string;
@@ -186,6 +186,19 @@ standingsColGoldenGlove: string;
 standingsColTopSpanishScorer: string;
 standingsColTotal: string;
 standingsColGroups: string;
+
+transparencyEyebrow: string;
+transparencyTitle: string;
+transparencySubtitle: string;
+transparencyLoading: string;
+transparencyNoData: string;
+transparencyParticipantLabel: string;
+transparencyGroupStageSubtitle: string;
+transparencyStandingsSubtitle: string;
+transparencyExtraSubtitle: string;
+transparencyOfficialLabel: string;
+transparencyMatchDateHeader: string;
+transparencyKnockoutSubtitle: string;
 
 classificationCardTitle: string;
 classificationMovementLabel: string;
@@ -464,6 +477,19 @@ standingsColTopSpanishScorer: "Máximo goleador de España",
 standingsColTotal: "Total",
 standingsColGroups: "Grupos",
 
+transparencyEyebrow: "Transparencia total",
+transparencyTitle: "Predicciones por participante",
+transparencySubtitle: "Consulta una porra enviada completa: fase de grupos, clasificaciones, knockout y preguntas extra.",
+transparencyLoading: "Cargando transparencia...",
+transparencyNoData: "No hay datos disponibles.",
+transparencyParticipantLabel: "Participante",
+transparencyGroupStageSubtitle: "Pronósticos del participante en orden cronológico.",
+transparencyStandingsSubtitle: "Clasificación proyectada por grupo.",
+transparencyExtraSubtitle: "Respuestas enviadas por este participante.",
+transparencyOfficialLabel: "Oficial",
+transparencyMatchDateHeader: "J / G / Fecha",
+transparencyKnockoutSubtitle: "Predicción enviada por este participante",
+
 classificationCardTitle: "Clasificación",
 classificationMovementLabel: "Variación respecto a la última clasificación",
 classificationPending: "Pendiente de inicio",
@@ -733,6 +759,19 @@ standingsColTopSpanishScorer: "Top Spanish scorer",
 standingsColTotal: "Total",
 standingsColGroups: "Groups",
 
+transparencyEyebrow: "Full transparency",
+transparencyTitle: "Predictions by participant",
+transparencySubtitle: "View a complete submitted entry: group stage, standings, knockout and extra questions.",
+transparencyLoading: "Loading transparency...",
+transparencyNoData: "No data available.",
+transparencyParticipantLabel: "Participant",
+transparencyGroupStageSubtitle: "Participant's predictions in chronological order.",
+transparencyStandingsSubtitle: "Projected standings by group.",
+transparencyExtraSubtitle: "Answers submitted by this participant.",
+transparencyOfficialLabel: "Official",
+transparencyMatchDateHeader: "MD / G / Date",
+transparencyKnockoutSubtitle: "Prediction submitted by this participant",
+
 classificationCardTitle: "Standings",
 classificationMovementLabel: "Change compared to the latest standings",
 classificationPending: "Pending start",
@@ -1000,6 +1039,19 @@ standingsColGoldenGlove: "Luva de Ouro",
 standingsColTopSpanishScorer: "Maior goleador espanhol",
 standingsColTotal: "Total",
 standingsColGroups: "Grupos",
+
+transparencyEyebrow: "Transparência total",
+transparencyTitle: "Palpites por participante",
+transparencySubtitle: "Consulte um bolão enviado completo: fase de grupos, classificações, knockout e perguntas extras.",
+transparencyLoading: "Carregando transparência...",
+transparencyNoData: "Não há dados disponíveis.",
+transparencyParticipantLabel: "Participante",
+transparencyGroupStageSubtitle: "Palpites do participante em ordem cronológica.",
+transparencyStandingsSubtitle: "Classificação projetada por grupo.",
+transparencyExtraSubtitle: "Respostas enviadas por este participante.",
+transparencyOfficialLabel: "Oficial",
+transparencyMatchDateHeader: "J / G / Data",
+transparencyKnockoutSubtitle: "Palpite enviado por este participante",
 
 classificationCardTitle: "Classificação",
 classificationMovementLabel: "Variação em relação à última classificação",

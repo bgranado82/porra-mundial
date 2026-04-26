@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { Locale, Messages, messages } from "@/lib/i18n";
 import { teams } from "@/data/teams";
 import { matches as initialMatches } from "@/data/matches";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
@@ -67,19 +65,15 @@ type PredictionMap = Record<
   { homeGoals: number | null; awayGoals: number | null }
 >;
 
-function getExtraLabels(t: Messages): Record<string, string> {
-  return {
-    first_goal_scorer_world: `🥇 ${t.extras.first_goal_scorer_world}`,
-    first_goal_scorer_spain: `🇪🇸 ${t.extras.first_goal_scorer_spain}`,
-    golden_boot: `👟 ${t.extras.golden_boot}`,
-    golden_ball: `🏆 ${t.extras.golden_ball}`,
-    best_young_player: `🌟 ${t.extras.best_young_player}`,
-    golden_glove: `🧤 ${t.extras.golden_glove}`,
-    top_spanish_scorer: `⚽ ${t.extras.top_spanish_scorer}`,
-  };
-}
-
-const LOCALE_KEY = "porra-mundial-locale";
+const EXTRA_LABELS: Record<string, string> = {
+  first_goal_scorer_world: "🥇 Primer goleador del Mundial",
+  first_goal_scorer_spain: "🇪🇸 Primer goleador de España",
+  golden_boot: "👟 Bota de Oro",
+  golden_ball: "🏆 Balón de Oro",
+  best_young_player: "🌟 Mejor jugador joven",
+  golden_glove: "🧤 Guante de Oro",
+  top_spanish_scorer: "⚽ Máximo goleador de España",
+};
 
 function getTeamsInRound(
   matches: Array<{ homeTeamId: string | null; awayTeamId: string | null }>
@@ -120,7 +114,6 @@ export default function TransparencyPageClient() {
   const [loadingList, setLoadingList] = useState(true);
   const [loadingEntry, setLoadingEntry] = useState(true);
   const [error, setError] = useState("");
-  const [locale, setLocale] = useState<Locale>("es");
 
   const teamMap = useMemo(
     () => new Map(teams.map((team) => [team.id, team])),
@@ -135,15 +128,6 @@ export default function TransparencyPageClient() {
   useEffect(() => {
     setSelectedEntryId(selectedEntryIdParam);
   }, [selectedEntryIdParam]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(LOCALE_KEY) as Locale | null;
-    if (saved && ["es", "en", "pt"].includes(saved)) setLocale(saved);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(LOCALE_KEY, locale);
-  }, [locale]);
 
   useEffect(() => {
     async function loadParticipants() {
@@ -350,15 +334,12 @@ export default function TransparencyPageClient() {
 
   const selectedParticipant = participants.find((p) => p.id === selectedEntryId);
 
-  const t = messages[locale];
-  const extraLabels = getExtraLabels(t);
-
   if (loadingList || loadingEntry) {
     return (
       <main className="mx-auto max-w-[1600px] px-4 py-6">
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 shadow-sm">
           <div className="text-sm font-semibold text-[var(--iberdrola-forest)]">
-            {t.transparencyLoading}
+            Cargando transparencia...
           </div>
         </section>
       </main>
@@ -370,7 +351,7 @@ export default function TransparencyPageClient() {
       <main className="mx-auto max-w-[1600px] px-4 py-6">
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 shadow-sm">
           <div className="text-sm font-semibold text-[var(--iberdrola-forest)]">
-            {error || t.transparencyNoData}
+            {error || "No hay datos disponibles."}
           </div>
         </section>
       </main>
@@ -392,35 +373,31 @@ export default function TransparencyPageClient() {
 
             <div>
               <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                {t.transparencyEyebrow}
+                Transparencia total
               </div>
               <h1 className="text-2xl font-black text-[var(--iberdrola-forest)]">
-                {t.transparencyTitle}
+                Predicciones por participante
               </h1>
               <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                {t.transparencySubtitle}
+                Consulta una porra enviada completa: fase de grupos,
+                clasificaciones, knockout y preguntas extra.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <LanguageSwitcher
-              locale={locale}
-              onChange={setLocale}
-              label={t.language}
-            />
+          <div className="flex flex-wrap gap-2">
             <Link
               href={backToStatsHref}
               className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
             >
-              {t.banquillo.backToStats}
+              Volver a estadísticas
             </Link>
 
             <Link
               href={backToPredictionHref}
               className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
             >
-              {t.banquillo.backToPrediction}
+              Volver a la porra
             </Link>
           </div>
         </div>
@@ -430,7 +407,7 @@ export default function TransparencyPageClient() {
         <div className="grid gap-4 p-5 lg:grid-cols-[1.2fr_1fr]">
           <div>
             <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-              {t.transparencyParticipantLabel}
+              Participante
             </label>
             <select
               value={selectedEntryId}
@@ -451,7 +428,7 @@ export default function TransparencyPageClient() {
             >
               {participants.map((participant) => (
                 <option key={participant.id} value={participant.id}>
-                  {participant.name || t.banquillo.participantFallback}
+                  {participant.name || "Participante"}
                 </option>
               ))}
             </select>
@@ -460,7 +437,7 @@ export default function TransparencyPageClient() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
               <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                {t.name}
+                Nombre
               </div>
               <div className="mt-1 text-sm font-bold text-[var(--iberdrola-forest)]">
                 {selectedParticipant?.name || data.entry.name || "-"}
@@ -469,7 +446,7 @@ export default function TransparencyPageClient() {
 
             <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
               <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                {t.company}
+                Empresa
               </div>
               <div className="mt-1 text-sm font-bold text-[var(--iberdrola-forest)]">
                 {data.entry.company || "-"}
@@ -478,7 +455,7 @@ export default function TransparencyPageClient() {
 
             <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3">
               <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                {t.country}
+                País
               </div>
               <div className="mt-1 text-sm font-bold text-[var(--iberdrola-forest)]">
                 {data.entry.country || "-"}
@@ -492,18 +469,18 @@ export default function TransparencyPageClient() {
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-              {t.groupStageSection}
+              Fase de grupos
             </h2>
             <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-              {t.transparencyGroupStageSubtitle}
+              Pronósticos del participante en orden cronológico.
             </p>
           </div>
 
           <div className="p-4">
             <div className="hidden xl:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
               <div className="grid grid-cols-[132px_minmax(0,1fr)_82px] gap-2 bg-[var(--iberdrola-sand)]/35 px-3 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
-                <div>{t.transparencyMatchDateHeader}</div>
-                <div className="text-center">{t.predictionHeader}</div>
+                <div>J / G / Fecha</div>
+                <div className="text-center">Pronóstico</div>
                 <div className="text-right">Info</div>
               </div>
 
@@ -539,8 +516,8 @@ const score = calculateMatchPredictionScore(
     points={score.points}
     onChangeHome={() => {}}
     onChangeAway={() => {}}
-    officialLabel={t.transparencyOfficialLabel}
-    pointsShortLabel={t.pointsShort}
+    officialLabel="Oficial"
+    pointsShortLabel="pts"
   />
                 );
               })}
@@ -580,9 +557,9 @@ const score = calculateMatchPredictionScore(
     officialAwayGoals={match.awayGoals}
     points={score.points}
     pointsShortLabel="pts"
-    officialLabel={t.transparencyOfficialLabel}
-    officialPendingLabel={t.officialPending}
-    matchLabel={t.matchLabel}
+    officialLabel="Oficial"
+    officialPendingLabel="Pendiente"
+    matchLabel="Partido"
     onChangeHome={() => {}}
     onChangeAway={() => {}}
   />
@@ -595,10 +572,10 @@ const score = calculateMatchPredictionScore(
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm xl:sticky xl:top-4 self-start">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-              {t.groupStandingsSection}
+              Clasificaciones
             </h2>
             <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-              {t.transparencyStandingsSubtitle}
+              Clasificación proyectada por grupo.
             </p>
           </div>
 
@@ -609,21 +586,21 @@ const score = calculateMatchPredictionScore(
                 className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
               >
                 <GroupStandingsTable
-  title={`${t.group} ${groupCode}`}
+  title={`Grupo ${groupCode}`}
   groupCode={groupCode}
   rows={rows}
   tiebreaks={{}} // aquí vacío porque es solo visualización
   showTiebreak={false} // importante: aquí no quieres editar
   labels={{
-    team: t.team,
-    played: t.played,
-    won: t.won,
-    drawn: t.drawn,
-    lost: t.lost,
-    goalsFor: t.goalsFor,
-    goalsAgainst: t.goalsAgainst,
-    goalDifference: t.goalDifference,
-    pointsShort: t.pointsShort,
+    team: "Equipo",
+    played: "PJ",
+    won: "PG",
+    drawn: "PE",
+    lost: "PP",
+    goalsFor: "GF",
+    goalsAgainst: "GC",
+    goalDifference: "DG",
+    pointsShort: "Pts",
     tiebreak: "TB",
   }}
 />
@@ -634,8 +611,8 @@ const score = calculateMatchPredictionScore(
       </div>
 
       <KnockoutBracket
-  title={t.knockoutBracket}
-  subtitle={t.transparencyKnockoutSubtitle}
+  title="Cuadro eliminatorio"
+  subtitle="Predicción enviada por este participante"
   round32={userBracket.round32}
   round16={userBracket.round16}
   quarterfinals={userBracket.quarterfinals}
@@ -646,27 +623,27 @@ const score = calculateMatchPredictionScore(
   picks={knockoutPredictions}
   realTeamsByRound={realTeamsByRound}
   labels={{
-    matchLabel: t.matchLabel,
-    championLabel: t.champion,
-    undefinedLabel: t.undefinedLabel,
-    invalidLabel: t.invalidLabel,
-    leftSideLabel: t.leftSideLabel,
-    rightSideLabel: t.rightSideLabel,
-    round32Label: t.round32,
-    round16Label: t.round16,
-    quarterfinalsLabel: t.quarterfinals,
-    semifinalsLabel: t.semifinals,
-    finalLabel: t.finalLabel,
+    matchLabel: "Partido",
+    championLabel: "Campeón",
+    undefinedLabel: "Por definir",
+    invalidLabel: "Inválido",
+    leftSideLabel: "Lado izquierdo",
+    rightSideLabel: "Lado derecho",
+    round32Label: "Round of 32",
+    round16Label: "Octavos",
+    quarterfinalsLabel: "Cuartos",
+    semifinalsLabel: "Semis",
+    finalLabel: "Final",
   }}
 />
 
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-            {t.extraQuestionsRulesTitle}
+            Preguntas extra
           </h2>
           <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-            {t.transparencyExtraSubtitle}
+            Respuestas enviadas por este participante.
           </p>
         </div>
 
@@ -701,7 +678,7 @@ const score = calculateMatchPredictionScore(
       }`}
     >
       <div className="mb-2 text-sm font-bold text-[var(--iberdrola-forest)]">
-        {extraLabels[question.key] ||
+        {EXTRA_LABELS[question.key] ||
           question.label ||
           question.title ||
           question.text ||
@@ -715,7 +692,7 @@ const score = calculateMatchPredictionScore(
       {officialValue ? (
         <div className="mt-3 flex items-center justify-between gap-2">
           <div className="text-xs text-[var(--iberdrola-forest)]/65">
-            {t.transparencyOfficialLabel}: {officialValue}
+            Oficial: {officialValue}
           </div>
 
           <span
