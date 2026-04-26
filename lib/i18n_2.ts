@@ -162,31 +162,6 @@ extraQuestionsRulesSubtitle: string;
 
 playerFallback: string;
 
-standingsTitle: string;
-standingsSubtitle: string;
-standingsBackToPool: string;
-standingsMissingPoolId: string;
-standingsTabGeneral: string;
-standingsColVariation: string;
-standingsColAccuracy: string;
-standingsColTotalMatchdays: string;
-standingsColFirstGoalWorld: string;
-standingsColFirstGoalSpain: string;
-standingsColTotalGroups: string;
-standingsColOutcomeHits: string;
-standingsColOutcomePercent: string;
-standingsColExactHits: string;
-standingsColExactPercent: string;
-standingsColFirstGoalWorldLong: string;
-standingsColFirstGoalSpainLong: string;
-standingsColGoldenBoot: string;
-standingsColGoldenBall: string;
-standingsColBestYoungPlayer: string;
-standingsColGoldenGlove: string;
-standingsColTopSpanishScorer: string;
-standingsColTotal: string;
-standingsColGroups: string;
-
 classificationCardTitle: string;
 classificationMovementLabel: string;
 classificationPending: string;
@@ -439,31 +414,6 @@ extraQuestionsRulesSubtitle: "Puntuación de premios individuales y goleadores."
 
 playerFallback: "Jugador",
 
-standingsTitle: "Clasificación Porra Mundial 2026",
-standingsSubtitle: "Consulta la clasificación por jornadas de grupos o la clasificación general acumulada.",
-standingsBackToPool: "Volver a la porra",
-standingsMissingPoolId: "Falta el poolId en la URL.",
-standingsTabGeneral: "General",
-standingsColVariation: "Variación",
-standingsColAccuracy: "Precisión",
-standingsColTotalMatchdays: "Total jornadas",
-standingsColFirstGoalWorld: "1º gol",
-standingsColFirstGoalSpain: "1º gol España",
-standingsColTotalGroups: "Total grupos",
-standingsColOutcomeHits: "Aciertos",
-standingsColOutcomePercent: "% acierto",
-standingsColExactHits: "Exactos",
-standingsColExactPercent: "% exacto",
-standingsColFirstGoalWorldLong: "Primer goleador",
-standingsColFirstGoalSpainLong: "Primer goleador de España",
-standingsColGoldenBoot: "Bota de Oro",
-standingsColGoldenBall: "Balón de Oro",
-standingsColBestYoungPlayer: "Mejor jugador joven",
-standingsColGoldenGlove: "Guante de Oro",
-standingsColTopSpanishScorer: "Máximo goleador de España",
-standingsColTotal: "Total",
-standingsColGroups: "Grupos",
-
 classificationCardTitle: "Clasificación",
 classificationMovementLabel: "Variación respecto a la última clasificación",
 classificationPending: "Pendiente de inicio",
@@ -708,31 +658,6 @@ extraQuestionsRulesSubtitle: "Scoring for individual awards and scorers.",
 
 playerFallback: "Player",
 
-standingsTitle: "World Cup Pool 2026 Standings",
-standingsSubtitle: "Check the standings by matchday or the overall accumulated standings.",
-standingsBackToPool: "Back to pool",
-standingsMissingPoolId: "Missing poolId in URL.",
-standingsTabGeneral: "Overall",
-standingsColVariation: "Change",
-standingsColAccuracy: "Accuracy",
-standingsColTotalMatchdays: "Total matchdays",
-standingsColFirstGoalWorld: "1st goal",
-standingsColFirstGoalSpain: "1st goal Spain",
-standingsColTotalGroups: "Group total",
-standingsColOutcomeHits: "Outcomes",
-standingsColOutcomePercent: "% outcome",
-standingsColExactHits: "Exact",
-standingsColExactPercent: "% exact",
-standingsColFirstGoalWorldLong: "First scorer",
-standingsColFirstGoalSpainLong: "First scorer Spain",
-standingsColGoldenBoot: "Golden Boot",
-standingsColGoldenBall: "Golden Ball",
-standingsColBestYoungPlayer: "Best young player",
-standingsColGoldenGlove: "Golden Glove",
-standingsColTopSpanishScorer: "Top Spanish scorer",
-standingsColTotal: "Total",
-standingsColGroups: "Groups",
-
 classificationCardTitle: "Standings",
 classificationMovementLabel: "Change compared to the latest standings",
 classificationPending: "Pending start",
@@ -975,31 +900,6 @@ extraQuestionsRulesTitle: "Perguntas extras",
 extraQuestionsRulesSubtitle: "Pontuação de prêmios individuais e artilheiros.",
 
 playerFallback: "Jogador",
-
-standingsTitle: "Classificação Bolão Mundial 2026",
-standingsSubtitle: "Consulte a classificação por jornadas de grupos ou a classificação geral acumulada.",
-standingsBackToPool: "Voltar ao bolão",
-standingsMissingPoolId: "Falta o poolId na URL.",
-standingsTabGeneral: "Geral",
-standingsColVariation: "Variação",
-standingsColAccuracy: "Precisão",
-standingsColTotalMatchdays: "Total jornadas",
-standingsColFirstGoalWorld: "1º gol",
-standingsColFirstGoalSpain: "1º gol Espanha",
-standingsColTotalGroups: "Total grupos",
-standingsColOutcomeHits: "Acertos",
-standingsColOutcomePercent: "% acerto",
-standingsColExactHits: "Exatos",
-standingsColExactPercent: "% exato",
-standingsColFirstGoalWorldLong: "Primeiro goleador",
-standingsColFirstGoalSpainLong: "Primeiro goleador Espanha",
-standingsColGoldenBoot: "Chuteira de Ouro",
-standingsColGoldenBall: "Bola de Ouro",
-standingsColBestYoungPlayer: "Melhor jovem",
-standingsColGoldenGlove: "Luva de Ouro",
-standingsColTopSpanishScorer: "Maior goleador espanhol",
-standingsColTotal: "Total",
-standingsColGroups: "Grupos",
 
 classificationCardTitle: "Classificação",
 classificationMovementLabel: "Variação em relação à última classificação",

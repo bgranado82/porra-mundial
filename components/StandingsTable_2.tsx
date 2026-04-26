@@ -3,7 +3,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Locale, messages } from "@/lib/i18n";
 
 type ExtraPointsMap = {
   first_goal_scorer_world: number;
@@ -47,7 +46,6 @@ type Standing = {
 type Props = {
   days: number[];
   standings: Standing[];
-  locale?: Locale;
 };
 
 type TabKey = "groups" | "general";
@@ -120,9 +118,8 @@ function getRankHeatClass(position: number, totalRows: number) {
   return "bg-red-100 text-red-900";
 }
 
-export default function StandingsTable({ days, standings, locale = "es" }: Props) {
+export default function StandingsTable({ days, standings }: Props) {
   const [tab, setTab] = useState<TabKey>("groups");
-  const t = messages[locale];
 
   const hasGroupDays = days.length > 0;
   const sortedDays = useMemo(() => [...days].sort((a, b) => a - b), [days]);
@@ -140,7 +137,7 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
             : "border border-[var(--iberdrola-green)] bg-white text-[var(--iberdrola-forest)]"
         }`}
       >
-        {t.groupStage}
+        Fase de grupos
       </button>
 
       <button
@@ -151,7 +148,7 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
             : "border border-[var(--iberdrola-green)] bg-white text-[var(--iberdrola-forest)]"
         }`}
       >
-        {t.standingsTabGeneral}
+        General
       </button>
     </div>
         
@@ -165,7 +162,7 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                     rowSpan={2}
                     className="sticky left-0 top-0 z-30 w-[95px] border-b border-gray-200 bg-white px-1 py-3 text-center font-bold md:px-2"
                   >
-                    {t.standingsColVariation}
+                    Variación
                   </th>
                   <th
                     rowSpan={2}
@@ -177,33 +174,33 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                     rowSpan={2}
                     className="sticky left-[155px] top-0 z-30 w-[190px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
-                    {t.playerFallback}
+                    Jugador
                   </th>
                   <th
                     rowSpan={2}
                     className="top-0 z-30 w-[140px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
-                    {t.company}
+                    Empresa
                   </th>
                   <th
                     rowSpan={2}
                     className="top-0 z-30 w-[110px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
-                    {t.country}
+                    País
                   </th>
 
                   <th
   colSpan={hasGroupDays ? sortedDays.length + 4 : 4}
   className="top-0 z-30 border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-2 text-center font-bold text-white md:px-2"
 >
-  {t.points}
+  Puntos
 </th>
 
                   <th
                     colSpan={4}
                     className="top-0 z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-semibold text-slate-700 md:px-2"
                   >
-                    {t.standingsColAccuracy}
+                    Precisión
                   </th>
                 </tr>
 
@@ -223,35 +220,35 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
 
   {/* ✅ NUEVO: TOTAL JORNADAS */}
   <th className="top-[44px] z-30 min-w-[95px] border-b border-l border-gray-200 bg-sky-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
-  {t.standingsColTotalMatchdays}
+  Total<br />jornadas
 </th>
 
 <th className="top-[44px] z-30 min-w-[95px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold whitespace-nowrap">
-  {t.standingsColFirstGoalWorld}
+  1º gol
 </th>
 
 <th className="top-[44px] z-30 min-w-[120px] border-b border-l border-gray-200 bg-green-50 px-2 py-3 text-center font-semibold leading-tight whitespace-nowrap">
-  {t.standingsColFirstGoalSpain}
+  1º gol<br />España
 </th>
 
 <th className="top-[44px] z-30 min-w-[110px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-2 py-3 text-center font-bold text-white whitespace-nowrap">
-  {t.standingsColTotalGroups}
+  Total<br />grupos
 </th>
 
 <th className="top-[44px] z-30 min-w-[90px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
-  {t.standingsColOutcomeHits}
+  Aciertos
 </th>
 
 <th className="top-[44px] z-30 min-w-[95px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
-  {t.standingsColOutcomePercent}
+  %<br />acierto
 </th>
 
 <th className="top-[44px] z-30 min-w-[90px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
-  {t.standingsColExactHits}
+  Exactos
 </th>
 
 <th className="top-[44px] z-30 min-w-[95px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap">
-  {t.standingsColExactPercent}
+  %<br />exacto
 </th>
 </tr>
               </thead>
@@ -278,9 +275,9 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                           <Link
                             href={`/entry/${row.entry_id}`}
                             className="hover:underline"
-                            title={row.name || row.email || t.playerFallback}
+                            title={row.name || row.email || "Jugador"}
                           >
-                            {row.name || row.email || t.playerFallback}
+                            {row.name || row.email || "Jugador"}
                           </Link>
                         </div>
                       </td>
@@ -356,7 +353,7 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                     rowSpan={2}
                     className="sticky left-0 top-0 z-30 w-[95px] border-b border-gray-200 bg-white px-1 py-3 text-center font-bold md:px-2"
                   >
-                    {t.standingsColVariation}
+                    Variación
                   </th>
                   <th
                     rowSpan={2}
@@ -368,33 +365,33 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                     rowSpan={2}
                     className="sticky left-[155px] top-0 z-30 w-[190px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
-                    {t.playerFallback}
+                    Jugador
                   </th>
 
                   <th
                     rowSpan={2}
                     className="top-0 z-30 w-[140px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
-                    {t.company}
+                    Empresa
                   </th>
                   <th
                     rowSpan={2}
                     className="top-0 z-30 w-[110px] border-b border-gray-200 bg-white px-1 py-3 text-left font-bold md:px-2"
                   >
-                    {t.country}
+                    País
                   </th>
 
                   <th
   colSpan={15}
   className="top-0 z-30 border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-2 text-center font-bold text-white md:px-2"
 >
-  {t.points}
+  Puntos
 </th>
                 </tr>
 
                 <tr>
                   <th className="top-[44px] z-30 w-[80px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
-                    {t.standingsColGroups}
+                    Grupos
                   </th>
                   <th className="top-[44px] z-30 w-[80px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
                     R32
@@ -403,41 +400,41 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                     R16
                   </th>
                   <th className="top-[44px] z-30 w-[80px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
-                    {t.quarterfinals}
+                    Cuartos
                   </th>
                   <th className="top-[44px] z-30 w-[96px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
-                    {t.semifinals}
+                    Semifinales
                   </th>
                   <th className="top-[44px] z-30 w-[80px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
-                    {t.finalLabel}
+                    Final
                   </th>
                   <th className="top-[44px] z-30 w-[80px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold whitespace-nowrap md:px-2">
-                    {t.champion}
+                    Campeón
                   </th>
 
                   <th className="top-[44px] z-30 w-[120px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-                    {t.standingsColFirstGoalWorldLong}
+                    Primer<br />goleador
                   </th>
                   <th className="top-[44px] z-30 w-[138px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-                    {t.standingsColFirstGoalSpainLong}
+                    Primer goleador<br />de España
                   </th>
                   <th className="top-[44px] z-30 w-[110px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-                    {t.standingsColGoldenBoot}
+                    Bota<br />de Oro
                   </th>
                   <th className="top-[44px] z-30 w-[110px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-                    {t.standingsColGoldenBall}
+                    Balón<br />de Oro
                   </th>
                   <th className="top-[44px] z-30 w-[120px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-                    {t.standingsColBestYoungPlayer}
+                    Mejor jugador<br />joven
                   </th>
                   <th className="top-[44px] z-30 w-[110px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-                    {t.standingsColGoldenGlove}
+                    Guante<br />de Oro
                   </th>
                   <th className="top-[44px] z-30 w-[140px] border-b border-l border-gray-200 bg-green-50 px-1 py-3 text-center font-semibold leading-tight md:px-2">
-                    {t.standingsColTopSpanishScorer}
+                    Máximo goleador<br />de España
                   </th>
                   <th className="top-[44px] z-30 w-[90px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold whitespace-nowrap text-white md:px-2">
-                    {t.standingsColTotal}
+                    Total
                   </th>
                 </tr>
               </thead>
@@ -464,9 +461,9 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                           <Link
                             href={`/entry/${row.entry_id}`}
                             className="hover:underline"
-                            title={row.name || row.email || t.playerFallback}
+                            title={row.name || row.email || "Jugador"}
                           >
-                            {row.name || row.email || t.playerFallback}
+                            {row.name || row.email || "Jugador"}
                           </Link>
                         </div>
                       </td>
