@@ -403,25 +403,27 @@ export default function TransparencyPageClient() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col items-start gap-2">
             <LanguageSwitcher
               locale={locale}
               onChange={setLocale}
               label={t.language}
             />
-            <Link
-              href={backToStatsHref}
-              className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
-            >
-              {t.banquillo.backToStats}
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={backToStatsHref}
+                className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+              >
+                {t.banquillo.backToStats}
+              </Link>
 
-            <Link
-              href={backToPredictionHref}
-              className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
-            >
-              {t.banquillo.backToPrediction}
-            </Link>
+              <Link
+                href={backToPredictionHref}
+                className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+              >
+                {t.banquillo.backToPrediction}
+              </Link>
+            </div>
           </div>
         </div>
       </section>
