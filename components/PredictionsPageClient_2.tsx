@@ -11,11 +11,11 @@ import { matches as initialMatches } from "@/data/matches";
 import { scoreSettings } from "@/data/settings";
 import { teams } from "@/data/teams";
 import { calculateMatchPredictionScore } from "@/lib/scoring";
-import { calculatePredictedStandings, getGroupTeamsNeedingTiebreak } from "@/lib/standings";
+import { calculatePredictedStandings } from "@/lib/standings";
 import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
 import { calculateKnockoutScore } from "@/lib/knockoutScoring";
-import { getBestThirdPlacedTeams, getThirdPlacedTeamsNeedingTiebreak } from "@/lib/thirdPlace";
+import { getBestThirdPlacedTeams } from "@/lib/thirdPlace";
 import { Locale, messages } from "@/lib/i18n";
 import { KnockoutPredictionMap, Match } from "@/types";
 import { createClient } from "@/utils/supabase/client";
@@ -775,28 +775,6 @@ const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
         ),
       })),
     [groups, officialMatches, predictions, groupUserTiebreaks]
-  );
-
-  const tiedTeamIdsByGroup = useMemo(
-    () =>
-      Object.fromEntries(
-        groups.map((groupCode) => [
-          groupCode,
-          getGroupTeamsNeedingTiebreak(teams, predictedGroupMatches, groupCode),
-        ])
-      ),
-    [groups, predictedGroupMatches]
-  );
-
-  const tiedThirdPlaceTeamIds = useMemo(
-    () =>
-      getThirdPlacedTeamsNeedingTiebreak(
-        teams,
-        predictedGroupMatches,
-        groups,
-        groupUserTiebreaks
-      ),
-    [predictedGroupMatches, groups, groupUserTiebreaks]
   );
 
   const userBracket = useMemo(
@@ -1661,7 +1639,6 @@ const invalidKnockoutPicks = useMemo(() => {
                     tiebreaks={userTiebreaks}
                     onChangeTiebreak={updateGroupTiebreak}
                     showTiebreak
-                    tiedTeamIds={tiedTeamIdsByGroup[groupCode]}
                     labels={{
                       team: t.team,
                       played: t.played,
@@ -1687,7 +1664,6 @@ const invalidKnockoutPicks = useMemo(() => {
           rows={predictedThirdPlaced}
           tiebreaks={userTiebreaks}
           onChangeTiebreak={updateThirdPlaceTiebreak}
-          tiedTeamIds={tiedThirdPlaceTeamIds}
           labels={{
             position: t.position,
             group: t.group,

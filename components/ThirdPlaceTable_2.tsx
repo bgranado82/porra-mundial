@@ -6,7 +6,6 @@ type Props = {
   rows: ThirdPlaceRow[];
   tiebreaks?: Record<string, number>;
   onChangeTiebreak?: (teamId: string, value: string) => void;
-  tiedTeamIds?: Set<string>;
   labels: {
     position: string;
     group: string;
@@ -36,7 +35,6 @@ export default function ThirdPlaceTable({
   rows,
   tiebreaks,
   onChangeTiebreak,
-  tiedTeamIds,
   labels,
 }: Props) {
   return (
@@ -78,14 +76,13 @@ export default function ThirdPlaceTable({
 
             <tbody>
               {rows.map((row, index) => {
-                const isTied = tiedTeamIds?.has(row.teamId) ?? false;
                 const tbKey = getTiebreakKey(row.teamId);
                 const tbValue = tiebreaks?.[tbKey] ?? "";
 
                 return (
                   <tr
                     key={row.teamId}
-                    className={`border-t border-[var(--iberdrola-sky)] text-[var(--iberdrola-forest)] ${isTied ? "bg-[var(--iberdrola-sunset)]/10" : ""}`}
+                    className="border-t border-[var(--iberdrola-sky)] text-[var(--iberdrola-forest)]"
                   >
                     <td className="px-3 py-2 font-bold">{index + 1}</td>
                     <td className="px-3 py-2 font-semibold">{row.group}</td>
@@ -99,11 +96,6 @@ export default function ThirdPlaceTable({
                           />
                         ) : null}
                         <span>{row.teamName}</span>
-                        {isTied ? (
-                          <span className="rounded-full bg-[var(--iberdrola-sunset)] px-1.5 py-0.5 text-[10px] font-black text-white">
-                            TB
-                          </span>
-                        ) : null}
                       </div>
                     </td>
                     <td className="px-2 py-2 text-center">{row.played}</td>
@@ -125,18 +117,14 @@ export default function ThirdPlaceTable({
                       </span>
                     </td>
                     <td className="px-2 py-2 text-center">
-                      {isTied ? (
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          value={tbValue}
-                          onChange={(e) => onChangeTiebreak?.(row.teamId, e.target.value)}
-                          className="w-14 rounded-lg border border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/5 px-2 py-1 text-center text-sm font-bold text-[var(--iberdrola-forest)] outline-none focus:border-[var(--iberdrola-sunset)] focus:ring-1 focus:ring-[var(--iberdrola-sunset)]"
-                        />
-                      ) : (
-                        <span className="text-gray-300">—</span>
-                      )}
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={tbValue}
+                        onChange={(e) => onChangeTiebreak?.(row.teamId, e.target.value)}
+                        className="w-14 rounded-lg border border-[var(--iberdrola-green)] px-2 py-1 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+                      />
                     </td>
                   </tr>
                 );
@@ -147,18 +135,13 @@ export default function ThirdPlaceTable({
 
         <div className="space-y-2 lg:hidden">
           {rows.map((row, index) => {
-            const isTied = tiedTeamIds?.has(row.teamId) ?? false;
             const tbKey = getTiebreakKey(row.teamId);
             const tbValue = tiebreaks?.[tbKey] ?? "";
 
             return (
               <div
                 key={row.teamId}
-                className={`rounded-xl border px-3 py-3 ${
-                  isTied
-                    ? "border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/10"
-                    : "border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]"
-                }`}
+                className="rounded-xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-3 py-3"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
@@ -173,11 +156,6 @@ export default function ThirdPlaceTable({
                       <span>
                         {index + 1}. {row.teamName}
                       </span>
-                      {isTied ? (
-                        <span className="rounded-full bg-[var(--iberdrola-sunset)] px-1.5 py-0.5 text-[10px] font-black text-white">
-                          TB
-                        </span>
-                      ) : null}
                     </div>
                     <div className="mt-1 text-xs font-semibold text-[var(--iberdrola-forest)]/70">
                       {labels.group}: {row.group}
@@ -237,8 +215,7 @@ export default function ThirdPlaceTable({
                   </div>
                 </div>
 
-                {isTied ? (
-                <div className="mt-3 border-t border-[var(--iberdrola-sunset)]/30 pt-3">
+                <div className="mt-3 border-t border-[var(--iberdrola-sky)] pt-3">
                   <div className="mb-1 text-xs font-semibold text-[var(--iberdrola-forest)]/70">
                     {labels.tiebreak}
                   </div>
@@ -248,10 +225,9 @@ export default function ThirdPlaceTable({
                     pattern="[0-9]*"
                     value={tbValue}
                     onChange={(e) => onChangeTiebreak?.(row.teamId, e.target.value)}
-                    className="w-16 rounded-lg border border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/5 px-2 py-1 text-center text-sm font-bold text-[var(--iberdrola-forest)] outline-none focus:ring-1 focus:ring-[var(--iberdrola-sunset)]"
+                    className="w-16 rounded-lg border border-[var(--iberdrola-green)] px-2 py-1 text-center text-sm font-bold text-[var(--iberdrola-forest)]"
                   />
                 </div>
-                ) : null}
               </div>
             );
           })}

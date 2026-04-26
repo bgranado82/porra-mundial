@@ -65,54 +65,6 @@ function compareThirdPlacedTeams(
   return a.teamName.localeCompare(b.teamName);
 }
 
-export function getThirdPlacedTeamsNeedingTiebreak(
-  teams: Team[],
-  matches: Match[],
-  groups: string[],
-  groupAdminTiebreaks?: Record<string, Record<string, number>>
-): Set<string> {
-  const thirdPlacedTeams = getThirdPlacedTeams(
-    teams,
-    matches,
-    groups,
-    undefined,
-    groupAdminTiebreaks
-  );
-
-  const tiedTeamIds = new Set<string>();
-  const visited = new Set<string>();
-
-  for (let i = 0; i < thirdPlacedTeams.length; i++) {
-    if (visited.has(thirdPlacedTeams[i].teamId)) continue;
-
-    const base = thirdPlacedTeams[i];
-    const tiedWith: ThirdPlaceRow[] = [base];
-
-    for (let j = i + 1; j < thirdPlacedTeams.length; j++) {
-      const candidate = thirdPlacedTeams[j];
-      const identical =
-        base.points === candidate.points &&
-        base.goalDifference === candidate.goalDifference &&
-        base.goalsFor === candidate.goalsFor;
-
-      if (identical) {
-        tiedWith.push(candidate);
-      }
-    }
-
-    if (tiedWith.length > 1) {
-      tiedWith.forEach((r) => {
-        tiedTeamIds.add(r.teamId);
-        visited.add(r.teamId);
-      });
-    } else {
-      visited.add(base.teamId);
-    }
-  }
-
-  return tiedTeamIds;
-}
-
 export function getThirdPlacedTeams(
   teams: Team[],
   matches: Match[],
