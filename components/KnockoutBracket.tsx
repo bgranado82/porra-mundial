@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { KnockoutBracketMatch, KnockoutPredictionMap, Team } from "@/types";
 
 type Props = {
@@ -267,7 +267,7 @@ function MatchCard({
   );
 }
 
-function StageTitle({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
+function StageTitle({ children, accent = false }: { children: ReactNode; accent?: boolean }) {
   return (
     <div className={`rounded-xl px-3 py-2 text-sm font-black text-[var(--iberdrola-forest)] ${
       accent
@@ -399,15 +399,8 @@ type MobileKnockoutProps = {
   teams: Team[];
   picks: KnockoutPredictionMap;
   onPick?: (matchId: string, teamId: string | null) => void;
-  realTeamsByRound: {
-    round32: Set<string>;
-    round16: Set<string>;
-    quarterfinals: Set<string>;
-    semifinals: Set<string>;
-    finals: Set<string>;
-    champion: string | null | undefined;
-  } | null;
-  invalidPicks: Record<string, boolean>;
+  realTeamsByRound?: Props["realTeamsByRound"];
+  invalidPicks?: Record<string, boolean>;
   labels: {
     matchLabel: string;
     championLabel: string;
@@ -434,7 +427,7 @@ function MobileRoundSection({
   matchCount: number;
   defaultOpen: boolean;
   accent?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
 
