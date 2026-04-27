@@ -1,4 +1,6 @@
+"use client";
 
+import { useState } from "react";
 import { KnockoutBracketMatch, KnockoutPredictionMap, Team } from "@/types";
 
 type Props = {
@@ -380,6 +382,170 @@ function ChampionCard({
   );
 }
 
+
+// ─── MOBILE KNOCKOUT ─────────────────────────────────────────────────────────
+type MobileKnockoutProps = {
+  orderedRound32Left: KnockoutBracketMatch[];
+  orderedRound32Right: KnockoutBracketMatch[];
+  orderedRound16Left: KnockoutBracketMatch[];
+  orderedRound16Right: KnockoutBracketMatch[];
+  orderedQuarterLeft: KnockoutBracketMatch[];
+  orderedQuarterRight: KnockoutBracketMatch[];
+  semifinals: KnockoutBracketMatch[];
+  finals: KnockoutBracketMatch[];
+  champion: Team | null;
+  championId: string | null;
+  championInvalid: boolean;
+  teams: Team[];
+  picks: KnockoutPredictionMap;
+  onPick?: (matchId: string, teamId: string | null) => void;
+  realTeamsByRound: {
+    round32: Set<string>;
+    round16: Set<string>;
+    quarterfinals: Set<string>;
+    semifinals: Set<string>;
+    finals: Set<string>;
+    champion: string | null | undefined;
+  } | null;
+  invalidPicks: Record<string, boolean>;
+  labels: {
+    matchLabel: string;
+    championLabel: string;
+    undefinedLabel: string;
+    invalidLabel: string;
+    leftSideLabel: string;
+    rightSideLabel: string;
+    round32Label: string;
+    round16Label: string;
+    quarterfinalsLabel: string;
+    semifinalsLabel: string;
+    finalLabel: string;
+  };
+};
+
+function MobileRoundSection({
+  title,
+  matchCount,
+  defaultOpen,
+  accent,
+  children,
+}: {
+  title: string;
+  matchCount: number;
+  defaultOpen: boolean;
+  accent?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <div className={`rounded-2xl border overflow-hidden ${
+      accent
+        ? "border-[var(--iberdrola-green)] shadow-md shadow-[var(--iberdrola-green)]/10"
+        : "border-[var(--iberdrola-green-mid)]"
+    }`}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`flex w-full items-center justify-between px-4 py-3 text-left transition ${
+          accent
+            ? "bg-[var(--iberdrola-green)] text-white"
+            : "bg-[var(--iberdrola-green-light)]/50 text-[var(--iberdrola-forest)]"
+        }`}
+      >
+        <span className="text-sm font-black">{title}</span>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-semibold ${accent ? "text-white/70" : "text-[var(--iberdrola-forest)]/50"}`}>
+            {matchCount} partidos
+          </span>
+          <span className={`text-base leading-none transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
+            ▾
+          </span>
+        </div>
+      </button>
+
+      {open ? (
+        <div className="space-y-2 p-3 bg-white">
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function MobileKnockout({
+  orderedRound32Left,
+  orderedRound32Right,
+  orderedRound16Left,
+  orderedRound16Right,
+  orderedQuarterLeft,
+  orderedQuarterRight,
+  semifinals,
+  finals,
+  champion,
+  championId,
+  championInvalid,
+  teams,
+  picks,
+  onPick,
+  realTeamsByRound,
+  invalidPicks,
+  labels,
+}: MobileKnockoutProps) {
+  const allRound32 = [...orderedRound32Left, ...orderedRound32Right];
+  const allRound16 = [...orderedRound16Left, ...orderedRound16Right];
+  const allQuarters = [...orderedQuarterLeft, ...orderedQuarterRight];
+
+  const rounds = [
+    { key: "r32", title: labels.round32Label, matches: allRound32, defaultOpen: false, accent: false },
+    { key: "r16", title: labels.round16Label, matches: allRound16, defaultOpen: true, accent: false },
+    { key: "qf", title: labels.quarterfinalsLabel, matches: allQuarters, defaultOpen: true, accent: false },
+    { key: "sf", title: labels.semifinalsLabel, matches: semifinals, defaultOpen: true, accent: false },
+    { key: "f", title: labels.finalLabel, matches: finals, defaultOpen: true, accent: true },
+  ];
+
+  return (
+    <div className="space-y-3 lg:hidden">
+      {rounds.map(({ key, title, matches, defaultOpen, accent }) => (
+        <MobileRoundSection
+          key={key}
+          title={title}
+          matchCount={matches.length}
+          defaultOpen={defaultOpen}
+          accent={accent}
+        >
+          <StageColumn
+            title=""
+            matches={matches}
+            teams={teams}
+            picks={picks}
+            onPick={onPick}
+            realTeamsByRound={realTeamsByRound}
+            invalidPicks={invalidPicks}
+            labels={labels}
+            matchesClassName="space-y-2"
+          />
+        </MobileRoundSection>
+      ))}
+
+      <ChampionCard
+        champion={champion}
+        invalid={championInvalid}
+        championLabel={labels.championLabel}
+        undefinedLabel={labels.undefinedLabel}
+        invalidLabel={labels.invalidLabel}
+        points={
+          championId &&
+          realTeamsByRound?.champion &&
+          championId === realTeamsByRound.champion
+            ? 120
+            : 0
+        }
+      />
+    </div>
+  );
+}
+
 export default function KnockoutBracket({
   title,
   subtitle,
@@ -449,134 +615,35 @@ export default function KnockoutBracket({
     );
 
   return (
-    <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-        <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-          {title}
-        </h2>
-        {subtitle ? (
-          <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-            {subtitle}
-          </p>
-        ) : null}
+    <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+      <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+        <span className="text-xl">🏆</span>
+        <div>
+          <h2 className="text-base font-black text-[var(--iberdrola-forest)]">{title}</h2>
+          {subtitle ? <p className="text-xs text-[var(--iberdrola-forest)]/55">{subtitle}</p> : null}
+        </div>
       </div>
 
       <div className="space-y-6 p-4">
-        <div className="space-y-6 lg:hidden">
-          <div className="space-y-3">
-            <StageTitle>{labels.leftSideLabel}</StageTitle>
-            <StageColumn
-              title={labels.round32Label}
-              matches={orderedRound32Left}
-              teams={teams}
-              picks={picks}
-              onPick={onPick}
-              realTeamsByRound={realTeamsByRound}
-              invalidPicks={invalidPicks}
-              labels={labels}
-              matchesClassName="space-y-3"
-            />
-            <StageColumn
-              title={labels.round16Label}
-              matches={orderedRound16Left}
-              teams={teams}
-              picks={picks}
-              onPick={onPick}
-              realTeamsByRound={realTeamsByRound}
-              invalidPicks={invalidPicks}
-              labels={labels}
-              matchesClassName="space-y-3"
-            />
-            <StageColumn
-              title={labels.quarterfinalsLabel}
-              matches={orderedQuarterLeft}
-              teams={teams}
-              picks={picks}
-              onPick={onPick}
-              realTeamsByRound={realTeamsByRound}
-              invalidPicks={invalidPicks}
-              labels={labels}
-              matchesClassName="space-y-3"
-            />
-          </div>
-
-          <div className="space-y-3">
-            <StageTitle>{labels.rightSideLabel}</StageTitle>
-            <StageColumn
-              title={labels.round32Label}
-              matches={orderedRound32Right}
-              teams={teams}
-              picks={picks}
-              onPick={onPick}
-              realTeamsByRound={realTeamsByRound}
-              invalidPicks={invalidPicks}
-              labels={labels}
-              matchesClassName="space-y-3"
-            />
-            <StageColumn
-              title={labels.round16Label}
-              matches={orderedRound16Right}
-              teams={teams}
-              picks={picks}
-              onPick={onPick}
-              realTeamsByRound={realTeamsByRound}
-              invalidPicks={invalidPicks}
-              labels={labels}
-              matchesClassName="space-y-3"
-            />
-            <StageColumn
-              title={labels.quarterfinalsLabel}
-              matches={orderedQuarterRight}
-              teams={teams}
-              picks={picks}
-              onPick={onPick}
-              realTeamsByRound={realTeamsByRound}
-              invalidPicks={invalidPicks}
-              labels={labels}
-              matchesClassName="space-y-3"
-            />
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-[1fr_1fr_0.8fr]">
-            <StageColumn
-              title={labels.semifinalsLabel}
-              matches={semifinals}
-              teams={teams}
-              picks={picks}
-              onPick={onPick}
-              realTeamsByRound={realTeamsByRound}
-              invalidPicks={invalidPicks}
-              labels={labels}
-              matchesClassName="space-y-3"
-            />
-            <StageColumn
-              title={labels.finalLabel}
-              accent
-              matches={finals}
-              teams={teams}
-              picks={picks}
-              onPick={onPick}
-              realTeamsByRound={realTeamsByRound}
-              invalidPicks={invalidPicks}
-              labels={labels}
-              matchesClassName="space-y-3"
-            />
-            <ChampionCard
-              champion={champion}
-              invalid={championInvalid}
-              championLabel={labels.championLabel}
-              undefinedLabel={labels.undefinedLabel}
-              invalidLabel={labels.invalidLabel}
-              points={
-                championId &&
-                realTeamsByRound?.champion &&
-                championId === realTeamsByRound.champion
-                  ? 120
-                  : 0
-              }
-            />
-          </div>
-        </div>
+        <MobileKnockout
+          orderedRound32Left={orderedRound32Left}
+          orderedRound32Right={orderedRound32Right}
+          orderedRound16Left={orderedRound16Left}
+          orderedRound16Right={orderedRound16Right}
+          orderedQuarterLeft={orderedQuarterLeft}
+          orderedQuarterRight={orderedQuarterRight}
+          semifinals={semifinals}
+          finals={finals}
+          champion={champion}
+          championId={championId}
+          championInvalid={championInvalid}
+          teams={teams}
+          picks={picks}
+          onPick={onPick}
+          realTeamsByRound={realTeamsByRound}
+          invalidPicks={invalidPicks}
+          labels={labels}
+        />
 
         <div className="hidden overflow-x-auto lg:block">
           <div className="min-w-[1180px] xl:min-w-[1240px] scale-[0.97] origin-top-left">

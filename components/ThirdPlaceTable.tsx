@@ -40,16 +40,13 @@ export default function ThirdPlaceTable({
   labels,
 }: Props) {
   return (
-    <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-        <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-          {title}
-        </h2>
-        {subtitle ? (
-          <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-            {subtitle}
-          </p>
-        ) : null}
+    <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+      <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+        <span className="text-xl">🏅</span>
+        <div>
+          <h2 className="text-base font-black text-[var(--iberdrola-forest)]">{title}</h2>
+          {subtitle ? <p className="text-xs text-[var(--iberdrola-forest)]/55">{subtitle}</p> : null}
+        </div>
       </div>
 
       <div className="p-4">
@@ -145,116 +142,78 @@ export default function ThirdPlaceTable({
           </table>
         </div>
 
-        <div className="space-y-2 lg:hidden">
-          {rows.map((row, index) => {
-            const isTied = tiedTeamIds?.has(row.teamId) ?? false;
-            const tbKey = getTiebreakKey(row.teamId);
-            const tbValue = tiebreaks?.[tbKey] ?? "";
-
-            return (
-              <div
-                key={row.teamId}
-                className={`rounded-xl border px-3 py-3 ${
-                  isTied
-                    ? "border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/10"
-                    : "border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-sm font-black text-[var(--iberdrola-forest)]">
-                      {row.teamFlag ? (
-                        <img
-                          src={row.teamFlag}
-                          alt={row.teamName}
-                          className="h-4 w-6 rounded-sm object-cover"
-                        />
-                      ) : null}
-                      <span>
-                        {index + 1}. {row.teamName}
+        <div className="lg:hidden overflow-x-auto">
+          <table className="min-w-full text-xs">
+            <thead>
+              <tr className="border-b border-gray-100 text-[var(--iberdrola-forest)]/50">
+                <th className="px-2 py-1.5 text-left font-bold">#</th>
+                <th className="px-2 py-1.5 text-left font-bold">{labels.team}</th>
+                <th className="px-1.5 py-1.5 text-center font-bold">{labels.group}</th>
+                <th className="px-1.5 py-1.5 text-center font-bold">{labels.played}</th>
+                <th className="px-1.5 py-1.5 text-center font-bold">{labels.won}</th>
+                <th className="px-1.5 py-1.5 text-center font-bold">{labels.drawn}</th>
+                <th className="px-1.5 py-1.5 text-center font-bold">{labels.lost}</th>
+                <th className="px-1.5 py-1.5 text-center font-bold">{labels.goalsFor}</th>
+                <th className="px-1.5 py-1.5 text-center font-bold">{labels.goalsAgainst}</th>
+                <th className="px-1.5 py-1.5 text-center font-bold text-[var(--iberdrola-green)]">{labels.pointsShort}</th>
+                <th className="px-1.5 py-1.5 text-center font-bold">{labels.status}</th>
+                <th className="px-1.5 py-1.5 text-center font-bold">{labels.tiebreak}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, index) => {
+                const isTied = tiedTeamIds?.has(row.teamId) ?? false;
+                const tbKey = getTiebreakKey(row.teamId);
+                const tbValue = tiebreaks?.[tbKey] ?? "";
+                return (
+                  <tr
+                    key={row.teamId}
+                    className={`border-b border-gray-100 ${
+                      isTied ? "bg-[var(--iberdrola-sunset)]/10" : index < 8 ? "bg-[var(--iberdrola-green-light)]/30" : ""
+                    }`}
+                  >
+                    <td className="px-2 py-2 font-bold text-[var(--iberdrola-forest)]/60">{index + 1}</td>
+                    <td className="px-2 py-2">
+                      <div className="flex items-center gap-1.5 whitespace-nowrap">
+                        {row.teamFlag ? (
+                          <img src={row.teamFlag} alt={row.teamName} className="h-4 w-5 rounded-[2px] border border-gray-100 object-cover" />
+                        ) : null}
+                        <span className="text-[11px] font-bold text-[var(--iberdrola-forest)]">{row.teamName}</span>
+                        {isTied ? <span className="rounded-full bg-[var(--iberdrola-sunset)] px-1 py-0.5 text-[9px] font-black text-white">TB</span> : null}
+                      </div>
+                    </td>
+                    <td className="px-1.5 py-2 text-center font-semibold text-[var(--iberdrola-forest)]/60">{row.group}</td>
+                    <td className="px-1.5 py-2 text-center text-[var(--iberdrola-forest)]/70">{row.played}</td>
+                    <td className="px-1.5 py-2 text-center text-[var(--iberdrola-forest)]/70">{row.won}</td>
+                    <td className="px-1.5 py-2 text-center text-[var(--iberdrola-forest)]/70">{row.drawn}</td>
+                    <td className="px-1.5 py-2 text-center text-[var(--iberdrola-forest)]/70">{row.lost}</td>
+                    <td className="px-1.5 py-2 text-center text-[var(--iberdrola-forest)]/70">{row.goalsFor}</td>
+                    <td className="px-1.5 py-2 text-center text-[var(--iberdrola-forest)]/70">{row.goalsAgainst}</td>
+                    <td className="px-1.5 py-2 text-center font-black text-[var(--iberdrola-green)]">{row.points}</td>
+                    <td className="px-1.5 py-2 text-center">
+                      <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black ${
+                        row.qualifies ? "bg-[var(--iberdrola-green)] text-white" : "bg-gray-200 text-gray-500"
+                      }`}>
+                        {row.qualifies ? "✓" : "✗"}
                       </span>
+                    </td>
+                    <td className="px-1.5 py-2 text-center">
                       {isTied ? (
-                        <span className="rounded-full bg-[var(--iberdrola-sunset)] px-1.5 py-0.5 text-[10px] font-black text-white">
-                          TB
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-1 text-xs font-semibold text-[var(--iberdrola-forest)]/70">
-                      {labels.group}: {row.group}
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="rounded-full bg-[var(--iberdrola-green)] px-2.5 py-1 text-xs font-black text-white">
-                      {row.points} {labels.pointsShort}
-                    </div>
-                    <div className="mt-2">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-black ${
-                          row.qualifies
-                            ? "bg-[var(--iberdrola-green)] text-white"
-                            : "bg-gray-200 text-gray-700"
-                        }`}
-                      >
-                        {row.qualifies ? labels.qualified : labels.eliminated}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 grid grid-cols-4 gap-2 text-center text-xs text-[var(--iberdrola-forest)]">
-                  <div>
-                    <div className="font-semibold opacity-70">{labels.played}</div>
-                    <div className="font-black">{row.played}</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold opacity-70">{labels.won}</div>
-                    <div className="font-black">{row.won}</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold opacity-70">{labels.drawn}</div>
-                    <div className="font-black">{row.drawn}</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold opacity-70">{labels.lost}</div>
-                    <div className="font-black">{row.lost}</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold opacity-70">{labels.goalsFor}</div>
-                    <div className="font-black">{row.goalsFor}</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold opacity-70">{labels.goalsAgainst}</div>
-                    <div className="font-black">{row.goalsAgainst}</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold opacity-70">{labels.goalDifference}</div>
-                    <div className="font-black">{row.goalDifference}</div>
-                  </div>
-                  <div>
-                    <div className="font-semibold opacity-70">{labels.pointsShort}</div>
-                    <div className="font-black">{row.points}</div>
-                  </div>
-                </div>
-
-                {isTied ? (
-                <div className="mt-3 border-t border-[var(--iberdrola-sunset)]/30 pt-3">
-                  <div className="mb-1 text-xs font-semibold text-[var(--iberdrola-forest)]/70">
-                    {labels.tiebreak}
-                  </div>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={tbValue}
-                    onChange={(e) => onChangeTiebreak?.(row.teamId, e.target.value)}
-                    className="w-16 rounded-lg border border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/5 px-2 py-1 text-center text-sm font-bold text-[var(--iberdrola-forest)] outline-none focus:ring-1 focus:ring-[var(--iberdrola-sunset)]"
-                  />
-                </div>
-                ) : null}
-              </div>
-            );
-          })}
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={tbValue}
+                          onChange={(e) => onChangeTiebreak?.(row.teamId, e.target.value)}
+                          className="w-10 rounded-lg border border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/5 px-1 py-0.5 text-center text-xs font-bold outline-none"
+                        />
+                      ) : <span className="text-gray-300">—</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
