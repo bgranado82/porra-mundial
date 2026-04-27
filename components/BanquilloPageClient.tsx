@@ -548,7 +548,8 @@ export default function BanquilloPageClient() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-[1100px] space-y-4 px-4 py-6">
+      <main className="page-bg">
+      <div className="mx-auto max-w-[1100px] space-y-4 px-4 py-6">
         <div className="skeleton h-24 rounded-3xl" />
         {[...Array(3)].map((_, i) => (
           <div key={i} className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-5 shadow-sm space-y-3">
@@ -565,13 +566,15 @@ export default function BanquilloPageClient() {
             </div>
           </div>
         ))}
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-[1100px] space-y-6 px-4 py-6">
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+    <main className="page-bg">
+      <div className="mx-auto max-w-[1100px] space-y-6 px-4 py-6 fade-in">
+      <section className="rounded-3xl card-glass shadow-md">
         <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-center gap-4">
             <img
@@ -673,6 +676,7 @@ export default function BanquilloPageClient() {
           ))
         )}
       </section>
+      </div>
     </main>
   );
 }

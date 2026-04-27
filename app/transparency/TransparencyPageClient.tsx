@@ -370,7 +370,7 @@ export default function TransparencyPageClient() {
 
   if (error || !data) {
     return (
-      <main className="mx-auto max-w-[1600px] px-4 py-6">
+      <main className="mx-auto max-w-[1600px] px-4 py-6 fade-in">
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 shadow-sm">
           <div className="text-sm font-semibold text-[var(--iberdrola-forest)]">
             {error || t.transparencyNoData}

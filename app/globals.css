@@ -53,9 +53,9 @@ html {
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--iberdrola-green-light) 25%,
-    var(--iberdrola-green-mid) 50%,
-    var(--iberdrola-green-light) 75%
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
   );
   background-size: 800px 100%;
   animation: shimmer 1.4s ease-in-out infinite;
@@ -80,4 +80,18 @@ html {
 
 .tab-fade-in {
   animation: tabFadeIn 0.18s ease-out both;
+}
+
+/* Consistent page background - matches login */
+.page-bg {
+  background: linear-gradient(135deg, var(--iberdrola-green-light) 0%, #ffffff 50%, var(--iberdrola-sky-light) 100%);
+  min-height: 100vh;
+}
+
+/* Glass card - matches login card style */
+.card-glass {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--iberdrola-green-mid);
 }

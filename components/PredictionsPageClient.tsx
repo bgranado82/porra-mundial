@@ -568,7 +568,7 @@ const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
       {
         event: "INSERT",
         schema: "public",
-        table: "banquillo_comments",
+        table: "pool_comments",
         filter: `pool_id=eq.${poolId}`,
       },
       () => {
@@ -1155,7 +1155,8 @@ const invalidKnockoutPicks = useMemo(() => {
 
   if (loadingEntry) {
     return (
-      <main className="mx-auto max-w-[1600px] space-y-4 px-3 py-4 sm:px-4 sm:py-6">
+      <main className="page-bg">
+        <div className="mx-auto max-w-[1600px] space-y-4 px-3 py-4 sm:px-4 sm:py-6">
         <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="skeleton h-14 w-14 rounded-xl shrink-0" />
@@ -1171,14 +1172,16 @@ const invalidKnockoutPicks = useMemo(() => {
           ))}
         </div>
         <div className="skeleton h-96 rounded-3xl" />
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-[1600px] px-3 py-4 sm:px-4 sm:py-6 fade-in">
+    <main className="page-bg">
+      <div className="mx-auto max-w-[1600px] px-3 py-4 sm:px-4 sm:py-6 fade-in">
       <div className="space-y-4">
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+        <section className="rounded-3xl card-glass shadow-md">
           <div className="p-4 sm:p-5">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0 flex-1">

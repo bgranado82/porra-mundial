@@ -64,11 +64,11 @@ export default function StandingsPageClient({ poolId, backHref }: Props) {
   const t = messages[locale];
 
   return (
-    <main className="min-h-screen bg-[var(--iberdrola-green-light)] p-4 md:p-6">
+    <main className="page-bg p-4 md:p-6">
       <div className="mx-auto max-w-7xl space-y-4">
 
         {/* HEADER */}
-        <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-5 shadow-sm">
+        <section className="rounded-3xl card-glass p-5 shadow-md">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
               <img
@@ -103,7 +103,7 @@ export default function StandingsPageClient({ poolId, backHref }: Props) {
         </section>
 
         {/* QUOTE OF THE DAY */}
-        <section className="rounded-3xl border border-[var(--iberdrola-green)] bg-white px-5 py-3 shadow-sm">
+        <section className="rounded-3xl card-glass px-5 py-3 shadow-sm">
           <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
             Quote of the day
           </div>

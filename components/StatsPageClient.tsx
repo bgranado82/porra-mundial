@@ -559,7 +559,8 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 fade-in">
+      <main className="page-bg">
+      <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 fade-in" style={{ minHeight: "100vh" }}>
         <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-5 shadow-sm">
           <div className="flex items-center gap-4">
             <div className="skeleton h-14 w-14 rounded-xl shrink-0" />
@@ -579,23 +580,27 @@ useEffect(() => {
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-72 rounded-3xl" />)}
         </div>
+      </div>
       </main>
     );
   }
 
   if (error || !data) {
     return (
-      <main className="mx-auto max-w-[1600px] px-4 py-6">
-        <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 text-sm font-semibold text-[var(--iberdrola-forest)]">
+      <main className="page-bg">
+      <div className="mx-auto max-w-[1600px] px-4 py-6">
+        <div className="rounded-3xl card-glass p-6 text-sm font-semibold text-[var(--iberdrola-forest)]">
           {error || t.stats.noData}
         </div>
+      </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 fade-in">
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+    <main className="page-bg">
+      <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 fade-in" style={{ minHeight: "100vh" }}>
+      <section className="rounded-3xl card-glass shadow-md">
         <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-3">
@@ -769,6 +774,7 @@ picksUnit={t.stats.picksUnit}
   title={t.stats.insightsTitle}
   notEnoughInsightsLabel={t.stats.notEnoughInsights}
 />
+      </div>
     </main>
   );
 }
