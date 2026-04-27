@@ -129,8 +129,15 @@ export default function StandingsPageClient({ poolId, backHref }: Props) {
             {t.standingsMissingPoolId}
           </div>
         ) : loading ? (
-          <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-8 text-center text-sm text-gray-500">
-            {t.loadingStandings}
+          <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-6 shadow-sm space-y-3">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="skeleton h-8 w-8 shrink-0 rounded-full" />
+                <div className="skeleton h-8 flex-1 rounded-2xl" />
+                <div className="skeleton h-8 w-16 rounded-2xl" />
+                <div className="skeleton h-8 w-12 rounded-2xl" />
+              </div>
+            ))}
           </div>
         ) : data ? (
           <StandingsTable

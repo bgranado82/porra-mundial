@@ -72,6 +72,7 @@ const EXTRA_ICONS: Record<string, string> = {
 
 const SPAIN_FLAG = "https://flagcdn.com/es.svg";
 
+
 function formatEuro(value: number) {
   return `${value.toLocaleString("es-ES")}€`;
 }
@@ -205,6 +206,25 @@ function ChampionDonutCard({
     ...(othersCount > 0 ? [{ name: othersLabel, value: othersCount }] : []),
   ];
 
+  const legendItems = [
+    ...topItems.map((item, idx) => ({
+      label: item.label,
+      percentage: item.percentage,
+      count: item.count,
+      teamId: item.teamId ?? null,
+      color: CHART_COLORS[idx % CHART_COLORS.length],
+    })),
+    ...(othersCount > 0 ? [{
+      label: othersLabel,
+      percentage: othersPercentage,
+      count: othersCount,
+      teamId: null as string | null,
+      color: CHART_COLORS[topItems.length % CHART_COLORS.length],
+    }] : []),
+  ];
+
+
+
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
       <SectionHeader title={title} />
@@ -228,44 +248,52 @@ function ChampionDonutCard({
                 ))}
               </Pie>
               <Tooltip
-  formatter={(value) => [`${value} ${picksUnit}`, picksLabel]}
-  contentStyle={{
-    backgroundColor: "#ffffff",
-    border: "1px solid #d9e7dc",
-    borderRadius: 12,
-  }}
-/>
+                formatter={(value, name) => [`${value} ${picksUnit}`, name as string]}
+                contentStyle={{
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #d9e7dc",
+                  borderRadius: 12,
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="space-y-3">
-          {topItems.length > 0 ? (
-            topItems.map((item) => {
-              const team = item.teamId ? teamMap.get(item.teamId) : null;
+        <div className="space-y-2">
+          {legendItems.length > 0 ? (
+            legendItems.map((legendItem, index) => {
+              const team = legendItem.teamId ? teamMap.get(legendItem.teamId) : null;
 
               return (
                 <div
-                  key={item.key}
+                  key={index}
                   className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3"
                 >
-                  <div className="min-w-0 pr-3">
-                    <div className="flex items-center gap-2 truncate text-sm font-bold text-[var(--iberdrola-forest)]">
-                      {team?.flagUrl ? (
-                        <img
-                          src={team.flagUrl}
-                          alt={team.name}
-                          className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
-                        />
-                      ) : null}
-                      <span className="truncate">{item.label}</span>
-                    </div>
-                    <div className="text-xs text-[var(--iberdrola-forest)]/60">
-                      {item.count} {picksUnit}
+                  <div className="min-w-0 pr-3 flex items-center gap-2">
+                    <span
+                      className="inline-block h-3 w-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: legendItem.color }}
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 truncate text-sm font-bold text-[var(--iberdrola-forest)]">
+                        {team?.flagUrl ? (
+                          <img
+                            src={team.flagUrl}
+                            alt={team.name}
+                            className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+                          />
+                        ) : null}
+                        <span className="truncate">{legendItem.label}</span>
+                      </div>
+                      <div className="text-xs text-[var(--iberdrola-forest)]/60">
+                        {legendItem.count} {picksUnit}
+                      </div>
                     </div>
                   </div>
                   <div className="shrink-0 text-right text-lg font-black text-[var(--iberdrola-green)]">
-                    {item.percentage.toFixed(1)}%
+                    {legendItem.percentage.toFixed(1)}%
                   </div>
                 </div>
               );
@@ -374,21 +402,19 @@ function ExtraQuestionBarCard({
 function ExtraQuestionListCard({
   title,
   icon,
-  flagImg,
   items,
   notEnoughDataLabel,
   picksUnit,
 }: {
   title: string;
   icon?: string;
-  flagImg?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
   notEnoughDataLabel: string;
   picksUnit: string;
 }) {
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <SectionHeader title={title} icon={icon} flagImg={flagImg} />
+      <SectionHeader title={title} icon={icon} />
       <div className="space-y-3 p-5">
         {items.slice(0, 5).length > 0 ? (
           items.slice(0, 5).map((item, index) => (
@@ -533,9 +559,25 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-[1600px] px-4 py-6">
-        <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 text-sm font-semibold text-[var(--iberdrola-forest)]">
-          {t.stats.loading}
+      <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 fade-in">
+        <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="skeleton h-14 w-14 rounded-xl shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="skeleton h-4 w-24 rounded-full" />
+              <div className="skeleton h-7 w-64 rounded-full" />
+            </div>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-28 rounded-3xl" />)}
+        </div>
+        <div className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
+          <div className="skeleton h-96 rounded-3xl" />
+          <div className="skeleton h-96 rounded-3xl" />
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-72 rounded-3xl" />)}
         </div>
       </main>
     );
@@ -552,7 +594,7 @@ useEffect(() => {
   }
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6">
+    <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 fade-in">
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-center gap-4">
@@ -650,13 +692,13 @@ useEffect(() => {
 
       <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
         <ChampionDonutCard
-  title={t.stats.championFavorites}
-  items={data.champion.items}
-  notEnoughDataLabel={t.stats.notEnoughData}
-  picksUnit={t.stats.picksUnit}
-  picksLabel={t.stats.picksLabel}
-  othersLabel={t.stats.others}
-/>
+          title={t.stats.championFavorites}
+          items={data.champion.items}
+          notEnoughDataLabel={t.stats.notEnoughData}
+          picksUnit={t.stats.picksUnit}
+          picksLabel={t.stats.picksLabel}
+          othersLabel={t.stats.others}
+        />
 
         <ExtraQuestionListCard
           icon={EXTRA_ICONS.golden_ball}

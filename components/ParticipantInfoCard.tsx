@@ -29,71 +29,67 @@ export default function ParticipantInfoCard({
   onChangeCompany,
   onChangeCountry,
 }: Props) {
+  const inputClass = "w-full rounded-xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)]/30 px-4 py-3 text-sm font-medium placeholder:text-[var(--iberdrola-forest)]/35 focus:border-[var(--iberdrola-green)] focus:bg-white focus:outline-none transition";
+
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-green)] bg-white p-4">
-      
-      <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]">
+    <div className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white p-5 shadow-sm">
+      <h3 className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/55">
+        <span className="inline-block h-1 w-4 rounded-full bg-[var(--iberdrola-green)]" />
         {title}
       </h3>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-
-        {/* Nombre */}
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <div className="xl:col-span-2">
-          <label className="mb-1 block text-sm text-[var(--iberdrola-forest)]">
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/50">
             {nameLabel}
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => onChangeName(e.target.value)}
-            className="w-full rounded-lg border border-[var(--iberdrola-sky)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--iberdrola-green)]"
+            className={inputClass}
             placeholder="Ej: Borja Fernández"
           />
         </div>
 
-        {/* Email */}
         <div className="xl:col-span-2">
-          <label className="mb-1 block text-sm text-[var(--iberdrola-forest)]">
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/50">
             {emailLabel}
           </label>
           <input
             type="email"
             value={email}
             onChange={(e) => onChangeEmail(e.target.value)}
-            className="w-full rounded-lg border border-[var(--iberdrola-sky)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--iberdrola-green)]"
+            className={inputClass}
             placeholder="Ej: borja@email.com"
           />
         </div>
 
-        {/* Empresa */}
         <div>
-          <label className="mb-1 block text-sm text-[var(--iberdrola-forest)]">
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/50">
             {companyLabel}
           </label>
           <input
             type="text"
             value={company}
             onChange={(e) => onChangeCompany(e.target.value)}
-            className="w-full rounded-lg border border-[var(--iberdrola-sky)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--iberdrola-green)]"
+            className={inputClass}
             placeholder="Ej: Iberdrola"
           />
         </div>
 
-        {/* País */}
         <div>
-          <label className="mb-1 block text-sm text-[var(--iberdrola-forest)]">
+          <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/50">
             {countryLabel}
           </label>
           <input
             type="text"
             value={country}
             onChange={(e) => onChangeCountry(e.target.value)}
-            className="w-full rounded-lg border border-[var(--iberdrola-sky)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--iberdrola-green)]"
+            className={inputClass}
             placeholder="Ej: España"
           />
         </div>
-
       </div>
     </div>
   );

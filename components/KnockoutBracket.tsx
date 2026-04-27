@@ -212,8 +212,16 @@ function MatchCard({
     !!realTeamsByRound &&
     realTeamsByRound[roundKey].has(awayTeam.id);
 
+  const stageBorderClass = {
+    round32: "border-[var(--iberdrola-sky)] shadow-sm",
+    round16: "border-[var(--iberdrola-sky)] shadow-sm",
+    quarterfinal: "border-[var(--iberdrola-sky)] shadow-md",
+    semifinal: "border-[var(--iberdrola-green)]/40 shadow-md",
+    final: "border-[var(--iberdrola-green)] shadow-lg ring-1 ring-[var(--iberdrola-green)]/20",
+  }[match.stage as string] ?? "border-[var(--iberdrola-sky)] shadow-sm";
+
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-2.5 shadow-sm">
+    <div className={`rounded-2xl border bg-white p-2.5 transition ${stageBorderClass}`}>
       <div className="mb-2 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
         {officialNumber
           ? `${labels.matchLabel} ${officialNumber}`
@@ -257,9 +265,13 @@ function MatchCard({
   );
 }
 
-function StageTitle({ children }: { children: React.ReactNode }) {
+function StageTitle({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
   return (
-    <div className="rounded-xl bg-[var(--iberdrola-sand)] px-3 py-2 text-sm font-black text-[var(--iberdrola-forest)]">
+    <div className={`rounded-xl px-3 py-2 text-sm font-black text-[var(--iberdrola-forest)] ${
+      accent
+        ? "bg-[var(--iberdrola-green)] text-white"
+        : "bg-[var(--iberdrola-sand)] text-[var(--iberdrola-forest)]"
+    }`}>
       {children}
     </div>
   );
@@ -276,6 +288,7 @@ function StageColumn({
   labels,
   className = "",
   matchesClassName = "space-y-3",
+  accent = false,
 }: {
   title: string;
   matches: KnockoutBracketMatch[];
@@ -287,10 +300,11 @@ function StageColumn({
   labels: Props["labels"];
   className?: string;
   matchesClassName?: string;
+  accent?: boolean;
 }) {
   return (
     <div className={className}>
-      <StageTitle>{title}</StageTitle>
+      <StageTitle accent={accent}>{title}</StageTitle>
       <div className={matchesClassName}>
         {matches.map((match) => (
           <MatchCard
@@ -526,6 +540,7 @@ export default function KnockoutBracket({
           <div className="grid gap-4 md:grid-cols-[1fr_1fr_0.8fr]">
             <StageColumn
               title={labels.semifinalsLabel}
+              accent
               matches={semifinals}
               teams={teams}
               picks={picks}
@@ -537,6 +552,7 @@ export default function KnockoutBracket({
             />
             <StageColumn
               title={labels.finalLabel}
+              accent
               matches={finals}
               teams={teams}
               picks={picks}
@@ -609,6 +625,7 @@ export default function KnockoutBracket({
                 <div className="w-full pt-[360px]">
                   <StageColumn
                     title={labels.semifinalsLabel}
+              accent
                     matches={semifinals[0] ? [semifinals[0]] : []}
                     teams={teams}
                     picks={picks}
@@ -622,6 +639,7 @@ export default function KnockoutBracket({
                 <div className="w-full pt-[80px]">
                   <StageColumn
                     title={labels.finalLabel}
+              accent
                     matches={finals}
                     teams={teams}
                     picks={picks}
@@ -635,6 +653,7 @@ export default function KnockoutBracket({
                 <div className="w-full pt-[80px]">
                   <StageColumn
                     title={labels.semifinalsLabel}
+              accent
                     matches={semifinals[1] ? [semifinals[1]] : []}
                     teams={teams}
                     picks={picks}

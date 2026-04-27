@@ -548,12 +548,23 @@ export default function BanquilloPageClient() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-[1100px] px-4 py-6">
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 shadow-sm">
-          <div className="text-sm font-semibold text-[var(--iberdrola-forest)]">
-            {t.banquillo.loading}
+      <main className="mx-auto max-w-[1100px] space-y-4 px-4 py-6">
+        <div className="skeleton h-24 rounded-3xl" />
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-5 shadow-sm space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="skeleton h-10 w-10 rounded-full shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton h-4 w-32 rounded-full" />
+                <div className="skeleton h-3 w-48 rounded-full" />
+              </div>
+            </div>
+            <div className="skeleton h-12 w-full rounded-2xl" />
+            <div className="flex gap-2">
+              {[...Array(5)].map((_, j) => <div key={j} className="skeleton h-8 w-14 rounded-full" />)}
+            </div>
           </div>
-        </section>
+        ))}
       </main>
     );
   }

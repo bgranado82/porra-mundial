@@ -49,7 +49,7 @@ export default function GroupStandingsTable({
   labels,
 }: Props) {
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white shadow-sm transition hover:shadow-md">
       <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
         <h3 className="text-lg font-black text-[var(--iberdrola-forest)]">
           {title}
@@ -95,7 +95,7 @@ export default function GroupStandingsTable({
                 return (
                   <tr
                     key={row.teamId}
-                    className={`border-b border-gray-100 ${isTied ? "bg-[var(--iberdrola-sunset)]/10" : ""}`}
+                    className={`border-b border-gray-100 transition ${isTied ? "bg-[var(--iberdrola-sunset)]/10" : index < 2 ? "bg-[var(--iberdrola-green-light)]/40" : "hover:bg-gray-50"}`}
                   >
                     <td className="px-2 py-2 font-semibold">{index + 1}</td>
                     <td className="whitespace-nowrap px-2 py-2 font-bold">
@@ -104,7 +104,7 @@ export default function GroupStandingsTable({
                           <img
                             src={row.teamFlag}
                             alt={row.teamName ?? row.teamId}
-                            className="h-4 w-6 rounded-sm object-cover"
+                            className="h-5 w-7 rounded-[3px] border border-gray-100 object-cover shadow-sm"
                           />
                         ) : null}
                         <span className="text-[13px] font-bold">
@@ -182,7 +182,7 @@ export default function GroupStandingsTable({
                       <img
                         src={row.teamFlag}
                         alt={row.teamName ?? row.teamId}
-                        className="h-4 w-6 rounded-sm object-cover"
+                        className="h-5 w-7 rounded-[3px] border border-gray-100 object-cover shadow-sm"
                       />
                     ) : null}
                     <span>

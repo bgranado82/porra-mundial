@@ -561,7 +561,6 @@ const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
 
   loadBanquilloCount();
 
-  // Realtime: incrementar badge cuando llega un comentario nuevo
   const channel = supabase
     .channel(`banquillo-count-${poolId}`)
     .on(
@@ -1156,16 +1155,28 @@ const invalidKnockoutPicks = useMemo(() => {
 
   if (loadingEntry) {
     return (
-      <main className="mx-auto max-w-7xl px-4 py-8">
-        <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-6 text-center text-sm font-semibold text-[var(--iberdrola-forest)] shadow-sm">
-          {t.loadingPool}
+      <main className="mx-auto max-w-[1600px] space-y-4 px-3 py-4 sm:px-4 sm:py-6">
+        <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="skeleton h-14 w-14 rounded-xl shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div className="skeleton h-4 w-48 rounded-full" />
+              <div className="skeleton h-8 w-36 rounded-full" />
+            </div>
+          </div>
         </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="skeleton h-48 rounded-3xl" />
+          ))}
+        </div>
+        <div className="skeleton h-96 rounded-3xl" />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-[1600px] px-3 py-4 sm:px-4 sm:py-6">
+    <main className="mx-auto max-w-[1600px] px-3 py-4 sm:px-4 sm:py-6 fade-in">
       <div className="space-y-4">
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="p-4 sm:p-5">
@@ -1343,12 +1354,12 @@ const invalidKnockoutPicks = useMemo(() => {
                 {poolId && activeEntryId && poolSlug ? (
   <Link
     href={`/banquillo?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
-    className="relative inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+    className="relative inline-flex items-center justify-center rounded-2xl bg-[var(--iberdrola-green)] px-4 py-3 text-sm font-black text-white shadow-md shadow-[var(--iberdrola-green)]/25 transition hover:brightness-110 active:scale-[0.98]"
   >
     {t.banquillo.title}
 
     {!loadingBanquilloCount && banquilloCount > 0 ? (
-      <span className="ml-2 inline-flex min-w-6 items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-black text-white">
+      <span className="ml-2 inline-flex min-w-6 items-center justify-center rounded-full bg-white px-2 py-0.5 text-[11px] font-black text-[var(--iberdrola-green)]">
         {banquilloCount}
       </span>
     ) : null}

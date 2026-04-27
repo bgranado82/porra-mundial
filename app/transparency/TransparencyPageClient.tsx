@@ -355,12 +355,15 @@ export default function TransparencyPageClient() {
 
   if (loadingList || loadingEntry) {
     return (
-      <main className="mx-auto max-w-[1600px] px-4 py-6">
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 shadow-sm">
-          <div className="text-sm font-semibold text-[var(--iberdrola-forest)]">
-            {t.transparencyLoading}
+      <main className="mx-auto max-w-[1600px] space-y-4 px-4 py-6">
+        <div className="skeleton h-28 rounded-3xl" />
+        <div className="skeleton h-16 rounded-3xl" />
+        <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+          <div className="space-y-3">
+            {[...Array(6)].map((_, i) => <div key={i} className="skeleton h-16 rounded-2xl" />)}
           </div>
-        </section>
+          <div className="skeleton h-96 rounded-3xl" />
+        </div>
       </main>
     );
   }

@@ -48,7 +48,7 @@ function TeamFlag({ team }: { team: Team }) {
     <img
       src={team.flagUrl}
       alt={team.name}
-      className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+      className="h-5 w-7 rounded-[3px] border border-gray-200 object-cover shadow-sm"
     />
   );
 }
@@ -86,7 +86,7 @@ export default function GroupMatchRow({
     : "bg-gray-100 text-gray-500";
 
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3 shadow-sm">
+    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3 shadow-sm transition hover:shadow-md hover:border-[var(--iberdrola-green)]/40">
       <div className="mb-2 flex items-center justify-between gap-3">
         <div className="min-w-0 text-xs font-semibold text-[var(--iberdrola-forest)]/65">
           {matchNumber ? `${matchLabel} ${matchNumber}` : ""}
@@ -126,7 +126,7 @@ export default function GroupMatchRow({
 
               onChangeHome(Number(value));
             }}
-            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
+            className="h-12 w-13 rounded-xl border-2 border-[var(--iberdrola-sky)] bg-[var(--iberdrola-green-light)]/30 px-0 text-center text-lg font-black leading-none text-[var(--iberdrola-forest)] focus:border-[var(--iberdrola-green)] focus:bg-white focus:outline-none transition"
           />
         </div>
 
@@ -155,7 +155,7 @@ export default function GroupMatchRow({
 
               onChangeAway(Number(value));
             }}
-            className="h-11 w-12 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-0 text-center text-base font-black leading-none text-[var(--iberdrola-forest)]"
+            className="h-12 w-13 rounded-xl border-2 border-[var(--iberdrola-sky)] bg-[var(--iberdrola-green-light)]/30 px-0 text-center text-lg font-black leading-none text-[var(--iberdrola-forest)] focus:border-[var(--iberdrola-green)] focus:bg-white focus:outline-none transition"
           />
         </div>
       </div>

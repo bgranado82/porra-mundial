@@ -43,7 +43,7 @@ function TeamFlag({ team }: { team: Team }) {
     <img
       src={team.flagUrl}
       alt={team.name}
-      className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
+      className="h-5 w-7 rounded-[3px] border border-gray-200 object-cover shadow-sm"
     />
   );
 }

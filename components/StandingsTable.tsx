@@ -119,6 +119,14 @@ function getRankHeatClass(position: number, totalRows: number) {
   return "bg-red-100 text-red-900";
 }
 
+
+function getMedal(position: number): string | null {
+  if (position === 1) return "🥇";
+  if (position === 2) return "🥈";
+  if (position === 3) return "🥉";
+  return null;
+}
+
 export default function StandingsTable({ days, standings, locale = "es" }: Props) {
   const [tab, setTab] = useState<TabKey>("groups");
   const t = messages[locale];
@@ -260,16 +268,25 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                   const heatClass = getRankHeatClass(row.position, totalRows);
 
                   return (
-                    <tr key={row.entry_id} className="hover:bg-gray-50">
-                      <td className="sticky left-0 z-10 border-b border-gray-100 bg-white px-1 py-3 text-center md:px-2">
+                    <tr key={row.entry_id} className={`transition ${
+                      row.position === 1 ? "bg-amber-50/60 hover:bg-amber-50" :
+                      row.position === 2 ? "bg-gray-50/80 hover:bg-gray-100/60" :
+                      row.position === 3 ? "bg-orange-50/40 hover:bg-orange-50/60" :
+                      "hover:bg-gray-50"
+                    }`}>
+                      <td className={`sticky left-0 z-10 border-b border-gray-100 px-1 py-3 text-center md:px-2 ${
+                        row.position <= 3 ? "bg-transparent" : "bg-white"
+                      }`}>
                         <MovementBadge
                           movement={row.movement}
                           movementValue={row.movement_value}
                         />
                       </td>
 
-                      <td className="sticky left-[95px] z-10 border-b border-gray-100 bg-white px-1 py-3 text-center font-bold whitespace-nowrap md:px-2">
-                        {row.position}
+                      <td className={`sticky left-[95px] z-10 border-b border-gray-100 px-1 py-3 text-center font-bold whitespace-nowrap md:px-2 ${
+                        row.position <= 3 ? "bg-transparent" : "bg-white"
+                      }`}>
+                        {getMedal(row.position) ?? row.position}
                       </td>
 
                       <td className="sticky left-[155px] z-10 border-b border-gray-100 bg-white px-1 py-3 font-medium md:px-2">
@@ -442,16 +459,25 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                   const heatClass = getRankHeatClass(row.position, totalRows);
 
                   return (
-                    <tr key={row.entry_id} className="hover:bg-gray-50">
-                      <td className="sticky left-0 z-10 border-b border-gray-100 bg-white px-1 py-3 text-center md:px-2">
+                    <tr key={row.entry_id} className={`transition ${
+                      row.position === 1 ? "bg-amber-50/60 hover:bg-amber-50" :
+                      row.position === 2 ? "bg-gray-50/80 hover:bg-gray-100/60" :
+                      row.position === 3 ? "bg-orange-50/40 hover:bg-orange-50/60" :
+                      "hover:bg-gray-50"
+                    }`}>
+                      <td className={`sticky left-0 z-10 border-b border-gray-100 px-1 py-3 text-center md:px-2 ${
+                        row.position <= 3 ? "bg-transparent" : "bg-white"
+                      }`}>
                         <MovementBadge
                           movement={row.movement}
                           movementValue={row.movement_value}
                         />
                       </td>
 
-                      <td className="sticky left-[95px] z-10 border-b border-gray-100 bg-white px-1 py-3 text-center font-bold whitespace-nowrap md:px-2">
-                        {row.position}
+                      <td className={`sticky left-[95px] z-10 border-b border-gray-100 px-1 py-3 text-center font-bold whitespace-nowrap md:px-2 ${
+                        row.position <= 3 ? "bg-transparent" : "bg-white"
+                      }`}>
+                        {getMedal(row.position) ?? row.position}
                       </td>
 
                       <td className="sticky left-[155px] z-10 border-b border-gray-100 bg-white px-1 py-3 font-medium md:px-2">
