@@ -130,7 +130,7 @@ function HeaderPill({
     <div className="relative overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] px-5 py-5 shadow-lg flex flex-col items-center justify-center text-center">
       <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-[var(--iberdrola-green)] opacity-20 blur-2xl" />
       <div className="relative">
-        <div className={`font-black tracking-tight text-[var(--iberdrola-green)] leading-none ${
+        <div className={`font-black tracking-tight text-white leading-none ${
           big ? "text-6xl sm:text-7xl" : "text-4xl"
         }`}>
           {value}
@@ -556,6 +556,8 @@ const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
   }
 
   loadBanquilloCount();
+
+  if (!poolId) return;
 
   const channel = supabase
     .channel(`banquillo-count-${poolId}`)
@@ -1825,9 +1827,17 @@ const invalidKnockoutPicks = useMemo(() => {
                       <span className="text-sm font-black text-[var(--iberdrola-forest)]">
                         {t.extras[question.key as keyof typeof t.extras]}
                       </span>
-                      <span className="ml-auto shrink-0 rounded-full bg-[var(--iberdrola-green)]/10 px-2 py-0.5 text-[11px] font-black text-[var(--iberdrola-green)]">
+                      {officialValue ? (
+                      <span className={`ml-auto shrink-0 rounded-full px-2 py-0.5 text-[11px] font-black ${
+                        isCorrect ? "bg-[var(--iberdrola-green)]/10 text-[var(--iberdrola-green)]" : "bg-gray-100 text-gray-400"
+                      }`}>
+                        {isCorrect ? `+${points}` : `+${points}?`}
+                      </span>
+                    ) : (
+                      <span className="ml-auto shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-400">
                         +{points}
                       </span>
+                    )}
                     </div>
 
                     <input

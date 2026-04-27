@@ -215,9 +215,9 @@ function MatchCard({
   const stageBorderClass = {
     round32: "border-[var(--iberdrola-sky)] shadow-sm",
     round16: "border-[var(--iberdrola-sky)] shadow-sm",
-    quarterfinal: "border-[var(--iberdrola-sky)] shadow-md",
-    semifinal: "border-[var(--iberdrola-green)]/40 shadow-md",
-    final: "border-[var(--iberdrola-green)] shadow-lg ring-1 ring-[var(--iberdrola-green)]/20",
+    quarterfinal: "border-[var(--iberdrola-sky)] shadow-sm",
+    semifinal: "border-[var(--iberdrola-sky)] shadow-sm",
+    final: "border-[var(--iberdrola-green)] shadow-lg ring-2 ring-[var(--iberdrola-green)]/20",
   }[match.stage as string] ?? "border-[var(--iberdrola-sky)] shadow-sm";
 
   return (
@@ -540,7 +540,6 @@ export default function KnockoutBracket({
           <div className="grid gap-4 md:grid-cols-[1fr_1fr_0.8fr]">
             <StageColumn
               title={labels.semifinalsLabel}
-              accent
               matches={semifinals}
               teams={teams}
               picks={picks}
@@ -625,7 +624,6 @@ export default function KnockoutBracket({
                 <div className="w-full pt-[360px]">
                   <StageColumn
                     title={labels.semifinalsLabel}
-              accent
                     matches={semifinals[0] ? [semifinals[0]] : []}
                     teams={teams}
                     picks={picks}
@@ -653,7 +651,6 @@ export default function KnockoutBracket({
                 <div className="w-full pt-[80px]">
                   <StageColumn
                     title={labels.semifinalsLabel}
-              accent
                     matches={semifinals[1] ? [semifinals[1]] : []}
                     teams={teams}
                     picks={picks}

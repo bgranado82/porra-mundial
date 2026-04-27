@@ -137,7 +137,7 @@ function PrizesCard({
         <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-white/40">
           {labels.potTotal}
         </div>
-        <div className="text-3xl font-black tracking-tight text-[var(--iberdrola-green)]">
+        <div className="text-3xl font-black tracking-tight text-white">
           {formatEuro(potTotal)}
         </div>
         <div className="mt-4 space-y-2">
