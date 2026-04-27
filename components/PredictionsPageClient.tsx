@@ -127,17 +127,19 @@ function HeaderPill({
   big?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4 shadow-sm">
-      <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
-        {label}
+    <div className="relative overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] px-5 py-5 shadow-lg flex flex-col items-center justify-center text-center">
+      <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-[var(--iberdrola-green)] opacity-20 blur-2xl" />
+      <div className="relative">
+        <div className={`font-black tracking-tight text-[var(--iberdrola-green)] leading-none ${
+          big ? "text-6xl sm:text-7xl" : "text-4xl"
+        }`}>
+          {value}
+        </div>
+        <div className="mt-2 text-[11px] font-bold uppercase tracking-widest text-white/50">
+          {label}
+        </div>
       </div>
-      <div
-        className={`flex items-center justify-center text-center font-black text-[var(--iberdrola-green)] ${
-          big ? "min-h-[110px] text-5xl sm:text-6xl" : "min-h-[110px] text-3xl"
-        }`}
-      >
-        {value}
-      </div>
+      <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-[var(--iberdrola-green)] to-[var(--iberdrola-sky)]" />
     </div>
   );
 }
@@ -150,11 +152,11 @@ function RulePill({
   value: string;
 }) {
   return (
-    <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2">
-      <div className="text-[11px] font-semibold text-[var(--iberdrola-forest)]/65">
+    <div className="flex items-center justify-between rounded-xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)]/40 px-3 py-2.5 transition hover:bg-[var(--iberdrola-green-light)]">
+      <div className="text-xs font-semibold text-[var(--iberdrola-forest)]/65 truncate pr-2">
         {label}
       </div>
-      <div className="text-sm font-extrabold text-[var(--iberdrola-forest)]">
+      <div className="shrink-0 text-sm font-black text-[var(--iberdrola-green)]">
         {value}
       </div>
     </div>
@@ -203,38 +205,32 @@ function ClassificationHeaderCard({
   pendingLabel: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4 shadow-sm">
-      <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+    <div className="relative overflow-hidden rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white px-5 py-5 shadow-sm flex flex-col items-center justify-center text-center">
+      <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45 mb-2">
         {title}
       </div>
-
-      <div className="flex min-h-[110px] flex-col items-center justify-center text-center">
-        {currentUserStanding ? (
-          <>
-            <div className="text-5xl font-black text-[var(--iberdrola-green)] sm:text-6xl">
-              {currentUserStanding.position}º
-            </div>
-
-            <div className="mt-3">
-              <MovementMini
-                movement={currentUserStanding.movement}
-                movementValue={currentUserStanding.movement_value}
-              />
-            </div>
-
-            <div className="mt-2 text-xs font-medium text-[var(--iberdrola-forest)]/65">
-              {movementLabel}
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center">
-            <div className="text-3xl font-black text-[var(--iberdrola-green)]">-</div>
-            <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/50">
-              {pendingLabel}
-            </div>
+      {currentUserStanding ? (
+        <>
+          <div className="text-6xl font-black text-[var(--iberdrola-forest)] leading-none sm:text-7xl">
+            {currentUserStanding.position}º
           </div>
-        )}
-      </div>
+          <div className="mt-3">
+            <MovementMini
+              movement={currentUserStanding.movement}
+              movementValue={currentUserStanding.movement_value}
+            />
+          </div>
+          <div className="mt-1 text-[11px] font-medium text-[var(--iberdrola-forest)]/50">
+            {movementLabel}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="text-5xl font-black text-[var(--iberdrola-forest)]/20 leading-none">—</div>
+          <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/40">{pendingLabel}</div>
+        </>
+      )}
+      <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-[var(--iberdrola-sky)] to-[var(--iberdrola-green)]" />
     </div>
   );
 }
@@ -1182,17 +1178,20 @@ const invalidKnockoutPicks = useMemo(() => {
       <div className="mx-auto max-w-[1600px] px-3 py-4 sm:px-4 sm:py-6 fade-in">
       <div className="space-y-4">
         <section className="rounded-3xl card-glass shadow-md">
-          <div className="p-4 sm:p-5">
+          <div className="p-5 sm:p-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-3">
-                  <img
-                    src="/logo.png"
-                    alt="Porra Mundial"
-                    className="h-12 w-12 rounded-xl object-contain sm:h-14 sm:w-14"
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-2xl bg-[var(--iberdrola-green)] opacity-10 blur-lg scale-110" />
+                    <img
+                      src="/logo.png"
+                      alt="Porra Mundial"
+                      className="relative h-12 w-12 rounded-2xl object-contain shadow-sm sm:h-14 sm:w-14"
+                    />
+                  </div>
                   <div className="min-w-0">
-                    <h1 className="truncate text-xl font-black text-[var(--iberdrola-forest)] sm:text-2xl">
+                    <h1 className="truncate text-xl font-black tracking-tight text-[var(--iberdrola-forest)] sm:text-2xl">
                       {t.appTitle}
                     </h1>
                     <p className="text-sm text-[var(--iberdrola-forest)]/70">
@@ -1205,13 +1204,13 @@ const invalidKnockoutPicks = useMemo(() => {
 
                 <div className="mt-2">
                   <span
-                    className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
                       paymentStatus === "paid"
-                        ? "bg-green-50 text-green-700"
-                        : "bg-amber-50 text-amber-700"
+                        ? "bg-[var(--iberdrola-green)]/10 text-[var(--iberdrola-green)]"
+                        : "bg-amber-50 text-amber-600"
                     }`}
                   >
-                    {paymentStatus === "paid" ? "💳" : "⏳"}{" "}
+                    {paymentStatus === "paid" ? "✓" : "⏳"}{" "}
                     {paymentStatus === "paid"
                       ? t.paymentStatus.paid
                       : t.paymentStatus.pending}
@@ -1219,16 +1218,16 @@ const invalidKnockoutPicks = useMemo(() => {
                 </div>
 
                 <div className="mt-4">
-                  <div className="text-sm font-semibold text-[var(--iberdrola-forest)]/65">
+                  <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
                     {t.welcomeUser}
                   </div>
-                  <div className="text-2xl font-black tracking-tight text-[var(--iberdrola-green)] sm:text-3xl">
+                  <div className="mt-1 text-2xl font-black tracking-tight text-[var(--iberdrola-forest)] sm:text-3xl">
                     {greetingName}
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 xl:min-w-[260px] xl:items-end">
+              <div className="flex flex-col items-start gap-3 xl:items-end xl:min-w-[240px]">
                 <LanguageSwitcher
                   locale={locale}
                   onChange={setLocale}
@@ -1250,34 +1249,37 @@ const invalidKnockoutPicks = useMemo(() => {
   pendingLabel={t.classificationPending}
 />
 
-              <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleSubmitEntry}
+                  disabled={submitLoading || !canSubmitPredictions}
+                  className={`rounded-2xl px-5 py-3 text-sm font-black shadow-md transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${
+                    entryStatus === "submitted"
+                      ? "bg-[var(--iberdrola-green)]/15 text-[var(--iberdrola-green)] cursor-default"
+                      : "bg-[var(--iberdrola-green)] text-white shadow-[var(--iberdrola-green)]/25 hover:brightness-110"
+                  }`}
+                >
+                  {entryStatus === "submitted"
+                    ? `✓ ${t.entrySubmitted}`
+                    : submitLoading
+                      ? t.submittingEntry
+                      : t.submitEntry}
+                </button>
+
                 <button
                   type="button"
                   onClick={handleSaveEntry}
                   disabled={saveLoading || !canEditPredictions}
-                  className="rounded-2xl border border-[var(--iberdrola-forest)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white px-5 py-2.5 text-sm font-bold text-[var(--iberdrola-forest)] transition hover:bg-[var(--iberdrola-green-light)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saveLoading ? t.savingEntry : t.saveEntry}
                 </button>
 
                 <button
                   type="button"
-                  onClick={handleSubmitEntry}
-                  disabled={submitLoading || !canSubmitPredictions}
-                  className="rounded-2xl bg-[var(--iberdrola-green)] px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {entryStatus === "submitted"
-                    ? t.entrySubmitted
-                    : submitLoading
-                      ? t.submittingEntry
-                      : t.submitEntry}
-
-                </button>
-
-                <button
-                  type="button"
                   onClick={handleLogout}
-                  className="rounded-2xl border border-red-200 bg-white px-4 py-3 text-sm font-bold text-red-600 shadow-sm transition hover:bg-red-50"
+                  className="rounded-2xl border border-gray-200 bg-white px-5 py-2 text-xs font-semibold text-gray-400 transition hover:border-red-200 hover:text-red-500"
                 >
                   {t.logout}
                 </button>
@@ -1285,14 +1287,14 @@ const invalidKnockoutPicks = useMemo(() => {
             </div>
 
             {submitMessage ? (
-              <div className="mt-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
+              <div className="mt-4 rounded-2xl border border-[var(--iberdrola-green)]/30 bg-[var(--iberdrola-green-light)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
                 {submitMessage}
               </div>
             ) : null}
 
             {isDeadlinePassed ? (
-              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-                {t.deadlinePassed}
+              <div className="mt-4 flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+                <span>⏰</span> {t.deadlinePassed}
               </div>
             ) : null}
 
@@ -1305,17 +1307,17 @@ const invalidKnockoutPicks = useMemo(() => {
         </section>
 
         {canSeeClassification ? (
-          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-            <div className="p-4">
+          <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+            <div className="p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+                  <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
                     {t.classificationSummary}
                   </div>
-                  <div className="mt-1 text-lg font-black text-[var(--iberdrola-forest)]">
+                  <div className="mt-1 text-lg font-black tracking-tight text-[var(--iberdrola-forest)]">
                     {t.top3AndLast}
                   </div>
-                  <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
+                  <div className="mt-0.5 text-sm text-[var(--iberdrola-forest)]/55">
                     {t.classificationQuickView}
                   </div>
 
@@ -1382,32 +1384,35 @@ const invalidKnockoutPicks = useMemo(() => {
                         {t.loadingStandings}
                       </div>
                     ) : top3Standings.length > 0 ? (
-                      top3Standings.map((row) => (
+                      top3Standings.map((row, idx) => {
+                        const medals = ["🥇", "🥈", "🥉"];
+                        const bgColors = [
+                          "bg-amber-50 border-amber-200",
+                          "bg-gray-50 border-gray-200",
+                          "bg-orange-50/50 border-orange-200/60",
+                        ];
+                        return (
                         <div
                           key={row.entry_id}
-                          className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3"
+                          className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${bgColors[idx] ?? "border-gray-100 bg-white"}`}
                         >
-                          <div className="min-w-0 pr-3">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-[var(--iberdrola-green-light)] px-2 text-sm font-black text-[var(--iberdrola-forest)]">
-                                {row.position}
-                              </span>
-                              <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] sm:text-base">
-                                {row.name || row.email || t.playerFallback}
-                              </span>
-                            </div>
+                          <div className="min-w-0 pr-3 flex items-center gap-2">
+                            <span className="text-lg leading-none shrink-0">{medals[idx]}</span>
+                            <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] sm:text-base">
+                              {row.name || row.email || t.playerFallback}
+                            </span>
                           </div>
-
                           <div className="shrink-0 text-right">
-                            <div className="text-lg font-black text-[var(--iberdrola-green)]">
+                            <div className="text-lg font-black text-[var(--iberdrola-forest)]">
                               {row.total_points}
                             </div>
-                            <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
+                            <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/45">
                               {t.points}
                             </div>
                           </div>
                         </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
                         {t.noStandingsYet}
@@ -1422,22 +1427,24 @@ const invalidKnockoutPicks = useMemo(() => {
                   </div>
 
                   {lastStanding ? (
-                    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-4">
+                    <div className="rounded-2xl border border-gray-100 bg-gray-50/50 px-4 py-4">
                       <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="truncate text-base font-black text-[var(--iberdrola-forest)]">
-                            {lastStanding.name || lastStanding.email || t.playerFallback}
-                          </div>
-                          <div className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                            {t.positionLabel} {lastStanding.position}
+                        <div className="min-w-0 flex items-center gap-2">
+                          <span className="text-lg leading-none shrink-0">🔙</span>
+                          <div className="min-w-0">
+                            <div className="truncate text-sm font-black text-[var(--iberdrola-forest)]">
+                              {lastStanding.name || lastStanding.email || t.playerFallback}
+                            </div>
+                            <div className="text-xs text-[var(--iberdrola-forest)]/50">
+                              {t.positionLabel} {lastStanding.position}
+                            </div>
                           </div>
                         </div>
-
-                        <div className="text-right">
-                          <div className="text-2xl font-black text-[var(--iberdrola-green)]">
+                        <div className="shrink-0 text-right">
+                          <div className="text-xl font-black text-[var(--iberdrola-forest)]/60">
                             {lastStanding.total_points}
                           </div>
-                          <div className="text-[11px] font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
+                          <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/40">
                             {t.points}
                           </div>
                         </div>
@@ -1454,14 +1461,15 @@ const invalidKnockoutPicks = useMemo(() => {
           </section>
         ) : null}
 
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-            <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+        <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+          <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+            <span className="text-xl">⚽</span>
+            <h2 className="text-base font-black text-[var(--iberdrola-forest)]">
               {t.scoringRules}
             </h2>
           </div>
 
-          <div className="p-4">
+          <div className="p-5">
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
               <RulePill
                 label={t.exactScoreRule}
@@ -1514,14 +1522,17 @@ const invalidKnockoutPicks = useMemo(() => {
           </div>
         </section>
 
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-            <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-              {t.extraQuestionsRulesTitle}
-            </h2>
-            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-              {t.extraQuestionsRulesSubtitle}
-            </p>
+        <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+          <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+            <span className="text-xl">🏆</span>
+            <div>
+              <h2 className="text-base font-black text-[var(--iberdrola-forest)]">
+                {t.extraQuestionsRulesTitle}
+              </h2>
+              <p className="text-xs text-[var(--iberdrola-forest)]/55">
+                {t.extraQuestionsRulesSubtitle}
+              </p>
+            </div>
           </div>
 
           <div className="p-4">
@@ -1559,14 +1570,13 @@ const invalidKnockoutPicks = useMemo(() => {
         </section>
 
         <div className="grid gap-4 lg:grid-cols-[1.65fr_0.95fr]">
-          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-            <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-              <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-                {t.groupStageSection}
-              </h2>
-              <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                {t.matchesChronological}
-              </p>
+          <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+            <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+              <span className="text-xl">🌍</span>
+              <div>
+                <h2 className="text-base font-black text-[var(--iberdrola-forest)]">{t.groupStageSection}</h2>
+                <p className="text-xs text-[var(--iberdrola-forest)]/55">{t.matchesChronological}</p>
+              </div>
             </div>
 
             <div className="p-4">
@@ -1673,14 +1683,13 @@ const invalidKnockoutPicks = useMemo(() => {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
-            <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-              <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-                {t.groupStandingsSection}
-              </h2>
-              <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                {t.groupStandingsUpdated}
-              </p>
+          <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
+            <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+              <span className="text-xl">📊</span>
+              <div>
+                <h2 className="text-base font-black text-[var(--iberdrola-forest)]">{t.groupStandingsSection}</h2>
+                <p className="text-xs text-[var(--iberdrola-forest)]/55">{t.groupStandingsUpdated}</p>
+              </div>
             </div>
 
             <div className="p-4 space-y-3">
@@ -1771,14 +1780,13 @@ const invalidKnockoutPicks = useMemo(() => {
 }}
 />
 
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-            <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-              {t.extras.title}
-            </h2>
-            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-              {t.extras.subtitle}
-            </p>
+        <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+          <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+            <span className="text-xl">✨</span>
+            <div>
+              <h2 className="text-base font-black text-[var(--iberdrola-forest)]">{t.extras.title}</h2>
+              <p className="text-xs text-[var(--iberdrola-forest)]/55">{t.extras.subtitle}</p>
+            </div>
           </div>
 
           <div className="p-4">
@@ -1799,15 +1807,27 @@ const invalidKnockoutPicks = useMemo(() => {
                 return (
                   <div
                     key={question.key}
-                    className={`rounded-2xl border px-4 py-4 ${
+                    className={`relative overflow-hidden rounded-2xl border p-4 transition ${
                       isCorrect
-                        ? "border-green-400 bg-green-50"
-                        : "border-[var(--iberdrola-sky)] bg-white"
+                        ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/60"
+                        : currentValue.trim()
+                          ? "border-[var(--iberdrola-green-mid)] bg-white"
+                          : "border-gray-200 bg-gray-50/50"
                     }`}
                   >
-                    <div className="mb-2 flex items-start gap-2 text-sm font-bold text-[var(--iberdrola-forest)]">
-                      <span className="text-lg leading-none">{question.icon}</span>
-                      <span>{t.extras[question.key as keyof typeof t.extras]}</span>
+                    {isCorrect && (
+                      <div className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--iberdrola-green)] text-xs font-black text-white">
+                        ✓
+                      </div>
+                    )}
+                    <div className="mb-3 flex items-center gap-2">
+                      <span className="text-xl leading-none">{question.icon}</span>
+                      <span className="text-sm font-black text-[var(--iberdrola-forest)]">
+                        {t.extras[question.key as keyof typeof t.extras]}
+                      </span>
+                      <span className="ml-auto shrink-0 rounded-full bg-[var(--iberdrola-green)]/10 px-2 py-0.5 text-[11px] font-black text-[var(--iberdrola-green)]">
+                        +{points}
+                      </span>
                     </div>
 
                     <input
@@ -1817,26 +1837,25 @@ const invalidKnockoutPicks = useMemo(() => {
                       placeholder={t.extras.placeholder}
                       disabled={!canEditPredictions}
                       maxLength={60}
-                      className="w-full rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)] outline-none transition focus:ring-2 focus:ring-[var(--iberdrola-green)] disabled:cursor-not-allowed disabled:opacity-70"
+                      className="w-full rounded-xl border border-[var(--iberdrola-green-mid)] bg-white/80 px-3 py-2.5 text-sm font-semibold text-[var(--iberdrola-forest)] outline-none transition focus:border-[var(--iberdrola-green)] focus:bg-white focus:ring-2 focus:ring-[var(--iberdrola-green)]/20 disabled:cursor-not-allowed disabled:opacity-70"
                     />
 
                     {question.key === "best_young_player" ? (
-                      <div className="mt-2 text-xs text-[var(--iberdrola-forest)]/60">
+                      <div className="mt-1.5 text-xs text-[var(--iberdrola-forest)]/50">
                         {t.extras.help_best_young}
                       </div>
                     ) : null}
 
                     {officialValue ? (
-                      <div className="mt-3 flex items-center justify-between gap-2">
-                        <div className="text-xs text-[var(--iberdrola-forest)]/65">
-                          Oficial: {officialValue}
+                      <div className="mt-2.5 flex items-center justify-between gap-2 rounded-xl bg-[var(--iberdrola-forest)]/5 px-3 py-2">
+                        <div className="text-xs font-semibold text-[var(--iberdrola-forest)]/60">
+                          {t.transparencyOfficialLabel}: <span className="font-black text-[var(--iberdrola-forest)]">{officialValue}</span>
                         </div>
-
                         <span
-                          className={`rounded-full px-2 py-1 text-xs font-black ${
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-black ${
                             isCorrect
                               ? "bg-[var(--iberdrola-green)] text-white"
-                              : "bg-gray-100 text-gray-500"
+                              : "bg-gray-200 text-gray-500"
                           }`}
                         >
                           {isCorrect ? `+${points}` : "0"}
