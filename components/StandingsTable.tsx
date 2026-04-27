@@ -2,7 +2,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { Locale, messages } from "@/lib/i18n";
 
 type ExtraPointsMap = {
@@ -275,13 +274,9 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
 
                       <td className="sticky left-[155px] z-10 border-b border-gray-100 bg-white px-1 py-3 font-medium md:px-2">
                         <div className="truncate">
-                          <Link
-                            href={`/entry/${row.entry_id}`}
-                            className="hover:underline"
-                            title={row.name || row.email || t.playerFallback}
-                          >
+                          <span title={row.name || row.email || t.playerFallback}>
                             {row.name || row.email || t.playerFallback}
-                          </Link>
+                          </span>
                         </div>
                       </td>
 
@@ -461,13 +456,9 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
 
                       <td className="sticky left-[155px] z-10 border-b border-gray-100 bg-white px-1 py-3 font-medium md:px-2">
                         <div className="truncate">
-                          <Link
-                            href={`/entry/${row.entry_id}`}
-                            className="hover:underline"
-                            title={row.name || row.email || t.playerFallback}
-                          >
+                          <span title={row.name || row.email || t.playerFallback}>
                             {row.name || row.email || t.playerFallback}
-                          </Link>
+                          </span>
                         </div>
                       </td>
 

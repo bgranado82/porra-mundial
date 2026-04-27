@@ -145,8 +145,8 @@ function ReactionPills({
             disabled={isLoading}
             className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-bold transition ${
               isMine
-                ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green)]/10 text-[var(--iberdrola-forest)]"
-                : "border-[var(--iberdrola-sky)] bg-white text-[var(--iberdrola-forest)]/85"
+                ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green)]/10 text-[var(--iberdrola-forest)] hover:bg-[var(--iberdrola-green)]/20"
+                : "border-[var(--iberdrola-sky)] bg-white text-[var(--iberdrola-forest)]/85 hover:border-[var(--iberdrola-green)] hover:bg-[var(--iberdrola-sand)]"
             }`}
           >
             <span>{REACTION_META[reactionKey].emoji}</span>

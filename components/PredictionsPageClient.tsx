@@ -560,7 +560,28 @@ const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
   }
 
   loadBanquilloCount();
-}, [poolId]);
+
+  // Realtime: incrementar badge cuando llega un comentario nuevo
+  const channel = supabase
+    .channel(`banquillo-count-${poolId}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "banquillo_comments",
+        filter: `pool_id=eq.${poolId}`,
+      },
+      () => {
+        setBanquilloCount((prev) => prev + 1);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [poolId, supabase]);
 
   const t = messages[locale];
   const teamMap = new Map(teams.map((team) => [team.id, team]));

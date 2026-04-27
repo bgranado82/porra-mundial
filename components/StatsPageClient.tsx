@@ -62,13 +62,15 @@ const CHART_COLORS = ["#00A443", "#6CC24A", "#009CDE", "#78BE20", "#A7D46F"];
 
 const EXTRA_ICONS: Record<string, string> = {
   first_goal_scorer_world: "🥇",
-  first_goal_scorer_spain: "🇪🇸",
+  first_goal_scorer_spain: "",
   golden_boot: "👟",
   golden_ball: "🏆",
   best_young_player: "🌟",
   golden_glove: "🧤",
   top_spanish_scorer: "⚽",
 };
+
+const SPAIN_FLAG = "https://flagcdn.com/es.svg";
 
 function formatEuro(value: number) {
   return `${value.toLocaleString("es-ES")}€`;
@@ -157,14 +159,20 @@ function PrizesCard({
 function SectionHeader({
   title,
   icon,
+  flagImg,
 }: {
   title: string;
   icon?: string;
+  flagImg?: string;
 }) {
   return (
     <div className="border-b border-[var(--iberdrola-sky)] px-5 py-4">
       <div className="flex items-start gap-2 text-base font-black text-[var(--iberdrola-forest)]">
-        {icon ? <span className="text-lg leading-none">{icon}</span> : null}
+        {flagImg ? (
+          <img src={flagImg} alt="" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover" style={{ marginTop: 2 }} />
+        ) : icon ? (
+          <span className="text-lg leading-none">{icon}</span>
+        ) : null}
         <span>{title}</span>
       </div>
     </div>
@@ -177,20 +185,25 @@ function ChampionDonutCard({
   notEnoughDataLabel,
   picksUnit,
   picksLabel,
+  othersLabel,
 }: {
   title: string;
   items: StatsResponse["champion"]["items"];
   notEnoughDataLabel: string;
   picksUnit: string;
   picksLabel: string;
+  othersLabel: string;
 }) {
   const topItems = items.slice(0, 5);
+  const otherItems = items.slice(5);
+  const othersCount = otherItems.reduce((sum, item) => sum + item.count, 0);
+  const othersPercentage = otherItems.reduce((sum, item) => sum + item.percentage, 0);
   const teamMap = new Map(teams.map((team) => [team.id, team]));
 
-  const chartData = topItems.map((item) => ({
-    name: item.label,
-    value: item.count,
-  }));
+  const chartData = [
+    ...topItems.map((item) => ({ name: item.label, value: item.count })),
+    ...(othersCount > 0 ? [{ name: othersLabel, value: othersCount }] : []),
+  ];
 
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
@@ -271,12 +284,14 @@ function ChampionDonutCard({
 function ExtraQuestionBarCard({
   title,
   icon,
+  flagImg,
   items,
   othersLabel,
   picksUnit,
 }: {
   title: string;
   icon?: string;
+  flagImg?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
   othersLabel: string;
   picksUnit: string;
@@ -309,7 +324,7 @@ function ExtraQuestionBarCard({
 
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <SectionHeader title={title} icon={icon} />
+      <SectionHeader title={title} icon={icon} flagImg={flagImg} />
       <div className="flex h-[340px] items-center justify-center p-4">
         <div className="h-[250px] w-full max-w-[420px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -359,19 +374,21 @@ function ExtraQuestionBarCard({
 function ExtraQuestionListCard({
   title,
   icon,
+  flagImg,
   items,
   notEnoughDataLabel,
   picksUnit,
 }: {
   title: string;
   icon?: string;
+  flagImg?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
   notEnoughDataLabel: string;
   picksUnit: string;
 }) {
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <SectionHeader title={title} icon={icon} />
+      <SectionHeader title={title} icon={icon} flagImg={flagImg} />
       <div className="space-y-3 p-5">
         {items.slice(0, 5).length > 0 ? (
           items.slice(0, 5).map((item, index) => (
@@ -592,6 +609,17 @@ useEffect(() => {
   </Link>
 
   <Link
+    href={
+      poolId
+        ? `/banquillo?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
+        : "/banquillo"
+    }
+    className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
+  >
+    {t.banquillo.title}
+  </Link>
+
+  <Link
     href={backHref}
     className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
   >
@@ -627,6 +655,7 @@ useEffect(() => {
   notEnoughDataLabel={t.stats.notEnoughData}
   picksUnit={t.stats.picksUnit}
   picksLabel={t.stats.picksLabel}
+  othersLabel={t.stats.others}
 />
 
         <ExtraQuestionListCard
@@ -677,6 +706,7 @@ picksUnit={t.stats.picksUnit}
 
         <ExtraQuestionBarCard
           icon={EXTRA_ICONS.first_goal_scorer_spain}
+          flagImg={SPAIN_FLAG}
           title={t.extras.first_goal_scorer_spain}
           items={extraMap.get("first_goal_scorer_spain")?.items ?? []}
           othersLabel={t.stats.others}
