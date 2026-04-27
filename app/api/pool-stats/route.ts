@@ -7,6 +7,7 @@ import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 type ExtraPredictionRow = {
   question_key: string;
   predicted_value: string | null;
+  normalized_value: string | null;
 };
 
 type EntryRow = {
@@ -32,6 +33,14 @@ function normalizeValue(value: string) {
 
 function prettifyValue(value: string) {
   return value.trim();
+}
+
+function titleCase(value: string) {
+  return value
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function getText(locale: string) {
@@ -218,7 +227,7 @@ const text = getText(locale);
 
       const { data: extraRows, error: extraError } = await supabase
         .from("entry_extra_predictions")
-        .select("question_key, predicted_value, entry_id")
+        .select("question_key, predicted_value, normalized_value, entry_id")
         .in("entry_id", entryIds)
         .returns<(ExtraPredictionRow & { entry_id: string })[]>();
 
@@ -234,20 +243,20 @@ const text = getText(locale);
           (row) => row.question_key === question.key
         );
 
-        const counter = new Map<string, { label: string; count: number }>();
+        const counter = new Map<string, { labels: string[]; count: number }>();
 
         rowsForQuestion.forEach((row) => {
+          const normalized = row.normalized_value?.trim();
           const raw = row.predicted_value?.trim();
-          if (!raw) return;
+          if (!normalized || !raw) return;
 
-          const key = normalizeValue(raw);
-          const current = counter.get(key);
+          const current = counter.get(normalized);
 
           if (current) {
             current.count += 1;
           } else {
-            counter.set(key, {
-              label: prettifyValue(raw),
+            counter.set(normalized, {
+              labels: [prettifyValue(raw)],
               count: 1,
             });
           }
@@ -256,7 +265,7 @@ const text = getText(locale);
         const items = Array.from(counter.entries())
           .map(([key, value]) => ({
             key,
-            label: value.label,
+            label: titleCase(key),
             count: value.count,
             percentage:
               participants > 0 ? (value.count / participants) * 100 : 0,

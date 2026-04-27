@@ -87,15 +87,13 @@ function KpiCard({
   icon: string;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white p-5 shadow-sm transition hover:shadow-md">
-      <div className="flex items-start justify-between gap-2">
-        <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/50">
-          {label}
-        </div>
-        <span className="text-xl leading-none">{icon}</span>
-      </div>
-      <div className="mt-3 text-4xl font-black tracking-tight text-[var(--iberdrola-forest)]">
+    <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white p-6 shadow-sm transition hover:shadow-md text-center">
+      <span className="text-2xl leading-none mb-2">{icon}</span>
+      <div className="text-6xl font-black tracking-tight text-[var(--iberdrola-forest)] leading-none">
         {value}
+      </div>
+      <div className="mt-2 text-[11px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/50">
+        {label}
       </div>
       <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-[var(--iberdrola-green)] to-[var(--iberdrola-sky)]" />
     </div>
@@ -133,7 +131,7 @@ function PrizesCard({
   ];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] p-5 shadow-lg">
+    <div className="relative overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] p-5 shadow-md">
       <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[var(--iberdrola-green)] opacity-15 blur-2xl" />
       <div className="relative">
         <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-white/40">
@@ -348,7 +346,7 @@ function ExtraQuestionBarCard({
               <CartesianGrid stroke="#f0f0f0" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 type="number"
-                domain={[0, 100]}
+                domain={[0, (dataMax: number) => Math.min(100, Math.ceil(dataMax * 1.2))]}
                 tickFormatter={(v) => `${v}%`}
                 tick={{ fontSize: 11, fill: "#6b7280" }}
                 axisLine={false}
@@ -553,8 +551,8 @@ export default function StatsPageClient() {
       <main className="page-bg">
         <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6">
           <div className="skeleton h-24 rounded-3xl" />
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-28 rounded-3xl" />)}
+          <div className="grid gap-4 md:grid-cols-3">
+            {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-28 rounded-3xl" />)}
           </div>
           <div className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
             <div className="skeleton h-80 rounded-3xl" />
@@ -642,10 +640,9 @@ export default function StatsPageClient() {
         </section>
 
         {/* ── KPIs + PRIZES */}
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-3">
           <KpiCard label={t.stats.participants} value={data.summary.participants} icon="👥" />
           <KpiCard label={t.stats.countries} value={data.summary.countries} icon="🌍" />
-          <KpiCard label={t.stats.potTotal} value={formatEuro(data.summary.potTotal)} icon="💰" />
           <PrizesCard
             loserRefund={data.summary.loserRefund}
             firstPrize={data.summary.firstPrize}
