@@ -1849,6 +1849,7 @@ const invalidKnockoutPicks = useMemo(() => {
             </div>
           </div>
         </section>
+        </div>
       </div>
     </main>
   );
