@@ -355,7 +355,8 @@ export default function TransparencyPageClient() {
 
   if (loadingList || loadingEntry) {
     return (
-      <main className="mx-auto max-w-[1600px] space-y-4 px-4 py-6">
+      <main className="page-bg">
+      <div className="mx-auto max-w-[1600px] space-y-4 px-4 py-6">
         <div className="skeleton h-28 rounded-3xl" />
         <div className="skeleton h-16 rounded-3xl" />
         <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
@@ -364,24 +365,28 @@ export default function TransparencyPageClient() {
           </div>
           <div className="skeleton h-96 rounded-3xl" />
         </div>
+        </div>
       </main>
     );
   }
 
   if (error || !data) {
     return (
-      <main className="mx-auto max-w-[1600px] px-4 py-6 fade-in">
+      <main className="page-bg">
+      <div className="mx-auto max-w-[1600px] px-4 py-6 fade-in">
         <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] card-glass p-6 shadow-sm">
           <div className="text-sm font-semibold text-[var(--iberdrola-forest)]">
             {error || t.transparencyNoData}
           </div>
         </section>
+      </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6">
+    <main className="page-bg">
+      <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 fade-in">
       <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-center gap-4">
@@ -736,6 +741,7 @@ const score = calculateMatchPredictionScore(
 })}
         </div>
       </section>
+      </div>
     </main>
   );
 }
