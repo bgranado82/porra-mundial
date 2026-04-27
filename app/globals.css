@@ -12,28 +12,72 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 :root {
   --iberdrola-green: #00A443;
+  --iberdrola-green-light: #E8F7EE;
+  --iberdrola-green-mid: #C2EBD1;
   --iberdrola-sky: #0DA9FF;
+  --iberdrola-sky-light: #E6F6FF;
   --iberdrola-sunset: #FF9C1A;
   --iberdrola-forest: #00402A;
   --iberdrola-sand: #FFF5EC;
+  --iberdrola-sand-dark: #FFE8D0;
 }
 
 body {
   background: var(--iberdrola-sand);
   color: var(--iberdrola-forest);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus ring global */
+*:focus-visible {
+  outline: 2px solid var(--iberdrola-green);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Skeleton animation */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--iberdrola-green-light) 25%,
+    var(--iberdrola-green-mid) 50%,
+    var(--iberdrola-green-light) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.25s ease-out both;
+}
+
+/* Tab transition */
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateX(4px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.tab-fade-in {
+  animation: tabFadeIn 0.18s ease-out both;
 }

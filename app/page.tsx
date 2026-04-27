@@ -165,8 +165,10 @@ export default function Home() {
 
 
   return (
-    <main className="min-h-screen bg-[var(--iberdrola-green-light)] flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+    <main className="min-h-screen flex items-center justify-center px-4 py-8"
+      style={{ background: "linear-gradient(135deg, var(--iberdrola-green-light) 0%, #ffffff 50%, var(--iberdrola-sky-light) 100%)" }}
+    >
+      <div className="w-full max-w-md fade-in">
         <div className="mb-3 flex justify-end">
           <LanguageSwitcher
             locale={locale}
@@ -175,28 +177,31 @@ export default function Home() {
           />
         </div>
 
-        <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white p-6 shadow-sm md:p-8">
-          <div className="mb-6 flex flex-col items-center text-center">
-            <img
-              src="/logo.png"
-              alt="Ibe World Cup"
-              className="mb-4 h-24 w-24 rounded-3xl shadow-md md:h-28 md:w-28"
-            />
+        <div className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white/90 p-6 shadow-xl backdrop-blur-sm md:p-8">
+          <div className="mb-8 flex flex-col items-center text-center">
+            <div className="relative mb-4">
+              <div className="absolute inset-0 rounded-3xl bg-[var(--iberdrola-green)] opacity-10 blur-xl scale-110" />
+              <img
+                src="/logo.png"
+                alt="Ibe World Cup"
+                className="relative h-24 w-24 rounded-3xl shadow-lg md:h-28 md:w-28"
+              />
+            </div>
 
-            <h1 className="text-2xl font-bold text-[var(--iberdrola-forest)] md:text-3xl">
+            <h1 className="text-2xl font-black tracking-tight text-[var(--iberdrola-forest)] md:text-3xl">
               {t.appTitle}
             </h1>
 
-            <p className="mt-3 text-sm text-gray-600">{t.authWelcome}</p>
+            <p className="mt-2 text-sm text-[var(--iberdrola-forest)]/60">{t.authWelcome}</p>
           </div>
 
-          <div className="mb-4 grid grid-cols-2 gap-2">
+          <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl bg-[var(--iberdrola-green-light)] p-1">
             <button
               type="button"
-              className={`rounded-xl px-4 py-2 text-sm font-medium ${
+              className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${
                 mode === "login"
-                  ? "bg-[var(--iberdrola-green)] text-white"
-                  : "bg-white text-[var(--iberdrola-forest)] border border-[var(--iberdrola-sky)]"
+                  ? "bg-[var(--iberdrola-green)] text-white shadow-md"
+                  : "text-[var(--iberdrola-forest)]/70 hover:text-[var(--iberdrola-forest)]"
               }`}
               onClick={() => {
                 setMode("login");
@@ -208,10 +213,10 @@ export default function Home() {
 
             <button
               type="button"
-              className={`rounded-xl px-4 py-2 text-sm font-medium ${
+              className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${
                 mode === "register"
-                  ? "bg-[var(--iberdrola-green)] text-white"
-                  : "bg-white text-[var(--iberdrola-forest)] border border-[var(--iberdrola-sky)]"
+                  ? "bg-[var(--iberdrola-green)] text-white shadow-md"
+                  : "text-[var(--iberdrola-forest)]/70 hover:text-[var(--iberdrola-forest)]"
               }`}
               onClick={() => {
                 setMode("register");
@@ -227,28 +232,28 @@ export default function Home() {
               <>
                 <input
                   placeholder={t.name}
-                  className="w-full rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2"
+                  className="w-full rounded-2xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)]/40 px-4 py-3 text-sm font-medium placeholder:text-[var(--iberdrola-forest)]/40 focus:border-[var(--iberdrola-green)] focus:bg-white focus:outline-none transition"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
 
                 <input
                   placeholder={t.company}
-                  className="w-full rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2"
+                  className="w-full rounded-2xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)]/40 px-4 py-3 text-sm font-medium placeholder:text-[var(--iberdrola-forest)]/40 focus:border-[var(--iberdrola-green)] focus:bg-white focus:outline-none transition"
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                 />
 
                 <input
                   placeholder={t.country}
-                  className="w-full rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2"
+                  className="w-full rounded-2xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)]/40 px-4 py-3 text-sm font-medium placeholder:text-[var(--iberdrola-forest)]/40 focus:border-[var(--iberdrola-green)] focus:bg-white focus:outline-none transition"
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
                 />
 
                 <input
                   placeholder={t.accessCode}
-                  className="w-full rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2 uppercase"
+                  className="w-full rounded-2xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)]/40 px-4 py-3 text-sm font-medium uppercase placeholder:text-[var(--iberdrola-forest)]/40 focus:border-[var(--iberdrola-green)] focus:bg-white focus:outline-none transition"
                   value={accessCode}
                   onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
                 />
@@ -258,7 +263,7 @@ export default function Home() {
             <input
               type="email"
               placeholder="Email"
-              className="w-full rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2"
+              className="w-full rounded-2xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)]/40 px-4 py-3 text-sm font-medium placeholder:text-[var(--iberdrola-forest)]/40 focus:border-[var(--iberdrola-green)] focus:bg-white focus:outline-none transition"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
@@ -266,26 +271,28 @@ export default function Home() {
             <input
               type="password"
               placeholder={t.password}
-              className="w-full rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2"
+              className="w-full rounded-2xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)]/40 px-4 py-3 text-sm font-medium placeholder:text-[var(--iberdrola-forest)]/40 focus:border-[var(--iberdrola-green)] focus:bg-white focus:outline-none transition"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
 
-{mode === "login" && (
-  <button
-    type="button"
-    onClick={handleForgotPassword}
-    className="w-full text-right text-sm font-medium text-[var(--iberdrola-forest)] underline"
-  >
-    {t.forgotPassword}
-  </button>
-)}
+            {mode === "login" && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs font-semibold text-[var(--iberdrola-forest)]/55 hover:text-[var(--iberdrola-forest)] transition underline-offset-2 hover:underline"
+                >
+                  {t.forgotPassword}
+                </button>
+              </div>
+            )}
 
             {mode === "register" && (
               <input
                 type="password"
                 placeholder={t.confirmPassword}
-                className="w-full rounded-xl border border-[var(--iberdrola-sky)] px-3 py-2"
+                className="w-full rounded-2xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)]/40 px-4 py-3 text-sm font-medium placeholder:text-[var(--iberdrola-forest)]/40 focus:border-[var(--iberdrola-green)] focus:bg-white focus:outline-none transition"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
@@ -293,17 +300,31 @@ export default function Home() {
 
             <button
               onClick={mode === "login" ? handleLogin : handleRegister}
-              className="w-full rounded-xl bg-[var(--iberdrola-green)] py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+              className="w-full rounded-2xl bg-[var(--iberdrola-green)] py-3.5 text-sm font-black text-white shadow-lg shadow-[var(--iberdrola-green)]/30 transition hover:brightness-110 hover:shadow-[var(--iberdrola-green)]/40 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
               disabled={loading}
             >
-              {loading ? t.loading : mode === "login" ? t.login : t.register}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                  </svg>
+                  {t.loading}
+                </span>
+              ) : mode === "login" ? t.login : t.register}
             </button>
 
             {message && (
-              <p className="text-sm text-red-600 text-center">{message}</p>
+              <div className="rounded-2xl bg-red-50 border border-red-200 px-4 py-3 text-sm font-medium text-red-700 text-center fade-in">
+                {message}
+              </div>
             )}
           </div>
         </div>
+
+        <p className="mt-4 text-center text-xs text-[var(--iberdrola-forest)]/40">
+          Ibe World Cup 2026 · ibewc2026.com
+        </p>
       </div>
     </main>
   );
