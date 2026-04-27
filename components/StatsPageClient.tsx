@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -56,9 +55,10 @@ type StatsResponse = {
   }>;
   insights: string[];
 };
+
 const LOCALE_KEY = "porra-mundial-locale";
 
-const CHART_COLORS = ["#00A443", "#6CC24A", "#009CDE", "#78BE20", "#A7D46F"];
+const CHART_COLORS = ["#00A443", "#6CC24A", "#009CDE", "#78BE20", "#A7D46F", "#B0BEC5"];
 
 const EXTRA_ICONS: Record<string, string> = {
   first_goal_scorer_world: "🥇",
@@ -72,91 +72,95 @@ const EXTRA_ICONS: Record<string, string> = {
 
 const SPAIN_FLAG = "https://flagcdn.com/es.svg";
 
-
 function formatEuro(value: number) {
   return `${value.toLocaleString("es-ES")}€`;
 }
 
+// ─── KPI CARD ────────────────────────────────────────────────────────────────
 function KpiCard({
   label,
   value,
-  subvalue,
+  icon,
 }: {
   label: string;
   value: string | number;
-  subvalue?: string;
+  icon: string;
 }) {
   return (
-    <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-5 shadow-sm">
-      <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-        {label}
+    <div className="relative overflow-hidden rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white p-5 shadow-sm transition hover:shadow-md">
+      <div className="flex items-start justify-between gap-2">
+        <div className="text-[11px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/50">
+          {label}
+        </div>
+        <span className="text-xl leading-none">{icon}</span>
       </div>
-      <div className="mt-2 text-3xl font-black text-[var(--iberdrola-green)]">
+      <div className="mt-3 text-4xl font-black tracking-tight text-[var(--iberdrola-forest)]">
         {value}
       </div>
-      {subvalue ? (
-        <div className="mt-2 text-sm text-[var(--iberdrola-forest)]/65">
-          {subvalue}
-        </div>
-      ) : null}
+      <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-[var(--iberdrola-green)] to-[var(--iberdrola-sky)]" />
     </div>
   );
 }
 
+// ─── PRIZES CARD ─────────────────────────────────────────────────────────────
 function PrizesCard({
   loserRefund,
   firstPrize,
   secondPrize,
   thirdPrize,
+  potTotal,
   labels,
 }: {
   loserRefund: number;
   firstPrize: number;
   secondPrize: number;
   thirdPrize: number;
+  potTotal: number;
   labels: {
     prizes: string;
     firstPlace: string;
     secondPlace: string;
     thirdPlace: string;
     lastPlace: string;
+    potTotal: string;
   };
 }) {
+  const prizes = [
+    { emoji: "🥇", label: labels.firstPlace, amount: firstPrize, highlight: true },
+    { emoji: "🥈", label: labels.secondPlace, amount: secondPrize, highlight: false },
+    { emoji: "🥉", label: labels.thirdPlace, amount: thirdPrize, highlight: false },
+    { emoji: "🔙", label: labels.lastPlace, amount: loserRefund, highlight: false },
+  ];
+
   return (
-    <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-5 shadow-sm">
-      <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-        {labels.prizes}
-      </div>
-      <div className="mt-3 grid gap-2 text-sm font-semibold text-[var(--iberdrola-forest)]">
-        <div className="flex items-center justify-between">
-          <span>🥇 {labels.firstPlace}</span>
-          <span className="font-black text-[var(--iberdrola-green)]">
-            {formatEuro(firstPrize)}
-          </span>
+    <div className="relative overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] p-5 shadow-lg">
+      <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[var(--iberdrola-green)] opacity-15 blur-2xl" />
+      <div className="relative">
+        <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-white/40">
+          {labels.potTotal}
         </div>
-        <div className="flex items-center justify-between">
-          <span>🥈 {labels.secondPlace}</span>
-          <span className="font-black text-[var(--iberdrola-green)]">
-            {formatEuro(secondPrize)}
-          </span>
+        <div className="text-3xl font-black tracking-tight text-[var(--iberdrola-green)]">
+          {formatEuro(potTotal)}
         </div>
-        <div className="flex items-center justify-between">
-          <span>🥉 {labels.thirdPlace}</span>
-          <span className="font-black text-[var(--iberdrola-green)]">
-            {formatEuro(thirdPrize)}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span>🔙 {labels.lastPlace}</span>
-          <span className="font-black text-[var(--iberdrola-forest)]">
-            {formatEuro(loserRefund)}
-          </span>
+        <div className="mt-4 space-y-2">
+          {prizes.map((p) => (
+            <div key={p.label} className="flex items-center justify-between">
+              <span className={`text-sm font-semibold ${p.highlight ? "text-white" : "text-white/60"}`}>
+                {p.emoji} {p.label}
+              </span>
+              <span className={`text-sm font-black ${p.highlight ? "text-[var(--iberdrola-green)]" : "text-white/70"}`}>
+                {formatEuro(p.amount)}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
+      <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-[var(--iberdrola-green)] to-[var(--iberdrola-sky)]" />
     </div>
   );
 }
 
+// ─── SECTION HEADER ──────────────────────────────────────────────────────────
 function SectionHeader({
   title,
   icon,
@@ -167,19 +171,18 @@ function SectionHeader({
   flagImg?: string;
 }) {
   return (
-    <div className="border-b border-[var(--iberdrola-sky)] px-5 py-4">
-      <div className="flex items-start gap-2 text-base font-black text-[var(--iberdrola-forest)]">
-        {flagImg ? (
-          <img src={flagImg} alt="" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover" style={{ marginTop: 2 }} />
-        ) : icon ? (
-          <span className="text-lg leading-none">{icon}</span>
-        ) : null}
-        <span>{title}</span>
-      </div>
+    <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+      {flagImg ? (
+        <img src={flagImg} alt="" className="h-5 w-7 rounded-[3px] border border-gray-200 object-cover shadow-sm" />
+      ) : icon ? (
+        <span className="text-xl leading-none">{icon}</span>
+      ) : null}
+      <span className="text-base font-black text-[var(--iberdrola-forest)]">{title}</span>
     </div>
   );
 }
 
+// ─── CHAMPION DONUT ───────────────────────────────────────────────────────────
 function ChampionDonutCard({
   title,
   items,
@@ -223,83 +226,79 @@ function ChampionDonutCard({
     }] : []),
   ];
 
-
-
   return (
-    <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+    <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <SectionHeader title={title} />
-      <div className="grid items-center gap-6 p-5 lg:grid-cols-[1fr_0.95fr]">
-        <div className="mx-auto h-[300px] w-full max-w-[420px]">
+      <div className="grid items-center gap-4 p-5 lg:grid-cols-[1fr_1fr]">
+        {/* Donut */}
+        <div className="mx-auto h-[280px] w-full max-w-[320px]">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 dataKey="value"
                 nameKey="name"
-                innerRadius={78}
-                outerRadius={118}
+                innerRadius={72}
+                outerRadius={112}
                 paddingAngle={3}
+                strokeWidth={0}
               >
                 {chartData.map((_, index) => (
-                  <Cell
-                    key={index}
-                    fill={CHART_COLORS[index % CHART_COLORS.length]}
-                  />
+                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip
                 formatter={(value, name) => [`${value} ${picksUnit}`, name as string]}
                 contentStyle={{
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #d9e7dc",
+                  backgroundColor: "#fff",
+                  border: "1px solid #e5e7eb",
                   borderRadius: 12,
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 700,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                 }}
               />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
+        {/* Legend */}
         <div className="space-y-2">
           {legendItems.length > 0 ? (
-            legendItems.map((legendItem, index) => {
-              const team = legendItem.teamId ? teamMap.get(legendItem.teamId) : null;
-
+            legendItems.map((item, index) => {
+              const team = item.teamId ? teamMap.get(item.teamId) : null;
+              const isTop = index === 0;
               return (
                 <div
                   key={index}
-                  className="flex items-center justify-between rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3"
+                  className={`flex items-center justify-between rounded-2xl px-3 py-2.5 transition ${
+                    isTop
+                      ? "bg-[var(--iberdrola-green-light)] border border-[var(--iberdrola-green)]/30"
+                      : "border border-gray-100 hover:border-gray-200 hover:bg-gray-50"
+                  }`}
                 >
-                  <div className="min-w-0 pr-3 flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <span
-                      className="inline-block h-3 w-3 shrink-0 rounded-full"
-                      style={{ backgroundColor: legendItem.color }}
+                      className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: item.color }}
                     />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 truncate text-sm font-bold text-[var(--iberdrola-forest)]">
-                        {team?.flagUrl ? (
-                          <img
-                            src={team.flagUrl}
-                            alt={team.name}
-                            className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
-                          />
-                        ) : null}
-                        <span className="truncate">{legendItem.label}</span>
-                      </div>
-                      <div className="text-xs text-[var(--iberdrola-forest)]/60">
-                        {legendItem.count} {picksUnit}
-                      </div>
-                    </div>
+                    {team?.flagUrl ? (
+                      <img src={team.flagUrl} alt={team.name} className="h-4 w-5 rounded-[2px] border border-gray-200 object-cover" />
+                    ) : null}
+                    <span className={`truncate text-sm font-bold ${isTop ? "text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/80"}`}>
+                      {item.label}
+                    </span>
                   </div>
-                  <div className="shrink-0 text-right text-lg font-black text-[var(--iberdrola-green)]">
-                    {legendItem.percentage.toFixed(1)}%
+                  <div className="shrink-0 pl-2 text-right">
+                    <span className={`text-base font-black ${isTop ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/70"}`}>
+                      {item.percentage.toFixed(1)}%
+                    </span>
                   </div>
                 </div>
               );
             })
           ) : (
-            <div className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-4 text-sm text-[var(--iberdrola-forest)]/65">
+            <div className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-[var(--iberdrola-forest)]/45">
               {notEnoughDataLabel}
             </div>
           )}
@@ -309,6 +308,7 @@ function ChampionDonutCard({
   );
 }
 
+// ─── BAR CARD ────────────────────────────────────────────────────────────────
 function ExtraQuestionBarCard({
   title,
   icon,
@@ -326,12 +326,8 @@ function ExtraQuestionBarCard({
 }) {
   const topItems = items.slice(0, 5);
   const otherItems = items.slice(5);
-
   const othersCount = otherItems.reduce((sum, item) => sum + item.count, 0);
-  const othersPercentage = otherItems.reduce(
-    (sum, item) => sum + item.percentage,
-    0
-  );
+  const othersPercentage = otherItems.reduce((sum, item) => sum + item.percentage, 0);
 
   const data = [
     ...topItems.map((item) => ({
@@ -339,56 +335,48 @@ function ExtraQuestionBarCard({
       percentage: Number(item.percentage.toFixed(1)),
       count: item.count,
     })),
-    ...(othersCount > 0
-      ? [
-          {
-            name: othersLabel,
-            percentage: Number(othersPercentage.toFixed(1)),
-            count: othersCount,
-          },
-        ]
-      : []),
+    ...(othersCount > 0 ? [{ name: othersLabel, percentage: Number(othersPercentage.toFixed(1)), count: othersCount }] : []),
   ];
 
   return (
-    <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+    <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <SectionHeader title={title} icon={icon} flagImg={flagImg} />
-      <div className="flex h-[340px] items-center justify-center p-4">
-        <div className="h-[250px] w-full max-w-[420px]">
+      <div className="p-4 pt-3">
+        <div className="h-[220px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={data}
-              layout="vertical"
-              margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-            >
-              <CartesianGrid
-                stroke="#d9e7dc"
-                strokeDasharray="3 3"
-                vertical={false}
-              />
+            <BarChart data={data} layout="vertical" margin={{ top: 0, right: 36, left: 8, bottom: 0 }}>
+              <CartesianGrid stroke="#f0f0f0" strokeDasharray="3 3" vertical={false} />
               <XAxis
                 type="number"
                 domain={[0, 100]}
-                tickFormatter={(value) => `${value}%`}
+                tickFormatter={(v) => `${v}%`}
+                tick={{ fontSize: 11, fill: "#6b7280" }}
+                axisLine={false}
+                tickLine={false}
               />
-              <YAxis type="category" dataKey="name" width={140} />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={120}
+                tick={{ fontSize: 11, fill: "#374151", fontWeight: 600 }}
+                axisLine={false}
+                tickLine={false}
+              />
               <Tooltip
-                formatter={(value, _name, props) => {
-                  const count = props.payload.count;
-                  return [`${value}% · ${count} ${picksUnit}`, ""];
-                }}
+                formatter={(value, _name, props) => [`${value}% · ${props.payload.count} ${picksUnit}`, ""]}
                 contentStyle={{
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #d9e7dc",
+                  backgroundColor: "#fff",
+                  border: "1px solid #e5e7eb",
                   borderRadius: 12,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                 }}
+                cursor={{ fill: "rgba(0,164,67,0.04)" }}
               />
-              <Bar dataKey="percentage" radius={[0, 8, 8, 0]}>
+              <Bar dataKey="percentage" radius={[0, 6, 6, 0]} maxBarSize={20}>
                 {data.map((_, index) => (
-                  <Cell
-                    key={index}
-                    fill={CHART_COLORS[index % CHART_COLORS.length]}
-                  />
+                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                 ))}
               </Bar>
             </BarChart>
@@ -399,6 +387,7 @@ function ExtraQuestionBarCard({
   );
 }
 
+// ─── LIST CARD ────────────────────────────────────────────────────────────────
 function ExtraQuestionListCard({
   title,
   icon,
@@ -412,38 +401,47 @@ function ExtraQuestionListCard({
   notEnoughDataLabel: string;
   picksUnit: string;
 }) {
+  const top5 = items.slice(0, 5);
+  const maxPct = top5[0]?.percentage ?? 1;
+
   return (
-    <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+    <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <SectionHeader title={title} icon={icon} />
-      <div className="space-y-3 p-5">
-        {items.slice(0, 5).length > 0 ? (
-          items.slice(0, 5).map((item, index) => (
-            <div
-              key={item.key}
-              className="rounded-2xl border border-[var(--iberdrola-sky)] px-4 py-3"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/45">
-                    #{index + 1}
+      <div className="space-y-1.5 p-4">
+        {top5.length > 0 ? (
+          top5.map((item, index) => {
+            const barWidth = Math.round((item.percentage / maxPct) * 100);
+            const isFirst = index === 0;
+            return (
+              <div key={item.key} className="group relative overflow-hidden rounded-xl px-3 py-2.5">
+                {/* Background bar */}
+                <div
+                  className="absolute inset-y-0 left-0 rounded-xl transition-all duration-500"
+                  style={{
+                    width: `${barWidth}%`,
+                    backgroundColor: isFirst ? "rgba(0,164,67,0.12)" : "rgba(0,164,67,0.05)",
+                  }}
+                />
+                <div className="relative flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className={`shrink-0 text-xs font-black ${isFirst ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/35"}`}>
+                      {index + 1}
+                    </span>
+                    <span className={`truncate text-sm font-bold ${isFirst ? "text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/75"}`}>
+                      {item.label}
+                    </span>
                   </div>
-                  <div className="truncate text-sm font-bold text-[var(--iberdrola-forest)]">
-                    {item.label}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-black text-[var(--iberdrola-green)]">
-                    {item.percentage.toFixed(1)}%
-                  </div>
-                  <div className="text-xs text-[var(--iberdrola-forest)]/55">
-                    {item.count} {picksUnit}
+                  <div className="shrink-0 text-right">
+                    <span className={`text-sm font-black ${isFirst ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/60"}`}>
+                      {item.percentage.toFixed(1)}%
+                    </span>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <div className="text-sm text-[var(--iberdrola-forest)]/65">
+          <div className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-[var(--iberdrola-forest)]/45">
             {notEnoughDataLabel}
           </div>
         )}
@@ -451,6 +449,9 @@ function ExtraQuestionListCard({
     </section>
   );
 }
+
+// ─── INSIGHTS CARD ────────────────────────────────────────────────────────────
+const INSIGHT_ICONS = ["💡", "🔥", "📊", "🎯"];
 
 function InsightsCard({
   items,
@@ -462,20 +463,21 @@ function InsightsCard({
   notEnoughInsightsLabel: string;
 }) {
   return (
-    <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-      <SectionHeader title={title} />
-      <div className="space-y-3 p-5">
+    <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+      <SectionHeader title={title} icon="💡" />
+      <div className="grid gap-3 p-5 sm:grid-cols-2">
         {items.length > 0 ? (
           items.map((item, index) => (
             <div
               key={index}
-              className="rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/25 px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]"
+              className="flex items-start gap-3 rounded-2xl bg-gradient-to-br from-[var(--iberdrola-green-light)] to-white p-4 border border-[var(--iberdrola-green)]/10"
             >
-              {item}
+              <span className="mt-0.5 shrink-0 text-lg leading-none">{INSIGHT_ICONS[index % INSIGHT_ICONS.length]}</span>
+              <p className="text-sm font-semibold leading-relaxed text-[var(--iberdrola-forest)]/80">{item}</p>
             </div>
           ))
         ) : (
-          <div className="text-sm text-[var(--iberdrola-forest)]/65">
+          <div className="col-span-2 rounded-xl border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-[var(--iberdrola-forest)]/45">
             {notEnoughInsightsLabel}
           </div>
         )}
@@ -484,51 +486,43 @@ function InsightsCard({
   );
 }
 
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function StatsPageClient() {
   const searchParams = useSearchParams();
   const poolId = searchParams.get("poolId") ?? "";
   const poolSlug = searchParams.get("poolSlug") ?? "";
   const entryId = searchParams.get("entryId") ?? "";
 
-const [locale, setLocale] = useState<Locale>("es");
-const t = messages[locale];
+  const [locale, setLocale] = useState<Locale>("es");
+  const t = messages[locale];
   const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-  const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
-  if (savedLocale === "es" || savedLocale === "en" || savedLocale === "pt") {
-    setLocale(savedLocale);
-  }
-}, []);
+    const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
+    if (savedLocale === "es" || savedLocale === "en" || savedLocale === "pt") {
+      setLocale(savedLocale);
+    }
+  }, []);
 
-useEffect(() => {
-  localStorage.setItem(LOCALE_KEY, locale);
-}, [locale]);
+  useEffect(() => {
+    localStorage.setItem(LOCALE_KEY, locale);
+  }, [locale]);
 
   useEffect(() => {
     async function load() {
       try {
         setLoading(true);
         setError("");
-
         if (!poolId) {
           setError(t.stats.missingPoolId);
           setLoading(false);
           return;
         }
-
-        const res = await fetch(`/api/pool-stats?poolId=${poolId}&locale=${locale}`, {
-  cache: "no-store",
-});
-
+        const res = await fetch(`/api/pool-stats?poolId=${poolId}&locale=${locale}`, { cache: "no-store" });
         const json = await res.json();
-
-        if (!res.ok) {
-          throw new Error(json?.error || t.stats.loadError);
-        }
-
+        if (!res.ok) throw new Error(json?.error || t.stats.loadError);
         setData(json as StatsResponse);
       } catch (err) {
         console.error(err);
@@ -537,7 +531,6 @@ useEffect(() => {
         setLoading(false);
       }
     }
-
     load();
   }, [poolId, locale]);
 
@@ -548,232 +541,205 @@ useEffect(() => {
   }, [data]);
 
   const dynamicInsights = useMemo(() => {
-  if (!data) return [];
-  return data.insights.slice(0, 4);
-}, [data]);
+    if (!data) return [];
+    return data.insights.slice(0, 4);
+  }, [data]);
 
-  const backHref =
-    entryId && poolSlug
-      ? `/pool/${poolSlug}/entry/${entryId}`
-      : "/dashboard";
+  const backHref = entryId && poolSlug ? `/pool/${poolSlug}/entry/${entryId}` : "/dashboard";
 
+  // ── Loading skeleton
   if (loading) {
     return (
       <main className="page-bg">
-      <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 fade-in" style={{ minHeight: "100vh" }}>
-        <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="skeleton h-14 w-14 rounded-xl shrink-0" />
-            <div className="flex-1 space-y-2">
-              <div className="skeleton h-4 w-24 rounded-full" />
-              <div className="skeleton h-7 w-64 rounded-full" />
-            </div>
+        <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6">
+          <div className="skeleton h-24 rounded-3xl" />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-28 rounded-3xl" />)}
+          </div>
+          <div className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
+            <div className="skeleton h-80 rounded-3xl" />
+            <div className="skeleton h-80 rounded-3xl" />
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-64 rounded-3xl" />)}
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-28 rounded-3xl" />)}
-        </div>
-        <div className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
-          <div className="skeleton h-96 rounded-3xl" />
-          <div className="skeleton h-96 rounded-3xl" />
-        </div>
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-72 rounded-3xl" />)}
-        </div>
-      </div>
       </main>
     );
   }
 
+  // ── Error
   if (error || !data) {
     return (
       <main className="page-bg">
-      <div className="mx-auto max-w-[1600px] px-4 py-6">
-        <div className="rounded-3xl card-glass p-6 text-sm font-semibold text-[var(--iberdrola-forest)]">
-          {error || t.stats.noData}
+        <div className="mx-auto max-w-[1600px] px-4 py-6">
+          <div className="rounded-3xl card-glass p-6 text-sm font-semibold text-[var(--iberdrola-forest)]">
+            {error || t.stats.noData}
+          </div>
         </div>
-      </div>
       </main>
     );
   }
 
+  // ── Main render
   return (
     <main className="page-bg">
-      <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 fade-in" style={{ minHeight: "100vh" }}>
-      <section className="rounded-3xl card-glass shadow-md">
-        <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="flex items-center gap-4">
-             <div className="flex items-center gap-3">
-              <img
-                src="/icon-512.png"
-                alt={t.stats.title}
-                 className="h-12 w-12 rounded-xl object-contain sm:h-14 sm:w-14"
-              />
+      <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 fade-in">
+
+        {/* ── HEADER */}
+        <section className="rounded-3xl card-glass shadow-md">
+          <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-2xl bg-[var(--iberdrola-green)] opacity-10 blur-lg scale-110" />
+                <img src="/icon-512.png" alt={t.stats.title} className="relative h-12 w-12 rounded-2xl object-contain shadow-sm sm:h-14 sm:w-14" />
+              </div>
+              <div>
+                <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
+                  {t.stats.sectionEyebrow}
+                </div>
+                <h1 className="text-2xl font-black tracking-tight text-[var(--iberdrola-forest)]">
+                  {t.stats.title}
+                </h1>
+                <p className="mt-0.5 text-sm text-[var(--iberdrola-forest)]/55">
+                  {t.stats.subtitle}
+                </p>
+              </div>
             </div>
 
-            <div>
-              <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                {t.stats.sectionEyebrow}
+            <div className="flex flex-col items-start gap-2 lg:items-end">
+              <LanguageSwitcher locale={locale} onChange={setLocale} label={t.language} />
+              <div className="flex flex-wrap gap-2">
+                {poolId ? (
+                  <Link
+                    href={poolSlug ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/standings?poolId=${poolId}&entryId=${entryId}`}
+                    className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+                  >
+                    {t.stats.viewStandings}
+                  </Link>
+                ) : null}
+                <Link
+                  href={poolId ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : "/transparency"}
+                  className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+                >
+                  {t.stats.viewTransparency}
+                </Link>
+                <Link
+                  href={poolId ? `/banquillo?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : "/banquillo"}
+                  className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+                >
+                  {t.banquillo.title}
+                </Link>
+                <Link
+                  href={backHref}
+                  className="rounded-2xl bg-[var(--iberdrola-green)] px-3 py-2 text-xs font-black text-white shadow-sm transition hover:brightness-110"
+                >
+                  {t.stats.backToPrediction}
+                </Link>
               </div>
-              <h1 className="text-2xl font-black text-[var(--iberdrola-forest)]">
-                {t.stats.title}
-              </h1>
-              <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                {t.stats.subtitle}
-              </p>
             </div>
           </div>
+        </section>
 
-          <div className="flex flex-wrap items-center gap-2">
-  <LanguageSwitcher
-    locale={locale}
-    onChange={setLocale}
-    label={t.language}
-  />
+        {/* ── KPIs + PRIZES */}
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <KpiCard label={t.stats.participants} value={data.summary.participants} icon="👥" />
+          <KpiCard label={t.stats.countries} value={data.summary.countries} icon="🌍" />
+          <KpiCard label={t.stats.potTotal} value={formatEuro(data.summary.potTotal)} icon="💰" />
+          <PrizesCard
+            loserRefund={data.summary.loserRefund}
+            firstPrize={data.summary.firstPrize}
+            secondPrize={data.summary.secondPrize}
+            thirdPrize={data.summary.thirdPrize}
+            potTotal={data.summary.potTotal}
+            labels={{
+              prizes: t.stats.prizes,
+              firstPlace: t.stats.firstPlace,
+              secondPlace: t.stats.secondPlace,
+              thirdPlace: t.stats.thirdPlace,
+              lastPlace: t.stats.lastPlace,
+              potTotal: t.stats.potTotal,
+            }}
+          />
+        </section>
 
-  {poolId ? (
-    <Link
-      href={
-        poolSlug
-          ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
-          : `/standings?poolId=${poolId}&entryId=${entryId}`
-      }
-      className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
-    >
-      {t.stats.viewStandings}
-    </Link>
-  ) : null}
+        {/* ── CHAMPION + GOLDEN BALL */}
+        <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
+          <ChampionDonutCard
+            title={t.stats.championFavorites}
+            items={data.champion.items}
+            notEnoughDataLabel={t.stats.notEnoughData}
+            picksUnit={t.stats.picksUnit}
+            picksLabel={t.stats.picksLabel}
+            othersLabel={t.stats.others}
+          />
+          <ExtraQuestionListCard
+            icon={EXTRA_ICONS.golden_ball}
+            title={t.extras.golden_ball}
+            items={extraMap.get("golden_ball")?.items ?? []}
+            notEnoughDataLabel={t.stats.notEnoughData}
+            picksUnit={t.stats.picksUnit}
+          />
+        </section>
 
-  <Link
-    href={
-      poolId
-        ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
-        : "/transparency"
-    }
-    className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
-  >
-    {t.stats.viewTransparency}
-  </Link>
+        {/* ── BOOTS + GLOVE + BEST YOUNG */}
+        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <ExtraQuestionBarCard
+            icon={EXTRA_ICONS.golden_boot}
+            title={t.extras.golden_boot}
+            items={extraMap.get("golden_boot")?.items ?? []}
+            othersLabel={t.stats.others}
+            picksUnit={t.stats.picksUnit}
+          />
+          <ExtraQuestionBarCard
+            icon={EXTRA_ICONS.golden_glove}
+            title={t.extras.golden_glove}
+            items={extraMap.get("golden_glove")?.items ?? []}
+            othersLabel={t.stats.others}
+            picksUnit={t.stats.picksUnit}
+          />
+          <ExtraQuestionListCard
+            icon={EXTRA_ICONS.best_young_player}
+            title={t.extras.best_young_player}
+            items={extraMap.get("best_young_player")?.items ?? []}
+            notEnoughDataLabel={t.stats.notEnoughData}
+            picksUnit={t.stats.picksUnit}
+          />
+        </section>
 
-  <Link
-    href={
-      poolId
-        ? `/banquillo?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}`
-        : "/banquillo"
-    }
-    className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
-  >
-    {t.banquillo.title}
-  </Link>
+        {/* ── SCORERS */}
+        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <ExtraQuestionBarCard
+            icon={EXTRA_ICONS.first_goal_scorer_world}
+            title={t.extras.first_goal_scorer_world}
+            items={extraMap.get("first_goal_scorer_world")?.items ?? []}
+            othersLabel={t.stats.others}
+            picksUnit={t.stats.picksUnit}
+          />
+          <ExtraQuestionBarCard
+            icon={EXTRA_ICONS.first_goal_scorer_spain}
+            flagImg={SPAIN_FLAG}
+            title={t.extras.first_goal_scorer_spain}
+            items={extraMap.get("first_goal_scorer_spain")?.items ?? []}
+            othersLabel={t.stats.others}
+            picksUnit={t.stats.picksUnit}
+          />
+          <ExtraQuestionBarCard
+            icon={EXTRA_ICONS.top_spanish_scorer}
+            title={t.extras.top_spanish_scorer}
+            items={extraMap.get("top_spanish_scorer")?.items ?? []}
+            othersLabel={t.stats.others}
+            picksUnit={t.stats.picksUnit}
+          />
+        </section>
 
-  <Link
-    href={backHref}
-    className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)]"
-  >
-    {t.stats.backToPrediction}
-  </Link>
-</div>
-        </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label={t.stats.participants} value={data.summary.participants} />
-        <KpiCard label={t.stats.countries} value={data.summary.countries} />
-        <KpiCard label={t.stats.potTotal} value={formatEuro(data.summary.potTotal)} />
-        <PrizesCard
-  loserRefund={data.summary.loserRefund}
-  firstPrize={data.summary.firstPrize}
-  secondPrize={data.summary.secondPrize}
-  thirdPrize={data.summary.thirdPrize}
-  labels={{
-    prizes: t.stats.prizes,
-    firstPlace: t.stats.firstPlace,
-    secondPlace: t.stats.secondPlace,
-    thirdPlace: t.stats.thirdPlace,
-    lastPlace: t.stats.lastPlace,
-  }}
-/>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.45fr_1fr]">
-        <ChampionDonutCard
-          title={t.stats.championFavorites}
-          items={data.champion.items}
-          notEnoughDataLabel={t.stats.notEnoughData}
-          picksUnit={t.stats.picksUnit}
-          picksLabel={t.stats.picksLabel}
-          othersLabel={t.stats.others}
+        {/* ── INSIGHTS */}
+        <InsightsCard
+          items={dynamicInsights}
+          title={t.stats.insightsTitle}
+          notEnoughInsightsLabel={t.stats.notEnoughInsights}
         />
 
-        <ExtraQuestionListCard
-          icon={EXTRA_ICONS.golden_ball}
-          title={t.extras.golden_ball}
-          items={extraMap.get("golden_ball")?.items ?? []}
-          notEnoughDataLabel={t.stats.notEnoughData}
-          picksUnit={t.stats.picksUnit}
-
-        />
-      </section>
-
-      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <ExtraQuestionBarCard
-          icon={EXTRA_ICONS.golden_boot}
-          title={t.extras.golden_boot}
-          items={extraMap.get("golden_boot")?.items ?? []}
-          othersLabel={t.stats.others}
-picksUnit={t.stats.picksUnit}
-        />
-
-        <ExtraQuestionBarCard
-          icon={EXTRA_ICONS.golden_glove}
-          title={t.extras.golden_glove}
-          items={extraMap.get("golden_glove")?.items ?? []}
-          othersLabel={t.stats.others}
-picksUnit={t.stats.picksUnit}
-        />
-
-        <ExtraQuestionListCard
-          icon={EXTRA_ICONS.best_young_player}
-          title={t.extras.best_young_player}
-          items={extraMap.get("best_young_player")?.items ?? []}
-          notEnoughDataLabel={t.stats.notEnoughData}
-          picksUnit={t.stats.picksUnit}
-
-        />
-      </section>
-
-      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <ExtraQuestionBarCard
-          icon={EXTRA_ICONS.first_goal_scorer_world}
-          title={t.extras.first_goal_scorer_world}
-          items={extraMap.get("first_goal_scorer_world")?.items ?? []}
-          othersLabel={t.stats.others}
-picksUnit={t.stats.picksUnit}
-        />
-
-        <ExtraQuestionBarCard
-          icon={EXTRA_ICONS.first_goal_scorer_spain}
-          flagImg={SPAIN_FLAG}
-          title={t.extras.first_goal_scorer_spain}
-          items={extraMap.get("first_goal_scorer_spain")?.items ?? []}
-          othersLabel={t.stats.others}
-picksUnit={t.stats.picksUnit}
-        />
-
-        <ExtraQuestionBarCard
-          icon={EXTRA_ICONS.top_spanish_scorer}
-          title={t.extras.top_spanish_scorer}
-          items={extraMap.get("top_spanish_scorer")?.items ?? []}
-          othersLabel={t.stats.others}
-picksUnit={t.stats.picksUnit}
-        />
-      </section>
-
-      <InsightsCard
-  items={dynamicInsights}
-  title={t.stats.insightsTitle}
-  notEnoughInsightsLabel={t.stats.notEnoughInsights}
-/>
       </div>
     </main>
   );
