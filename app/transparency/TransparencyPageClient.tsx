@@ -371,7 +371,7 @@ export default function TransparencyPageClient() {
   if (error || !data) {
     return (
       <main className="mx-auto max-w-[1600px] px-4 py-6 fade-in">
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 shadow-sm">
+        <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] card-glass p-6 shadow-sm">
           <div className="text-sm font-semibold text-[var(--iberdrola-forest)]">
             {error || t.transparencyNoData}
           </div>
@@ -382,7 +382,7 @@ export default function TransparencyPageClient() {
 
   return (
     <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6">
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-3">
@@ -415,14 +415,14 @@ export default function TransparencyPageClient() {
             <div className="flex flex-wrap gap-2">
               <Link
                 href={backToStatsHref}
-                className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+                className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
               >
                 {t.banquillo.backToStats}
               </Link>
 
               <Link
                 href={backToPredictionHref}
-                className="rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+                className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
               >
                 {t.banquillo.backToPrediction}
               </Link>
@@ -431,7 +431,7 @@ export default function TransparencyPageClient() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="grid gap-4 p-5 lg:grid-cols-[1.2fr_1fr]">
           <div>
             <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
@@ -494,14 +494,13 @@ export default function TransparencyPageClient() {
       </section>
 
       <div className="grid gap-4 xl:grid-cols-[1.65fr_0.95fr]">
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-            <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-              {t.groupStageSection}
-            </h2>
-            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-              {t.transparencyGroupStageSubtitle}
-            </p>
+        <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+          <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+            <span className="text-xl">🌍</span>
+            <div>
+              <h2 className="text-base font-black text-[var(--iberdrola-forest)]">{t.groupStageSection}</h2>
+              <p className="text-xs text-[var(--iberdrola-forest)]/55">{t.transparencyGroupStageSubtitle}</p>
+            </div>
           </div>
 
           <div className="p-4">
@@ -597,14 +596,13 @@ const score = calculateMatchPredictionScore(
           </div>
         </section>
 
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm xl:sticky xl:top-4 self-start">
-          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-            <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-              {t.groupStandingsSection}
-            </h2>
-            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-              {t.transparencyStandingsSubtitle}
-            </p>
+        <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm xl:sticky xl:top-4 self-start">
+          <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+            <span className="text-xl">📊</span>
+            <div>
+              <h2 className="text-base font-black text-[var(--iberdrola-forest)]">{t.groupStandingsSection}</h2>
+              <p className="text-xs text-[var(--iberdrola-forest)]/55">{t.transparencyStandingsSubtitle}</p>
+            </div>
           </div>
 
           <div className="space-y-3 p-4">
@@ -665,14 +663,13 @@ const score = calculateMatchPredictionScore(
   }}
 />
 
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-        <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-          <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-            {t.extraQuestionsRulesTitle}
-          </h2>
-          <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-            {t.transparencyExtraSubtitle}
-          </p>
+      <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+        <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
+          <span className="text-xl">✨</span>
+          <div>
+            <h2 className="text-base font-black text-[var(--iberdrola-forest)]">{t.extraQuestionsRulesTitle}</h2>
+            <p className="text-xs text-[var(--iberdrola-forest)]/55">{t.transparencyExtraSubtitle}</p>
+          </div>
         </div>
 
         <div className="grid gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
