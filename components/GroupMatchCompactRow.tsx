@@ -78,8 +78,8 @@ export default function GroupMatchCompactRow({
     : `${points} ${pointsShortLabel}`;
 
   return (
-    <div className="grid h-[52px] grid-cols-[132px_minmax(0,1fr)_82px] items-center gap-2 border-b border-[var(--iberdrola-sky)]/70 px-3 py-2 text-sm">
-      <div className="flex flex-col justify-center leading-tight">
+    <div className="grid h-[52px] grid-cols-[100px_minmax(0,1fr)_70px] items-center gap-1 border-b border-[var(--iberdrola-sky)]/70 px-2 py-2 text-sm">
+      <div className="flex flex-col justify-center leading-tight min-w-0">
         <span className="text-[12px] font-bold text-[var(--iberdrola-forest)]">
           J{day} · {group ?? "-"}
         </span>
@@ -96,10 +96,10 @@ export default function GroupMatchCompactRow({
         </span>
       </div>
 
-      <div className="grid grid-cols-[minmax(135px,1fr)_auto_minmax(135px,1fr)] items-center gap-2 -ml-8">
-        <div className="flex min-w-0 items-center justify-start gap-1.5">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1">
+        <div className="flex min-w-0 items-center gap-1">
           <TeamFlag team={homeTeam} />
-          <span className="truncate text-left text-[13px] font-semibold text-[var(--iberdrola-forest)]">
+          <span className="truncate text-[11px] font-semibold text-[var(--iberdrola-forest)]">
             {homeTeam.name}
           </span>
         </div>
@@ -122,7 +122,7 @@ export default function GroupMatchCompactRow({
 
               onChangeHome(Number(value));
             }}
-            className="h-8 w-8 rounded-lg border border-[var(--iberdrola-sky)] bg-white text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+            className="h-7 w-7 rounded-lg border border-[var(--iberdrola-sky)] bg-white text-center text-xs font-bold text-[var(--iberdrola-forest)]"
           />
 
           <span className="font-bold text-[var(--iberdrola-forest)]/60">-</span>
@@ -144,12 +144,12 @@ export default function GroupMatchCompactRow({
 
               onChangeAway(Number(value));
             }}
-            className="h-8 w-8 rounded-lg border border-[var(--iberdrola-sky)] bg-white text-center text-sm font-bold text-[var(--iberdrola-forest)]"
+            className="h-7 w-7 rounded-lg border border-[var(--iberdrola-sky)] bg-white text-center text-xs font-bold text-[var(--iberdrola-forest)]"
           />
         </div>
 
-        <div className="flex min-w-0 items-center justify-end gap-1.5">
-          <span className="truncate text-right text-[13px] font-semibold text-[var(--iberdrola-forest)]">
+        <div className="flex min-w-0 items-center justify-end gap-1">
+          <span className="truncate text-[11px] font-semibold text-[var(--iberdrola-forest)]">
             {awayTeam.name}
           </span>
           <TeamFlag team={awayTeam} />
