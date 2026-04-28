@@ -211,6 +211,9 @@ const text = getText(locale);
         );
       });
 
+      const championPicked = Array.from(championCounter.values()).reduce((a, b) => a + b, 0);
+      const championNoAnswer = participants - championPicked;
+
       championItems = Array.from(championCounter.entries())
         .map(([teamId, count]) => {
           const team = teamMap.get(teamId);
@@ -224,6 +227,18 @@ const text = getText(locale);
           };
         })
         .sort((a, b) => b.count - a.count);
+
+      // Add "no answer" bucket so total sums to 100%
+      if (championNoAnswer > 0) {
+        championItems.push({
+          key: "__no_answer__",
+          label: "__no_answer__",
+          count: championNoAnswer,
+          percentage: participants > 0 ? (championNoAnswer / participants) * 100 : 0,
+          teamId: null,
+          flagUrl: null,
+        });
+      }
 
       const { data: extraRows, error: extraError } = await supabase
         .from("entry_extra_predictions")
@@ -262,14 +277,23 @@ const text = getText(locale);
           }
         });
 
-        const items = Array.from(counter.entries())
-          .map(([key, value]) => ({
+        const answeredCount = Array.from(counter.values()).reduce((a, b) => a + b.count, 0);
+        const noAnswerCount = participants - answeredCount;
+
+        const items = [
+          ...Array.from(counter.entries()).map(([key, value]) => ({
             key,
             label: titleCase(key),
             count: value.count,
-            percentage:
-              participants > 0 ? (value.count / participants) * 100 : 0,
-          }))
+            percentage: participants > 0 ? (value.count / participants) * 100 : 0,
+          })),
+          ...(noAnswerCount > 0 ? [{
+            key: "__no_answer__",
+            label: "__no_answer__",
+            count: noAnswerCount,
+            percentage: participants > 0 ? (noAnswerCount / participants) * 100 : 0,
+          }] : []),
+        ]
           .sort((a, b) => b.count - a.count)
           .slice(0, 8);
 

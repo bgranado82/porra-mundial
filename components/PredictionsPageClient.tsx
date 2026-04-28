@@ -270,7 +270,8 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [officialExtraResults, setOfficialExtraResults] = useState<Record<string, string>>({});
   const [userTiebreaks, setUserTiebreaks] = useState<UserTiebreakMap>({});
   const [banquilloCount, setBanquilloCount] = useState(0);
-const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
+  const [banquilloUnread, setBanquilloUnread] = useState(0);
+  const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
 
   useEffect(() => {
     const savedLocale = localStorage.getItem(LOCALE_KEY) as Locale | null;
@@ -546,7 +547,10 @@ const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
       }
 
       const data = await res.json();
-      setBanquilloCount((data?.comments ?? []).length);
+      const total = (data?.comments ?? []).length;
+      setBanquilloCount(total);
+      const lastSeen = parseInt(localStorage.getItem(`banquillo-seen-${poolId}`) ?? "0", 10);
+      setBanquilloUnread(Math.max(0, total - lastSeen));
     } catch (err) {
       console.error(err);
       setBanquilloCount(0);
@@ -571,6 +575,7 @@ const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
       },
       () => {
         setBanquilloCount((prev) => prev + 1);
+        setBanquilloUnread((prev) => prev + 1);
       }
     )
     .subscribe();
@@ -1361,12 +1366,16 @@ const invalidKnockoutPicks = useMemo(() => {
                 {poolId && activeEntryId && poolSlug ? (
   <Link
     href={`/banquillo?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
+    onClick={() => {
+      localStorage.setItem(`banquillo-seen-${poolId}`, String(banquilloCount));
+      setBanquilloUnread(0);
+    }}
     className="relative inline-flex items-center justify-center rounded-2xl bg-[var(--iberdrola-green)] px-4 py-3 text-sm font-black text-white shadow-md shadow-[var(--iberdrola-green)]/25 transition hover:brightness-110 active:scale-[0.98]"
   >
     {t.banquillo.title}
-    {!loadingBanquilloCount && banquilloCount > 0 ? (
+    {!loadingBanquilloCount && banquilloUnread > 0 ? (
       <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white shadow-sm">
-        {banquilloCount}
+        {banquilloUnread}
       </span>
     ) : null}
   </Link>

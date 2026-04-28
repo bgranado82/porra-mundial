@@ -163,7 +163,7 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
     </div>
         
       <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white shadow-sm">
-        <div className="overflow-x-auto rounded-3xl">
+        <div className="overflow-x-auto overflow-y-auto rounded-3xl" style={{ maxHeight: "75vh" }}>
           {tab === "groups" ? (
             <table className="min-w-[2200px] w-max border-separate border-spacing-0 text-[11px] md:text-sm">
               <thead className="sticky top-0 z-20 bg-white shadow-sm">
