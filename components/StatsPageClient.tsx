@@ -423,84 +423,70 @@ function ExtraQuestionListCard({
   const otherItems = realItems.slice(5);
   const othersCount = otherItems.reduce((sum, i) => sum + i.count, 0);
   const othersPercentage = otherItems.reduce((sum, i) => sum + i.percentage, 0);
-  const maxPct = top5[0]?.percentage ?? 1;
-
-  const regularItems = top5.map((item, i) => ({
-    key: item.key,
-    label: item.label,
-    percentage: item.percentage,
-    count: item.count,
-    barWidth: Math.round((item.percentage / maxPct) * 100),
-    isSpecial: false,
-    rank: i,
-  }));
-
-  const specialItems = [
-    ...(othersCount > 0 ? [{ key: "__others__", label: othersLabel, percentage: othersPercentage, count: othersCount, barWidth: Math.round((othersPercentage / maxPct) * 100), isSpecial: true, rank: -1 }] : []),
-    ...(noAnswerItem ? [{ key: NO_ANSWER_KEY, label: noAnswerLabel, percentage: noAnswerItem.percentage, count: noAnswerItem.count, barWidth: Math.round((noAnswerItem.percentage / maxPct) * 100), isSpecial: true, rank: -2 }] : []),
-  ];
 
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <SectionHeader title={title} icon={icon} />
-      <div className="p-4 space-y-1">
-        {regularItems.length > 0 ? (
+      <div className="divide-y divide-gray-50">
+        {top5.length > 0 ? (
           <>
-            {regularItems.map((item) => (
-              <div key={item.key} className="relative overflow-hidden rounded-xl px-3 py-2">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-xl"
-                  style={{
-                    width: `${item.barWidth}%`,
-                    background: item.rank === 0
-                      ? "rgba(0,164,67,0.15)"
-                      : `rgba(0,164,67,${0.08 - item.rank * 0.015})`,
-                  }}
-                />
-                <div className="relative flex items-center gap-2">
-                  <span className={`w-4 shrink-0 text-right text-xs font-black ${
-                    item.rank === 0 ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/30"
-                  }`}>
-                    {item.rank + 1}
-                  </span>
-                  <span className={`min-w-0 flex-1 truncate text-sm font-bold ${
-                    item.rank === 0 ? "text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/70"
+            {top5.map((item, index) => (
+              <div key={item.key} className={`flex items-center gap-3 px-5 py-3 ${
+                index === 0 ? "bg-[var(--iberdrola-green-light)]/50" : ""
+              }`}>
+                <span className={`w-5 shrink-0 text-center text-xs font-black ${
+                  index === 0 ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/25"
+                }`}>
+                  {index + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className={`truncate text-sm font-bold ${
+                    index === 0 ? "text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/75"
                   }`}>
                     {item.label}
-                  </span>
-                  <span className={`shrink-0 text-xs tabular-nums ${
-                    item.rank === 0 ? "font-black text-[var(--iberdrola-green)]" : "font-semibold text-[var(--iberdrola-forest)]/50"
-                  }`}>
-                    {item.count} · {item.percentage.toFixed(1)}%
-                  </span>
+                  </div>
+                  <div className="text-[11px] text-[var(--iberdrola-forest)]/40">
+                    {item.count} {picksUnit}
+                  </div>
                 </div>
+                <span className={`shrink-0 text-sm font-black tabular-nums ${
+                  index === 0 ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/50"
+                }`}>
+                  {item.percentage.toFixed(1)}%
+                </span>
               </div>
             ))}
-            {specialItems.length > 0 && (
-              <>
-                <div className="mt-1 border-t border-dashed border-gray-100" />
-                {specialItems.map((item) => (
-                  <div key={item.key} className="relative overflow-hidden rounded-xl px-3 py-1.5">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-xl bg-gray-100/80"
-                      style={{ width: `${Math.min(item.barWidth, 100)}%` }}
-                    />
-                    <div className="relative flex items-center gap-2">
-                      <span className="w-4 shrink-0 text-center text-[10px] text-gray-300">·</span>
-                      <span className="min-w-0 flex-1 truncate text-xs font-semibold text-gray-400">
-                        {item.label}
-                      </span>
-                      <span className="shrink-0 text-xs tabular-nums font-semibold text-gray-400">
-                        {item.count} · {item.percentage.toFixed(1)}%
-                      </span>
+            {(othersCount > 0 || noAnswerItem) && (
+              <div className="divide-y divide-gray-50/80">
+                {othersCount > 0 && (
+                  <div className="flex items-center gap-3 px-5 py-2">
+                    <span className="w-5 shrink-0 text-center text-[10px] text-gray-300">·</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-xs font-semibold text-gray-400">{othersLabel}</div>
+                      <div className="text-[11px] text-gray-300">{othersCount} {picksUnit}</div>
                     </div>
+                    <span className="shrink-0 text-xs font-semibold tabular-nums text-gray-400">
+                      {othersPercentage.toFixed(1)}%
+                    </span>
                   </div>
-                ))}
-              </>
+                )}
+                {noAnswerItem && (
+                  <div className="flex items-center gap-3 px-5 py-2">
+                    <span className="w-5 shrink-0 text-center text-[10px] text-gray-300">·</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-xs font-semibold text-gray-400">{noAnswerLabel}</div>
+                      <div className="text-[11px] text-gray-300">{noAnswerItem.count} {picksUnit}</div>
+                    </div>
+                    <span className="shrink-0 text-xs font-semibold tabular-nums text-gray-400">
+                      {noAnswerItem.percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                )}
+              </div>
             )}
           </>
         ) : (
-          <div className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-[var(--iberdrola-forest)]/45">
+          <div className="px-5 py-6 text-center text-sm text-[var(--iberdrola-forest)]/45">
             {notEnoughDataLabel}
           </div>
         )}
