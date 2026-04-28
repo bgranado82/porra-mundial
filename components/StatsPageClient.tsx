@@ -424,50 +424,80 @@ function ExtraQuestionListCard({
   const othersCount = otherItems.reduce((sum, i) => sum + i.count, 0);
   const othersPercentage = otherItems.reduce((sum, i) => sum + i.percentage, 0);
 
-  const displayItems: Array<{ key: string; label: string; percentage: number; isSpecial: boolean }> = [
-    ...top5.map((item) => ({ key: item.key, label: item.label, percentage: item.percentage, isSpecial: false })),
-    ...(othersCount > 0 ? [{ key: "__others__", label: othersLabel, percentage: othersPercentage, isSpecial: true }] : []),
-    ...(noAnswerItem ? [{ key: NO_ANSWER_KEY, label: noAnswerLabel, percentage: noAnswerItem.percentage, isSpecial: true }] : []),
+  // Bar widths relative to the top item for visual clarity
+  const maxPct = top5[0]?.percentage ?? 1;
+
+  const displayItems: Array<{
+    key: string;
+    label: string;
+    percentage: number;
+    isSpecial: boolean;
+    rank: number;
+  }> = [
+    ...top5.map((item, i) => ({ key: item.key, label: item.label, percentage: item.percentage, isSpecial: false, rank: i })),
+    ...(othersCount > 0 ? [{ key: "__others__", label: othersLabel, percentage: othersPercentage, isSpecial: true, rank: -1 }] : []),
+    ...(noAnswerItem ? [{ key: NO_ANSWER_KEY, label: noAnswerLabel, percentage: noAnswerItem.percentage, isSpecial: true, rank: -2 }] : []),
   ];
 
-  const maxPct = top5[0]?.percentage ?? 1;
+  // Bar color opacity steps per rank — more contrast between positions
+  const barBgColors = [
+    "rgba(0,164,67,0.18)",
+    "rgba(0,164,67,0.11)",
+    "rgba(0,164,67,0.07)",
+    "rgba(0,164,67,0.05)",
+    "rgba(0,164,67,0.03)",
+  ];
 
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <SectionHeader title={title} icon={icon} />
-      <div className="space-y-1 p-4">
+      <div className="p-4">
         {displayItems.length > 0 ? (
-          <>
+          <div className="space-y-0.5">
             {displayItems.map((item, index) => {
-              const isFirst = index === 0;
-              const barWidth = Math.round((item.percentage / maxPct) * 100);
+              const isFirst = item.rank === 0;
+              // Bar width relative to top item for real items, absolute for special
+              const barWidth = item.isSpecial
+                ? Math.round(item.percentage)
+                : Math.round((item.percentage / maxPct) * 100);
+              const barBg = item.isSpecial
+                ? "rgba(0,0,0,0.04)"
+                : barBgColors[item.rank] ?? "rgba(0,164,67,0.03)";
+
               return (
                 <div key={item.key}>
-                  {item.isSpecial && index > 0 && !displayItems[index - 1].isSpecial ? (
-                    <div className="my-1 border-t border-dashed border-gray-100" />
+                  {item.isSpecial && !displayItems[index - 1]?.isSpecial ? (
+                    <div className="mt-2 mb-1 border-t border-dashed border-gray-100" />
                   ) : null}
-                  <div className={`relative overflow-hidden rounded-xl px-3 ${item.isSpecial ? "py-1.5" : "py-2"}`}>
+                  <div className={`relative overflow-hidden rounded-xl px-3 ${item.isSpecial ? "py-1" : "py-2"}`}>
+                    {/* proportional background bar */}
                     <div
-                      className="absolute inset-y-0 left-0 rounded-xl transition-all duration-500"
-                      style={{
-                        width: `${barWidth}%`,
-                        backgroundColor: item.isSpecial
-                          ? "rgba(0,0,0,0.04)"
-                          : isFirst
-                            ? "rgba(0,164,67,0.12)"
-                            : "rgba(0,164,67,0.05)",
-                      }}
+                      className="absolute inset-y-0 left-0 rounded-xl"
+                      style={{ width: `${barWidth}%`, backgroundColor: barBg }}
                     />
-                    <div className="relative flex items-center justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <span className={`shrink-0 font-black ${item.isSpecial ? "text-[11px] text-gray-400" : isFirst ? "text-xs text-[var(--iberdrola-green)]" : "text-xs text-[var(--iberdrola-forest)]/35"}`}>
-                          {item.isSpecial ? "·" : index + 1}
-                        </span>
-                        <span className={`truncate font-bold ${item.isSpecial ? "text-xs text-gray-400" : isFirst ? "text-sm text-[var(--iberdrola-forest)]" : "text-sm text-[var(--iberdrola-forest)]/75"}`}>
-                          {item.label}
-                        </span>
-                      </div>
-                      <span className={`shrink-0 font-black ${item.isSpecial ? "text-xs text-gray-400" : isFirst ? "text-sm text-[var(--iberdrola-green)]" : "text-sm text-[var(--iberdrola-forest)]/60"}`}>
+                    <div className="relative flex items-center gap-2">
+                      {/* rank number */}
+                      <span className={`w-4 shrink-0 text-right font-black leading-none ${
+                        item.isSpecial ? "text-[10px] text-gray-300" :
+                        isFirst ? "text-sm text-[var(--iberdrola-green)]" :
+                        "text-xs text-[var(--iberdrola-forest)]/30"
+                      }`}>
+                        {item.isSpecial ? "·" : item.rank + 1}
+                      </span>
+                      {/* label */}
+                      <span className={`min-w-0 flex-1 truncate font-semibold ${
+                        item.isSpecial ? "text-xs text-gray-400" :
+                        isFirst ? "text-sm font-bold text-[var(--iberdrola-forest)]" :
+                        "text-sm text-[var(--iberdrola-forest)]/70"
+                      }`}>
+                        {item.label}
+                      </span>
+                      {/* percentage */}
+                      <span className={`shrink-0 font-black tabular-nums ${
+                        item.isSpecial ? "text-xs text-gray-400" :
+                        isFirst ? "text-sm text-[var(--iberdrola-green)]" :
+                        "text-xs text-[var(--iberdrola-forest)]/55"
+                      }`}>
                         {item.percentage.toFixed(1)}%
                       </span>
                     </div>
@@ -475,7 +505,7 @@ function ExtraQuestionListCard({
                 </div>
               );
             })}
-          </>
+          </div>
         ) : (
           <div className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-[var(--iberdrola-forest)]/45">
             {notEnoughDataLabel}
@@ -485,7 +515,6 @@ function ExtraQuestionListCard({
     </section>
   );
 }
-
 
 // ─── INSIGHTS CARD ────────────────────────────────────────────────────────────
 const INSIGHT_ICONS = ["💡", "🔥", "📊", "🎯"];
