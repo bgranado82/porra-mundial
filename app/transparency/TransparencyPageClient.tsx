@@ -709,8 +709,8 @@ const score = calculateMatchPredictionScore(
     >
       <div className="mb-2 flex items-center gap-2">
         <span className="text-lg leading-none">{question.icon}</span>
-        {question.flagImg && (
-          <img src={question.flagImg} alt="" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover shadow-sm" />
+        {(question as { flagImg?: string }).flagImg && (
+          <img src={(question as { flagImg?: string }).flagImg} alt="" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover shadow-sm" />
         )}
         <span className="text-sm font-bold text-[var(--iberdrola-forest)]">
           {t.extras[question.key as keyof typeof t.extras] || question.key}

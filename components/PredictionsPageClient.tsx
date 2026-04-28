@@ -1306,7 +1306,7 @@ const invalidKnockoutPicks = useMemo(() => {
             ) : null}
 
             {!canEditPredictions && entryStatus !== "submitted" && !isDeadlinePassed ? (
-              <div className="mt-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
+              <div className="mt-4 rounded-2xl border border-[var(--iberdrola-green)]/30 bg-[var(--iberdrola-green-light)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
                 {t.editingDisabled}
               </div>
             ) : null}
@@ -1348,7 +1348,7 @@ const invalidKnockoutPicks = useMemo(() => {
         ? `/stats?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${activeEntryId}`
         : `/stats?poolId=${poolId}&entryId=${activeEntryId}`
     }
-    className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+    className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-green-light)]"
   >
     {t.viewStats}
   </Link>
@@ -1357,7 +1357,7 @@ const invalidKnockoutPicks = useMemo(() => {
                 {poolId && activeEntryId && poolSlug ? (
                   <Link
                     href={`/standings?poolId=${poolId}&entryId=${activeEntryId}&poolSlug=${poolSlug}`}
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-green-light)]"
                   >
                     {t.viewFullStandings}
                   </Link>
@@ -1591,7 +1591,7 @@ const invalidKnockoutPicks = useMemo(() => {
 
             <div className="p-4">
               <div className="hidden lg:block overflow-hidden rounded-2xl border border-[var(--iberdrola-sky)] bg-white">
-                <div className="grid grid-cols-[140px_minmax(0,1fr)_80px] gap-3 bg-[var(--iberdrola-sand)]/40 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
+                <div className="grid grid-cols-[140px_minmax(0,1fr)_80px] gap-3 bg-[var(--iberdrola-green-light)]/60 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
                   <div>{t.matchTableInfoHeader}</div>
                   <div className="text-center">{t.predictionHeader}</div>
                   <div className="text-right">{t.pointsHeader}</div>
@@ -1832,8 +1832,8 @@ const invalidKnockoutPicks = useMemo(() => {
                     )}
                     <div className="mb-3 flex items-center gap-2">
                       <span className="text-xl leading-none">{question.icon}</span>
-                      {question.flagImg && (
-                        <img src={question.flagImg} alt="" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover shadow-sm" />
+                      {(question as { flagImg?: string }).flagImg && (
+                        <img src={(question as { flagImg?: string }).flagImg} alt="" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover shadow-sm" />
                       )}
                       <span className="text-sm font-black text-[var(--iberdrola-forest)]">
                         {t.extras[question.key as keyof typeof t.extras]}

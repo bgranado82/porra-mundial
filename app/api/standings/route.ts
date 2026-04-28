@@ -434,8 +434,8 @@ export async function GET(req: Request) {
         current.champion_points;
     }
 
-    // Always show all 7 group stage matchdays so columns stay fixed
-    const days = [1, 2, 3, 4, 5, 6, 7];
+    // Always show all 18 group stage matchdays so columns stay fixed
+    const days = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
 
     const currentStandings = Array.from(grouped.values()).sort((a, b) => {
       if (b.total_points !== a.total_points) {
