@@ -66,7 +66,7 @@ export const EXTRA_QUESTIONS: ExtraQuestion[] = [
     key: "top_spanish_scorer",
     pointsKey: "topSpanishScorerPoints",
     showInGroupStandings: false,
-    icon: "🇪🇸🎯",
+    icon: "🎯",
     flagUrl: SPAIN_FLAG_URL,
   },
 ];
