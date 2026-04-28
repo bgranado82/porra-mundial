@@ -19,10 +19,7 @@ export type ExtraQuestion = {
     | "topSpanishScorerPoints";
   showInGroupStandings: boolean;
   icon: string;
-  flagUrl?: string;
 };
-
-const SPAIN_FLAG_URL = "https://flagcdn.com/es.svg";
 
 export const EXTRA_QUESTIONS: ExtraQuestion[] = [
   {
@@ -35,8 +32,7 @@ export const EXTRA_QUESTIONS: ExtraQuestion[] = [
     key: "first_goal_scorer_spain",
     pointsKey: "firstGoalScorerSpainPoints",
     showInGroupStandings: true,
-    icon: "🥇⚽",
-    flagUrl: SPAIN_FLAG_URL,
+    icon: "🇪🇸⚽",
   },
   {
     key: "golden_boot",
@@ -66,7 +62,6 @@ export const EXTRA_QUESTIONS: ExtraQuestion[] = [
     key: "top_spanish_scorer",
     pointsKey: "topSpanishScorerPoints",
     showInGroupStandings: false,
-    icon: "🎯",
-    flagUrl: SPAIN_FLAG_URL,
+    icon: "🇪🇸🎯",
   },
 ];
