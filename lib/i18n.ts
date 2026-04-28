@@ -177,6 +177,10 @@ standingsColOutcomeHits: string;
 standingsColOutcomePercent: string;
 standingsColExactHits: string;
 standingsColExactPercent: string;
+  standingsColKoPrecision: string;
+  standingsColKoHits: string;
+  standingsColKoPercent: string;
+  standingsColKoFinal: string;
 standingsColFirstGoalWorldLong: string;
 standingsColFirstGoalSpainLong: string;
 standingsColGoldenBoot: string;
@@ -468,6 +472,10 @@ standingsColOutcomeHits: "Aciertos",
 standingsColOutcomePercent: "% acierto",
 standingsColExactHits: "Exactos",
 standingsColExactPercent: "% exacto",
+  standingsColKoPrecision: "Precisión KO",
+  standingsColKoHits: "Aciertos KO",
+  standingsColKoPercent: "% KO",
+  standingsColKoFinal: "Final",
 standingsColFirstGoalWorldLong: "Primer goleador",
 standingsColFirstGoalSpainLong: "Primer goleador de España",
 standingsColGoldenBoot: "Bota de Oro",
@@ -751,6 +759,10 @@ standingsColOutcomeHits: "Outcomes",
 standingsColOutcomePercent: "% outcome",
 standingsColExactHits: "Exact",
 standingsColExactPercent: "% exact",
+  standingsColKoPrecision: "KO Precision",
+  standingsColKoHits: "KO Hits",
+  standingsColKoPercent: "KO %",
+  standingsColKoFinal: "Final",
 standingsColFirstGoalWorldLong: "First scorer",
 standingsColFirstGoalSpainLong: "First scorer Spain",
 standingsColGoldenBoot: "Golden Boot",
@@ -1033,6 +1045,10 @@ standingsColOutcomeHits: "Acertos",
 standingsColOutcomePercent: "% acerto",
 standingsColExactHits: "Exatos",
 standingsColExactPercent: "% exato",
+  standingsColKoPrecision: "Precisão KO",
+  standingsColKoHits: "Acertos KO",
+  standingsColKoPercent: "% KO",
+  standingsColKoFinal: "Final",
 standingsColFirstGoalWorldLong: "Primeiro goleador",
 standingsColFirstGoalSpainLong: "Primeiro goleador Espanha",
 standingsColGoldenBoot: "Chuteira de Ouro",

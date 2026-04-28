@@ -38,6 +38,12 @@ type Standing = {
   exact_hits: number;
   outcome_percent: number;
   exact_percent: number;
+  ko_r32_hits: number; ko_r32_total: number;
+  ko_r16_hits: number; ko_r16_total: number;
+  ko_qf_hits: number; ko_qf_total: number;
+  ko_sf_hits: number; ko_sf_total: number;
+  ko_final_hits: number; ko_final_total: number;
+  ko_champ_hits: number; ko_champ_total: number;
   position: number;
   movement: "up" | "down" | "same";
   movement_value: number;
@@ -212,6 +218,12 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                   >
                     {t.standingsColAccuracy}
                   </th>
+                  <th
+                    colSpan={6}
+                    className="top-0 z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-semibold text-slate-700 md:px-2"
+                  >
+                    {t.standingsColKoPrecision}
+                  </th>
                 </tr>
 
                 <tr>
@@ -359,6 +371,24 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
 
 <td className="min-w-[95px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
   {row.exact_percent}%
+</td>
+<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
+  {row.ko_r32_total > 0 ? `${row.ko_r32_hits}/${row.ko_r32_total}` : "—"}
+</td>
+<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
+  {row.ko_r16_total > 0 ? `${row.ko_r16_hits}/${row.ko_r16_total}` : "—"}
+</td>
+<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
+  {row.ko_qf_total > 0 ? `${row.ko_qf_hits}/${row.ko_qf_total}` : "—"}
+</td>
+<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
+  {row.ko_sf_total > 0 ? `${row.ko_sf_hits}/${row.ko_sf_total}` : "—"}
+</td>
+<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
+  {row.ko_final_total > 0 ? `${row.ko_final_hits}/${row.ko_final_total}` : "—"}
+</td>
+<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
+  {row.ko_champ_total > 0 ? `${row.ko_champ_hits}/${row.ko_champ_total}` : "—"}
 </td>
                     </tr>
                   );

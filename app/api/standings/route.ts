@@ -6,7 +6,7 @@ import { teams } from "@/data/teams";
 import { scoreSettings } from "@/data/settings";
 import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
-import { calculateKnockoutScore } from "@/lib/knockoutScoring";
+import { calculateKnockoutScore, calculateKnockoutPrecision } from "@/lib/knockoutScoring";
 import { KnockoutPredictionMap, Match } from "@/types";
 
 type EntryRow = {
@@ -103,6 +103,12 @@ type StandingRow = {
   total_points: number;
   outcome_hits: number;
   exact_hits: number;
+  ko_r32_hits: number; ko_r32_total: number;
+  ko_r16_hits: number; ko_r16_total: number;
+  ko_qf_hits: number; ko_qf_total: number;
+  ko_sf_hits: number; ko_sf_total: number;
+  ko_final_hits: number; ko_final_total: number;
+  ko_champ_hits: number; ko_champ_total: number;
   total_group_matches: number;
 };
 
@@ -283,6 +289,12 @@ export async function GET(req: Request) {
         total_points: 0,
         outcome_hits: 0,
         exact_hits: 0,
+        ko_r32_hits: 0, ko_r32_total: 0,
+        ko_r16_hits: 0, ko_r16_total: 0,
+        ko_qf_hits: 0, ko_qf_total: 0,
+        ko_sf_hits: 0, ko_sf_total: 0,
+        ko_final_hits: 0, ko_final_total: 0,
+        ko_champ_hits: 0, ko_champ_total: 0,
         total_group_matches: 0,
       });
     });
@@ -405,6 +417,37 @@ export async function GET(req: Request) {
         realBracket
       ) as any;
 
+      const koPrecision = calculateKnockoutPrecision(
+        scoreSettings,
+        {
+          round32: userBracket.round32 ?? [],
+          round16: userBracket.round16 ?? [],
+          quarterfinals: userBracket.quarterfinals ?? [],
+          semifinals: userBracket.semifinals ?? [],
+          finals: userBracket.finals ?? [],
+          championId: userBracket.championId ?? null,
+        },
+        {
+          round32: realBracket?.round32 ?? [],
+          round16: realBracket?.round16 ?? [],
+          quarterfinals: realBracket?.quarterfinals ?? [],
+          semifinals: realBracket?.semifinals ?? [],
+          finals: realBracket?.finals ?? [],
+          championId: realBracket?.championId ?? null,
+        }
+      );
+      current.ko_r32_hits = koPrecision.round32.hits;
+      current.ko_r32_total = koPrecision.round32.total;
+      current.ko_r16_hits = koPrecision.round16.hits;
+      current.ko_r16_total = koPrecision.round16.total;
+      current.ko_qf_hits = koPrecision.quarterfinals.hits;
+      current.ko_qf_total = koPrecision.quarterfinals.total;
+      current.ko_sf_hits = koPrecision.semifinals.hits;
+      current.ko_sf_total = koPrecision.semifinals.total;
+      current.ko_final_hits = koPrecision.final.hits;
+      current.ko_final_total = koPrecision.final.total;
+      current.ko_champ_hits = koPrecision.champion.hits;
+      current.ko_champ_total = koPrecision.champion.total;
       current.r32_points = getScoreValue(knockoutScore, ["round32", "r32"]);
       current.r16_points = getScoreValue(knockoutScore, ["round16", "r16"]);
       current.qf_points = getScoreValue(knockoutScore, [
