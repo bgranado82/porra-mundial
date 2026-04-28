@@ -18,6 +18,7 @@ import {
 import { teams } from "@/data/teams";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Locale, messages } from "@/lib/i18n";
+import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import { createClient } from "@/utils/supabase/client";
 
 type StatsResponse = {
@@ -63,17 +64,6 @@ const CHART_COLORS = ["#00A443", "#6CC24A", "#009CDE", "#78BE20", "#A7D46F", "#B
 const NO_ANSWER_KEY = "__no_answer__";
 const NO_ANSWER_COLOR = "#D1D5DB";
 
-const EXTRA_ICONS: Record<string, string> = {
-  first_goal_scorer_world: "🥇",
-  first_goal_scorer_spain: "",
-  golden_boot: "👟",
-  golden_ball: "🏆",
-  best_young_player: "🌟",
-  golden_glove: "🧤",
-  top_spanish_scorer: "⚽",
-};
-
-const SPAIN_FLAG = "https://flagcdn.com/es.svg";
 
 function formatEuro(value: number) {
   return `${value.toLocaleString("es-ES")}€`;
@@ -759,7 +749,7 @@ export default function StatsPageClient() {
             noAnswerLabel={t.stats.noAnswer}
           />
           <ExtraQuestionListCard
-            icon={EXTRA_ICONS.golden_ball}
+            icon={EXTRA_QUESTIONS.find((q) => q.key === "golden_ball")?.icon}
             title={t.extras.golden_ball}
             items={extraMap.get("golden_ball")?.items ?? []}
             notEnoughDataLabel={t.stats.notEnoughData}
@@ -772,7 +762,7 @@ export default function StatsPageClient() {
         {/* ── BOOTS + GLOVE + BEST YOUNG */}
         <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           <ExtraQuestionBarCard
-            icon={EXTRA_ICONS.golden_boot}
+            icon={EXTRA_QUESTIONS.find((q) => q.key === "golden_boot")?.icon}
             title={t.extras.golden_boot}
             items={extraMap.get("golden_boot")?.items ?? []}
             othersLabel={t.stats.others}
@@ -780,7 +770,7 @@ export default function StatsPageClient() {
             picksUnit={t.stats.picksUnit}
           />
           <ExtraQuestionBarCard
-            icon={EXTRA_ICONS.golden_glove}
+            icon={EXTRA_QUESTIONS.find((q) => q.key === "golden_glove")?.icon}
             title={t.extras.golden_glove}
             items={extraMap.get("golden_glove")?.items ?? []}
             othersLabel={t.stats.others}
@@ -788,7 +778,7 @@ export default function StatsPageClient() {
             picksUnit={t.stats.picksUnit}
           />
           <ExtraQuestionListCard
-            icon={EXTRA_ICONS.best_young_player}
+            icon={EXTRA_QUESTIONS.find((q) => q.key === "best_young_player")?.icon}
             title={t.extras.best_young_player}
             items={extraMap.get("best_young_player")?.items ?? []}
             notEnoughDataLabel={t.stats.notEnoughData}
@@ -801,7 +791,7 @@ export default function StatsPageClient() {
         {/* ── SCORERS */}
         <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           <ExtraQuestionBarCard
-            icon={EXTRA_ICONS.first_goal_scorer_world}
+            icon={EXTRA_QUESTIONS.find((q) => q.key === "first_goal_scorer_world")?.icon}
             title={t.extras.first_goal_scorer_world}
             items={extraMap.get("first_goal_scorer_world")?.items ?? []}
             othersLabel={t.stats.others}
@@ -809,8 +799,8 @@ export default function StatsPageClient() {
             picksUnit={t.stats.picksUnit}
           />
           <ExtraQuestionBarCard
-            icon={EXTRA_ICONS.first_goal_scorer_spain}
-            flagImg={SPAIN_FLAG}
+            icon={EXTRA_QUESTIONS.find((q) => q.key === "first_goal_scorer_spain")?.icon}
+            flagImg={EXTRA_QUESTIONS.find((q) => q.key === "first_goal_scorer_spain")?.flagImg}
             title={t.extras.first_goal_scorer_spain}
             items={extraMap.get("first_goal_scorer_spain")?.items ?? []}
             othersLabel={t.stats.others}
@@ -818,7 +808,8 @@ export default function StatsPageClient() {
             picksUnit={t.stats.picksUnit}
           />
           <ExtraQuestionBarCard
-            icon={EXTRA_ICONS.top_spanish_scorer}
+            icon={EXTRA_QUESTIONS.find((q) => q.key === "top_spanish_scorer")?.icon}
+            flagImg={EXTRA_QUESTIONS.find((q) => q.key === "top_spanish_scorer")?.flagImg}
             title={t.extras.top_spanish_scorer}
             items={extraMap.get("top_spanish_scorer")?.items ?? []}
             othersLabel={t.stats.others}

@@ -80,7 +80,6 @@ function getExtraLabels(t: Messages): Record<string, string> {
 }
 
 const LOCALE_KEY = "porra-mundial-locale";
-const SPAIN_FLAG = "https://flagcdn.com/es.svg";
 
 function getTeamsInRound(
   matches: Array<{ homeTeamId: string | null; awayTeamId: string | null }>
@@ -710,8 +709,8 @@ const score = calculateMatchPredictionScore(
     >
       <div className="mb-2 flex items-center gap-2">
         <span className="text-lg leading-none">{question.icon}</span>
-        {(question.key === "first_goal_scorer_spain" || question.key === "top_spanish_scorer") && (
-          <img src={SPAIN_FLAG} alt="España" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover shadow-sm" />
+        {question.flagImg && (
+          <img src={question.flagImg} alt="" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover shadow-sm" />
         )}
         <span className="text-sm font-bold text-[var(--iberdrola-forest)]">
           {t.extras[question.key as keyof typeof t.extras] || question.key}

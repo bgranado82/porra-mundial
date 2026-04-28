@@ -19,6 +19,7 @@ export type ExtraQuestion = {
     | "topSpanishScorerPoints";
   showInGroupStandings: boolean;
   icon: string;
+  flagImg?: string;
 };
 
 export const EXTRA_QUESTIONS: ExtraQuestion[] = [
