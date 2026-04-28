@@ -1832,9 +1832,7 @@ const invalidKnockoutPicks = useMemo(() => {
                     )}
                     <div className="mb-3 flex items-center gap-2">
                       <span className="text-xl leading-none">{question.icon}</span>
-                      {question.flagUrl ? (
-                        <img src={question.flagUrl} alt="" className="h-5 w-7 rounded-[3px] border border-gray-100 object-cover shadow-sm" />
-                      ) : null}
+
                       <span className="text-sm font-black text-[var(--iberdrola-forest)]">
                         {t.extras[question.key as keyof typeof t.extras]}
                       </span>
