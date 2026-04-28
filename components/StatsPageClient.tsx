@@ -59,6 +59,8 @@ type StatsResponse = {
 const LOCALE_KEY = "porra-mundial-locale";
 
 const CHART_COLORS = ["#00A443", "#6CC24A", "#009CDE", "#78BE20", "#A7D46F", "#B0BEC5"];
+const NO_ANSWER_KEY = "__no_answer__";
+const NO_ANSWER_COLOR = "#D1D5DB";
 
 const EXTRA_ICONS: Record<string, string> = {
   first_goal_scorer_world: "🥇",
@@ -188,6 +190,7 @@ function ChampionDonutCard({
   picksUnit,
   picksLabel,
   othersLabel,
+  noAnswerLabel,
 }: {
   title: string;
   items: StatsResponse["champion"]["items"];
@@ -195,6 +198,7 @@ function ChampionDonutCard({
   picksUnit: string;
   picksLabel: string;
   othersLabel: string;
+  noAnswerLabel: string;
 }) {
   const topItems = items.slice(0, 5);
   const otherItems = items.slice(5);
@@ -203,17 +207,20 @@ function ChampionDonutCard({
   const teamMap = new Map(teams.map((team) => [team.id, team]));
 
   const chartData = [
-    ...topItems.map((item) => ({ name: item.label, value: item.count })),
+    ...topItems.map((item) => ({
+      name: item.key === NO_ANSWER_KEY ? noAnswerLabel : item.label,
+      value: item.count,
+    })),
     ...(othersCount > 0 ? [{ name: othersLabel, value: othersCount }] : []),
   ];
 
   const legendItems = [
     ...topItems.map((item, idx) => ({
-      label: item.label,
+      label: item.key === NO_ANSWER_KEY ? noAnswerLabel : item.label,
       percentage: item.percentage,
       count: item.count,
-      teamId: item.teamId ?? null,
-      color: CHART_COLORS[idx % CHART_COLORS.length],
+      teamId: item.key === NO_ANSWER_KEY ? null : (item.teamId ?? null),
+      color: item.key === NO_ANSWER_KEY ? NO_ANSWER_COLOR : CHART_COLORS[idx % CHART_COLORS.length],
     })),
     ...(othersCount > 0 ? [{
       label: othersLabel,
@@ -242,7 +249,11 @@ function ChampionDonutCard({
                 strokeWidth={0}
               >
                 {chartData.map((_, index) => (
-                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  <Cell key={index} fill={
+                    topItems[index]?.key === NO_ANSWER_KEY
+                      ? NO_ANSWER_COLOR
+                      : CHART_COLORS[index % CHART_COLORS.length]
+                  } />
                 ))}
               </Pie>
               <Tooltip
@@ -313,6 +324,7 @@ function ExtraQuestionBarCard({
   flagImg,
   items,
   othersLabel,
+  noAnswerLabel,
   picksUnit,
 }: {
   title: string;
@@ -320,6 +332,7 @@ function ExtraQuestionBarCard({
   flagImg?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
   othersLabel: string;
+  noAnswerLabel: string;
   picksUnit: string;
 }) {
   const topItems = items.slice(0, 5);
@@ -329,11 +342,12 @@ function ExtraQuestionBarCard({
 
   const data = [
     ...topItems.map((item) => ({
-      name: item.label,
+      name: item.key === NO_ANSWER_KEY ? noAnswerLabel : item.label,
       percentage: Number(item.percentage.toFixed(1)),
       count: item.count,
+      isNoAnswer: item.key === NO_ANSWER_KEY,
     })),
-    ...(othersCount > 0 ? [{ name: othersLabel, percentage: Number(othersPercentage.toFixed(1)), count: othersCount }] : []),
+    ...(othersCount > 0 ? [{ name: othersLabel, percentage: Number(othersPercentage.toFixed(1)), count: othersCount, isNoAnswer: false }] : []),
   ];
 
   return (
@@ -373,8 +387,8 @@ function ExtraQuestionBarCard({
                 cursor={{ fill: "rgba(0,164,67,0.04)" }}
               />
               <Bar dataKey="percentage" radius={[0, 6, 6, 0]} maxBarSize={20}>
-                {data.map((_, index) => (
-                  <Cell key={index} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                {data.map((entry, index) => (
+                  <Cell key={index} fill={entry.isNoAnswer ? NO_ANSWER_COLOR : CHART_COLORS[index % CHART_COLORS.length]} />
                 ))}
               </Bar>
             </BarChart>
@@ -391,46 +405,76 @@ function ExtraQuestionListCard({
   icon,
   items,
   notEnoughDataLabel,
+  noAnswerLabel,
+  othersLabel,
   picksUnit,
 }: {
   title: string;
   icon?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
   notEnoughDataLabel: string;
+  noAnswerLabel: string;
+  othersLabel: string;
   picksUnit: string;
 }) {
-  const top5 = items.slice(0, 5);
-  const maxPct = top5[0]?.percentage ?? 1;
+  // Separate no-answer from real items, keep it for last
+  const noAnswerItem = items.find((i) => i.key === NO_ANSWER_KEY);
+  const realItems = items.filter((i) => i.key !== NO_ANSWER_KEY);
+  const top4 = realItems.slice(0, 4);
+  const otherItems = realItems.slice(4);
+  const othersCount = otherItems.reduce((sum, i) => sum + i.count, 0);
+  const othersPercentage = otherItems.reduce((sum, i) => sum + i.percentage, 0);
+
+  const displayItems = [
+    ...top4,
+    ...(othersCount > 0 ? [{ key: "__others__", label: othersLabel, count: othersCount, percentage: othersPercentage }] : []),
+    ...(noAnswerItem ? [noAnswerItem] : []),
+  ];
+
+  const maxPct = displayItems[0]?.percentage ?? 1;
 
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <SectionHeader title={title} icon={icon} />
       <div className="space-y-1.5 p-4">
-        {top5.length > 0 ? (
-          top5.map((item, index) => {
+        {displayItems.length > 0 ? (
+          displayItems.map((item, index) => {
+            const isNoAnswer = item.key === NO_ANSWER_KEY;
+            const isOthers = item.key === "__others__";
+            const isSpecial = isNoAnswer || isOthers;
+            const isFirst = index === 0 && !isSpecial;
             const barWidth = Math.round((item.percentage / maxPct) * 100);
-            const isFirst = index === 0;
+            const label = isNoAnswer ? noAnswerLabel : item.label;
             return (
               <div key={item.key} className="group relative overflow-hidden rounded-xl px-3 py-2.5">
-                {/* Background bar */}
                 <div
                   className="absolute inset-y-0 left-0 rounded-xl transition-all duration-500"
                   style={{
                     width: `${barWidth}%`,
-                    backgroundColor: isFirst ? "rgba(0,164,67,0.12)" : "rgba(0,164,67,0.05)",
+                    backgroundColor: isSpecial
+                      ? "rgba(0,0,0,0.04)"
+                      : isFirst
+                        ? "rgba(0,164,67,0.12)"
+                        : "rgba(0,164,67,0.05)",
                   }}
                 />
                 <div className="relative flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className={`shrink-0 text-xs font-black ${isFirst ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/35"}`}>
-                      {index + 1}
+                    <span className={`shrink-0 text-xs font-black ${
+                      isSpecial ? "text-gray-400" : isFirst ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/35"
+                    }`}>
+                      {isSpecial ? "·" : index + 1}
                     </span>
-                    <span className={`truncate text-sm font-bold ${isFirst ? "text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/75"}`}>
-                      {item.label}
+                    <span className={`truncate text-sm font-bold ${
+                      isSpecial ? "text-gray-400" : isFirst ? "text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/75"
+                    }`}>
+                      {label}
                     </span>
                   </div>
                   <div className="shrink-0 text-right">
-                    <span className={`text-sm font-black ${isFirst ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/60"}`}>
+                    <span className={`text-sm font-black ${
+                      isSpecial ? "text-gray-400" : isFirst ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/60"
+                    }`}>
                       {item.percentage.toFixed(1)}%
                     </span>
                   </div>
@@ -669,12 +713,15 @@ export default function StatsPageClient() {
             picksUnit={t.stats.picksUnit}
             picksLabel={t.stats.picksLabel}
             othersLabel={t.stats.others}
+            noAnswerLabel={t.stats.noAnswer}
           />
           <ExtraQuestionListCard
             icon={EXTRA_ICONS.golden_ball}
             title={t.extras.golden_ball}
             items={extraMap.get("golden_ball")?.items ?? []}
             notEnoughDataLabel={t.stats.notEnoughData}
+            noAnswerLabel={t.stats.noAnswer}
+            othersLabel={t.stats.others}
             picksUnit={t.stats.picksUnit}
           />
         </section>
@@ -686,6 +733,7 @@ export default function StatsPageClient() {
             title={t.extras.golden_boot}
             items={extraMap.get("golden_boot")?.items ?? []}
             othersLabel={t.stats.others}
+            noAnswerLabel={t.stats.noAnswer}
             picksUnit={t.stats.picksUnit}
           />
           <ExtraQuestionBarCard
@@ -693,6 +741,7 @@ export default function StatsPageClient() {
             title={t.extras.golden_glove}
             items={extraMap.get("golden_glove")?.items ?? []}
             othersLabel={t.stats.others}
+            noAnswerLabel={t.stats.noAnswer}
             picksUnit={t.stats.picksUnit}
           />
           <ExtraQuestionListCard
@@ -700,6 +749,8 @@ export default function StatsPageClient() {
             title={t.extras.best_young_player}
             items={extraMap.get("best_young_player")?.items ?? []}
             notEnoughDataLabel={t.stats.notEnoughData}
+            noAnswerLabel={t.stats.noAnswer}
+            othersLabel={t.stats.others}
             picksUnit={t.stats.picksUnit}
           />
         </section>
@@ -711,6 +762,7 @@ export default function StatsPageClient() {
             title={t.extras.first_goal_scorer_world}
             items={extraMap.get("first_goal_scorer_world")?.items ?? []}
             othersLabel={t.stats.others}
+            noAnswerLabel={t.stats.noAnswer}
             picksUnit={t.stats.picksUnit}
           />
           <ExtraQuestionBarCard
@@ -719,6 +771,7 @@ export default function StatsPageClient() {
             title={t.extras.first_goal_scorer_spain}
             items={extraMap.get("first_goal_scorer_spain")?.items ?? []}
             othersLabel={t.stats.others}
+            noAnswerLabel={t.stats.noAnswer}
             picksUnit={t.stats.picksUnit}
           />
           <ExtraQuestionBarCard
@@ -726,6 +779,7 @@ export default function StatsPageClient() {
             title={t.extras.top_spanish_scorer}
             items={extraMap.get("top_spanish_scorer")?.items ?? []}
             othersLabel={t.stats.others}
+            noAnswerLabel={t.stats.noAnswer}
             picksUnit={t.stats.picksUnit}
           />
         </section>

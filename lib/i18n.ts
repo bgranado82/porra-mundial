@@ -247,6 +247,7 @@ stats: {
   picksLabel: string;
   picksUnit: string;
   others: string;
+  noAnswer: string;
   insightsTitle: string;
 };
 banquillo: {
@@ -537,6 +538,7 @@ stats: {
   picksLabel: "Pronósticos",
   picksUnit: "pronósticos",
   others: "Otros",
+  noAnswer: "Sin respuesta",
   insightsTitle: "Insights del pool",
 },
 banquillo: {
@@ -819,6 +821,7 @@ stats: {
   picksLabel: "Picks",
   picksUnit: "picks",
   others: "Others",
+  noAnswer: "No answer",
   insightsTitle: "Pool insights",
 },
 banquillo: {
@@ -1100,6 +1103,7 @@ stats: {
   picksLabel: "Palpites",
   picksUnit: "palpites",
   others: "Outros",
+  noAnswer: "Sem resposta",
   insightsTitle: "Insights do bolão",
 },
 banquillo: {
