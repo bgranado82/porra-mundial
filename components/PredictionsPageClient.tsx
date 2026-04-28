@@ -1364,9 +1364,8 @@ const invalidKnockoutPicks = useMemo(() => {
     className="relative inline-flex items-center justify-center rounded-2xl bg-[var(--iberdrola-green)] px-4 py-3 text-sm font-black text-white shadow-md shadow-[var(--iberdrola-green)]/25 transition hover:brightness-110 active:scale-[0.98]"
   >
     {t.banquillo.title}
-
     {!loadingBanquilloCount && banquilloCount > 0 ? (
-      <span className="ml-2 inline-flex min-w-6 items-center justify-center rounded-full bg-white px-2 py-0.5 text-[11px] font-black text-[var(--iberdrola-green)]">
+      <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white shadow-sm">
         {banquilloCount}
       </span>
     ) : null}
@@ -1571,8 +1570,8 @@ const invalidKnockoutPicks = useMemo(() => {
           </div>
         </section>
 
-        <div className="grid gap-4 lg:grid-cols-[1.65fr_0.95fr]">
-          <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+        <div className="grid gap-4 lg:grid-cols-[1.65fr_0.95fr] min-w-0">
+          <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm overflow-hidden">
             <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
               <span className="text-xl">🌍</span>
               <div>
@@ -1685,7 +1684,7 @@ const invalidKnockoutPicks = useMemo(() => {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
+          <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm lg:sticky lg:top-4 self-start overflow-hidden">
             <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
               <span className="text-xl">📊</span>
               <div>
@@ -1698,7 +1697,7 @@ const invalidKnockoutPicks = useMemo(() => {
               {standingsByGroup.map(({ groupCode, rows }) => (
                 <div
                   key={groupCode}
-                  className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
+                  className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white p-2"
                 >
                   <GroupStandingsTable
                     title={`${t.group} ${groupCode}`}
