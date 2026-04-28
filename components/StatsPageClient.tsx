@@ -417,71 +417,65 @@ function ExtraQuestionListCard({
   othersLabel: string;
   picksUnit: string;
 }) {
-  // Separate no-answer from real items, keep it for last
   const noAnswerItem = items.find((i) => i.key === NO_ANSWER_KEY);
   const realItems = items.filter((i) => i.key !== NO_ANSWER_KEY);
-  const top4 = realItems.slice(0, 4);
-  const otherItems = realItems.slice(4);
+  const top5 = realItems.slice(0, 5);
+  const otherItems = realItems.slice(5);
   const othersCount = otherItems.reduce((sum, i) => sum + i.count, 0);
   const othersPercentage = otherItems.reduce((sum, i) => sum + i.percentage, 0);
 
-  const displayItems = [
-    ...top4,
-    ...(othersCount > 0 ? [{ key: "__others__", label: othersLabel, count: othersCount, percentage: othersPercentage }] : []),
-    ...(noAnswerItem ? [noAnswerItem] : []),
+  const displayItems: Array<{ key: string; label: string; percentage: number; isSpecial: boolean }> = [
+    ...top5.map((item) => ({ key: item.key, label: item.label, percentage: item.percentage, isSpecial: false })),
+    ...(othersCount > 0 ? [{ key: "__others__", label: othersLabel, percentage: othersPercentage, isSpecial: true }] : []),
+    ...(noAnswerItem ? [{ key: NO_ANSWER_KEY, label: noAnswerLabel, percentage: noAnswerItem.percentage, isSpecial: true }] : []),
   ];
 
-  const maxPct = displayItems[0]?.percentage ?? 1;
+  const maxPct = top5[0]?.percentage ?? 1;
 
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <SectionHeader title={title} icon={icon} />
-      <div className="space-y-1.5 p-4">
+      <div className="space-y-1 p-4">
         {displayItems.length > 0 ? (
-          displayItems.map((item, index) => {
-            const isNoAnswer = item.key === NO_ANSWER_KEY;
-            const isOthers = item.key === "__others__";
-            const isSpecial = isNoAnswer || isOthers;
-            const isFirst = index === 0 && !isSpecial;
-            const barWidth = Math.round((item.percentage / maxPct) * 100);
-            const label = isNoAnswer ? noAnswerLabel : item.label;
-            return (
-              <div key={item.key} className="group relative overflow-hidden rounded-xl px-3 py-2.5">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-xl transition-all duration-500"
-                  style={{
-                    width: `${barWidth}%`,
-                    backgroundColor: isSpecial
-                      ? "rgba(0,0,0,0.04)"
-                      : isFirst
-                        ? "rgba(0,164,67,0.12)"
-                        : "rgba(0,164,67,0.05)",
-                  }}
-                />
-                <div className="relative flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className={`shrink-0 text-xs font-black ${
-                      isSpecial ? "text-gray-400" : isFirst ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/35"
-                    }`}>
-                      {isSpecial ? "·" : index + 1}
-                    </span>
-                    <span className={`truncate text-sm font-bold ${
-                      isSpecial ? "text-gray-400" : isFirst ? "text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/75"
-                    }`}>
-                      {label}
-                    </span>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <span className={`text-sm font-black ${
-                      isSpecial ? "text-gray-400" : isFirst ? "text-[var(--iberdrola-green)]" : "text-[var(--iberdrola-forest)]/60"
-                    }`}>
-                      {item.percentage.toFixed(1)}%
-                    </span>
+          <>
+            {displayItems.map((item, index) => {
+              const isFirst = index === 0;
+              const barWidth = Math.round((item.percentage / maxPct) * 100);
+              return (
+                <div key={item.key}>
+                  {item.isSpecial && index > 0 && !displayItems[index - 1].isSpecial ? (
+                    <div className="my-1 border-t border-dashed border-gray-100" />
+                  ) : null}
+                  <div className={`relative overflow-hidden rounded-xl px-3 ${item.isSpecial ? "py-1.5" : "py-2"}`}>
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-xl transition-all duration-500"
+                      style={{
+                        width: `${barWidth}%`,
+                        backgroundColor: item.isSpecial
+                          ? "rgba(0,0,0,0.04)"
+                          : isFirst
+                            ? "rgba(0,164,67,0.12)"
+                            : "rgba(0,164,67,0.05)",
+                      }}
+                    />
+                    <div className="relative flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <span className={`shrink-0 font-black ${item.isSpecial ? "text-[11px] text-gray-400" : isFirst ? "text-xs text-[var(--iberdrola-green)]" : "text-xs text-[var(--iberdrola-forest)]/35"}`}>
+                          {item.isSpecial ? "·" : index + 1}
+                        </span>
+                        <span className={`truncate font-bold ${item.isSpecial ? "text-xs text-gray-400" : isFirst ? "text-sm text-[var(--iberdrola-forest)]" : "text-sm text-[var(--iberdrola-forest)]/75"}`}>
+                          {item.label}
+                        </span>
+                      </div>
+                      <span className={`shrink-0 font-black ${item.isSpecial ? "text-xs text-gray-400" : isFirst ? "text-sm text-[var(--iberdrola-green)]" : "text-sm text-[var(--iberdrola-forest)]/60"}`}>
+                        {item.percentage.toFixed(1)}%
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </>
         ) : (
           <div className="rounded-xl border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-[var(--iberdrola-forest)]/45">
             {notEnoughDataLabel}
@@ -491,6 +485,7 @@ function ExtraQuestionListCard({
     </section>
   );
 }
+
 
 // ─── INSIGHTS CARD ────────────────────────────────────────────────────────────
 const INSIGHT_ICONS = ["💡", "🔥", "📊", "🎯"];

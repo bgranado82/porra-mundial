@@ -289,7 +289,12 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                         {getMedal(row.position) ?? row.position}
                       </td>
 
-                      <td className="sticky left-[155px] z-10 border-b border-gray-100 bg-white px-1 py-3 font-medium md:px-2">
+                      <td className={`sticky left-[155px] z-10 border-b border-gray-100 px-1 py-3 font-medium md:px-2 ${
+                        row.position === 1 ? "bg-amber-50/60" :
+                        row.position === 2 ? "bg-gray-50/80" :
+                        row.position === 3 ? "bg-orange-50/40" :
+                        "bg-white"
+                      }`}>
                         <div className="truncate">
                           <span title={row.name || row.email || t.playerFallback}>
                             {row.name || row.email || t.playerFallback}
@@ -480,7 +485,12 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                         {getMedal(row.position) ?? row.position}
                       </td>
 
-                      <td className="sticky left-[155px] z-10 border-b border-gray-100 bg-white px-1 py-3 font-medium md:px-2">
+                      <td className={`sticky left-[155px] z-10 border-b border-gray-100 px-1 py-3 font-medium md:px-2 ${
+                        row.position === 1 ? "bg-amber-50/60" :
+                        row.position === 2 ? "bg-gray-50/80" :
+                        row.position === 3 ? "bg-orange-50/40" :
+                        "bg-white"
+                      }`}>
                         <div className="truncate">
                           <span title={row.name || row.email || t.playerFallback}>
                             {row.name || row.email || t.playerFallback}
