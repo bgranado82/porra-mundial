@@ -800,7 +800,7 @@ export default function StatsPageClient() {
           />
           <ExtraQuestionBarCard
             icon={EXTRA_QUESTIONS.find((q) => q.key === "first_goal_scorer_spain")?.icon}
-            flagImg={EXTRA_QUESTIONS.find((q) => q.key === "first_goal_scorer_spain")?.flagImg}
+            flagImg={EXTRA_QUESTIONS.find((q) => q.key === "first_goal_scorer_spain")?.flagUrl}
             title={t.extras.first_goal_scorer_spain}
             items={extraMap.get("first_goal_scorer_spain")?.items ?? []}
             othersLabel={t.stats.others}
@@ -809,7 +809,7 @@ export default function StatsPageClient() {
           />
           <ExtraQuestionBarCard
             icon={EXTRA_QUESTIONS.find((q) => q.key === "top_spanish_scorer")?.icon}
-            flagImg={EXTRA_QUESTIONS.find((q) => q.key === "top_spanish_scorer")?.flagImg}
+            flagImg={EXTRA_QUESTIONS.find((q) => q.key === "top_spanish_scorer")?.flagUrl}
             title={t.extras.top_spanish_scorer}
             items={extraMap.get("top_spanish_scorer")?.items ?? []}
             othersLabel={t.stats.others}
