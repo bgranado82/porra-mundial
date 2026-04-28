@@ -163,11 +163,8 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-4">
-      {flagImg ? (
-        <img src={flagImg} alt="" className="h-5 w-7 rounded-[3px] border border-gray-200 object-cover shadow-sm" />
-      ) : icon ? (
-        <span className="text-xl leading-none">{icon}</span>
-      ) : null}
+      {icon ? <span className="text-xl leading-none">{icon}</span> : null}
+      {flagImg ? <img src={flagImg} alt="" className="h-5 w-7 rounded-[3px] border border-gray-200 object-cover shadow-sm" /> : null}
       <span className="text-base font-black text-[var(--iberdrola-forest)]">{title}</span>
     </div>
   );
