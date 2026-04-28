@@ -218,12 +218,6 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                   >
                     {t.standingsColAccuracy}
                   </th>
-                  <th
-                    colSpan={6}
-                    className="top-0 z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-semibold text-slate-700 md:px-2"
-                  >
-                    {t.standingsColKoPrecision}
-                  </th>
                 </tr>
 
                 <tr>
@@ -372,24 +366,6 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
 <td className="min-w-[95px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
   {row.exact_percent}%
 </td>
-<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
-  {row.ko_r32_total > 0 ? `${row.ko_r32_hits}/${row.ko_r32_total}` : "—"}
-</td>
-<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
-  {row.ko_r16_total > 0 ? `${row.ko_r16_hits}/${row.ko_r16_total}` : "—"}
-</td>
-<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
-  {row.ko_qf_total > 0 ? `${row.ko_qf_hits}/${row.ko_qf_total}` : "—"}
-</td>
-<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
-  {row.ko_sf_total > 0 ? `${row.ko_sf_hits}/${row.ko_sf_total}` : "—"}
-</td>
-<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
-  {row.ko_final_total > 0 ? `${row.ko_final_hits}/${row.ko_final_total}` : "—"}
-</td>
-<td className="border-b border-l border-gray-100 px-2 py-2 text-center text-sm text-slate-600">
-  {row.ko_champ_total > 0 ? `${row.ko_champ_hits}/${row.ko_champ_total}` : "—"}
-</td>
                     </tr>
                   );
                 })}
@@ -437,6 +413,12 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
 >
   {t.points}
 </th>
+                  <th
+                    colSpan={5}
+                    className="top-0 z-30 border-b border-l border-gray-200 bg-slate-50 px-1 py-2 text-center font-semibold text-slate-700 md:px-2"
+                  >
+                    {t.standingsColKoPrecision}
+                  </th>
                 </tr>
 
                 <tr>
@@ -486,6 +468,11 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                   <th className="top-[44px] z-30 w-[90px] border-b border-l border-gray-200 bg-[var(--iberdrola-green)] px-1 py-3 text-center font-bold whitespace-nowrap text-white md:px-2">
                     {t.standingsColTotal}
                   </th>
+                  <th className="top-[44px] z-30 min-w-[80px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap text-slate-600">R32</th>
+                  <th className="top-[44px] z-30 min-w-[80px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap text-slate-600">R16</th>
+                  <th className="top-[44px] z-30 min-w-[80px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap text-slate-600">QF</th>
+                  <th className="top-[44px] z-30 min-w-[80px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap text-slate-600">SF</th>
+                  <th className="top-[44px] z-30 min-w-[80px] border-b border-l border-gray-200 bg-slate-50 px-2 py-2 text-center font-medium whitespace-nowrap text-slate-600">{t.standingsColKoFinal}</th>
                 </tr>
               </thead>
 
@@ -587,6 +574,21 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                         className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
                       >
                         {row.total_points}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-2 py-2 text-center text-xs text-slate-500">
+                        {row.ko_r32_total > 0 ? `${row.ko_r32_hits}/${row.ko_r32_total}` : "—"}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-2 py-2 text-center text-xs text-slate-500">
+                        {row.ko_r16_total > 0 ? `${row.ko_r16_hits}/${row.ko_r16_total}` : "—"}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-2 py-2 text-center text-xs text-slate-500">
+                        {row.ko_qf_total > 0 ? `${row.ko_qf_hits}/${row.ko_qf_total}` : "—"}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-2 py-2 text-center text-xs text-slate-500">
+                        {row.ko_sf_total > 0 ? `${row.ko_sf_hits}/${row.ko_sf_total}` : "—"}
+                      </td>
+                      <td className="border-b border-l border-gray-100 px-2 py-2 text-center text-xs text-slate-500">
+                        {row.ko_final_total > 0 ? `${row.ko_final_hits}/${row.ko_final_total}` : "—"}
                       </td>
                     </tr>
                   );
