@@ -372,7 +372,7 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
               </tbody>
             </table>
           ) : (
-            <table className="min-w-[1880px] w-full table-fixed border-separate border-spacing-0 text-[11px] md:text-sm">
+            <table className="min-w-[2460px] w-max border-separate border-spacing-0 text-[11px] md:text-sm">
               <thead className="sticky top-0 z-20 bg-white shadow-sm">
                 <tr>
                   <th
