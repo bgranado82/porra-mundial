@@ -80,6 +80,7 @@ function getExtraLabels(t: Messages): Record<string, string> {
 }
 
 const LOCALE_KEY = "porra-mundial-locale";
+const SPAIN_FLAG = "https://flagcdn.com/es.svg";
 
 function getTeamsInRound(
   matches: Array<{ homeTeamId: string | null; awayTeamId: string | null }>
@@ -703,19 +704,21 @@ const score = calculateMatchPredictionScore(
       key={question.key}
       className={`rounded-2xl border p-4 ${
         isCorrect
-          ? "border-green-400 bg-green-50"
-          : "border-[var(--iberdrola-sky)] bg-white"
+          ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/60"
+          : "border-[var(--iberdrola-green-mid)] bg-white"
       }`}
     >
-      <div className="mb-2 text-sm font-bold text-[var(--iberdrola-forest)]">
-        {extraLabels[question.key] ||
-          question.label ||
-          question.title ||
-          question.text ||
-          question.key}
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-lg leading-none">{question.icon}</span>
+        {(question.key === "first_goal_scorer_spain" || question.key === "top_spanish_scorer") && (
+          <img src={SPAIN_FLAG} alt="España" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover shadow-sm" />
+        )}
+        <span className="text-sm font-bold text-[var(--iberdrola-forest)]">
+          {t.extras[question.key as keyof typeof t.extras] || question.key}
+        </span>
       </div>
 
-      <div className="rounded-xl border border-[var(--iberdrola-green)]/30 bg-[var(--iberdrola-sand)]/20 px-3 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
+      <div className="rounded-xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)]/30 px-3 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
         {answer}
       </div>
 

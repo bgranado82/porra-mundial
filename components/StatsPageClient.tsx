@@ -18,6 +18,7 @@ import {
 import { teams } from "@/data/teams";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Locale, messages } from "@/lib/i18n";
+import { createClient } from "@/utils/supabase/client";
 
 type StatsResponse = {
   summary: {
@@ -540,6 +541,7 @@ export default function StatsPageClient() {
 
   const [locale, setLocale] = useState<Locale>("es");
   const t = messages[locale];
+  const [banquilloUnread, setBanquilloUnread] = useState(0);
   const [data, setData] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -554,6 +556,29 @@ export default function StatsPageClient() {
   useEffect(() => {
     localStorage.setItem(LOCALE_KEY, locale);
   }, [locale]);
+
+  useEffect(() => {
+    if (!poolId) return;
+    async function loadBanquilloUnread() {
+      try {
+        const res = await fetch(`/api/banquillo?poolId=${poolId}`, { cache: "no-store" });
+        const data = await res.json();
+        const total = (data?.comments ?? []).length;
+        const lastSeen = parseInt(localStorage.getItem(`banquillo-seen-${poolId}`) ?? "0", 10);
+        setBanquilloUnread(Math.max(0, total - lastSeen));
+      } catch { /* silent */ }
+    }
+    loadBanquilloUnread();
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`stats-banquillo-${poolId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "pool_comments", filter: `pool_id=eq.${poolId}` },
+        () => setBanquilloUnread((prev) => prev + 1)
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [poolId]);
 
   useEffect(() => {
     async function load() {
@@ -671,9 +696,24 @@ export default function StatsPageClient() {
                 </Link>
                 <Link
                   href={poolId ? `/banquillo?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : "/banquillo"}
-                  className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+                  onClick={() => {
+                    if (poolId) {
+                      fetch(`/api/banquillo?poolId=${poolId}`, { cache: "no-store" })
+                        .then(r => r.json())
+                        .then(d => {
+                          localStorage.setItem(`banquillo-seen-${poolId}`, String((d?.comments ?? []).length));
+                          setBanquilloUnread(0);
+                        }).catch(() => {});
+                    }
+                  }}
+                  className="relative inline-flex items-center justify-center rounded-2xl bg-[var(--iberdrola-green)] px-3 py-2 text-xs font-black text-white shadow-sm transition hover:brightness-110"
                 >
                   {t.banquillo.title}
+                  {banquilloUnread > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white shadow-sm">
+                      {banquilloUnread}
+                    </span>
+                  )}
                 </Link>
                 <Link
                   href={backHref}

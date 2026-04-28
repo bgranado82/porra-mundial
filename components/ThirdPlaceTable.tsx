@@ -52,7 +52,7 @@ export default function ThirdPlaceTable({
       <div className="p-4">
         <div className="hidden overflow-x-auto rounded-2xl border border-[var(--iberdrola-sky)] lg:block">
           <table className="min-w-full text-sm">
-            <thead className="bg-[var(--iberdrola-sand)] text-[var(--iberdrola-forest)]">
+            <thead className="bg-[var(--iberdrola-green-light)]/60 text-[var(--iberdrola-forest)]">
               <tr>
                 <th className="px-3 py-2 text-left font-black">{labels.position}</th>
                 <th className="px-3 py-2 text-left font-black">{labels.group}</th>
