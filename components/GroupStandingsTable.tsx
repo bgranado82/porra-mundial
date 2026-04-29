@@ -74,17 +74,15 @@ export default function GroupStandingsTable({
                 <th className="px-2 py-2 text-center font-black">
                   {labels.pointsShort}
                 </th>
-                {showTiebreak ? (
-                  <th className="px-2 py-2 text-center font-black">
-                    {labels.tiebreak}
-                  </th>
-                ) : null}
+                <th className="px-2 py-2 text-center font-black text-[var(--iberdrola-forest)]/40">
+                  {labels.tiebreak}
+                </th>
               </tr>
             </thead>
 
             <tbody>
               {rows.map((row, index) => {
-                const isTied = tiedTeamIds?.has(row.teamId) ?? false;
+                const isTied = showTiebreak && (tiedTeamIds?.has(row.teamId) ?? false);
                 const tbKey =
                   showTiebreak && groupCode
                     ? getTiebreakKey(groupCode, row.teamId)
@@ -127,29 +125,27 @@ export default function GroupStandingsTable({
                       {row.points}
                     </td>
 
-                    {showTiebreak ? (
-                      <td className="px-2 py-2 text-center">
-                        {isTied ? (
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={tbValue}
-                            onChange={(e) => {
-                              if (!groupCode) return;
-                              onChangeTiebreak?.(
-                                groupCode,
-                                row.teamId,
-                                e.target.value
-                              );
-                            }}
-                            className="w-14 rounded-lg border border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/5 px-2 py-1 text-center text-sm font-bold text-[var(--iberdrola-forest)] outline-none focus:border-[var(--iberdrola-sunset)] focus:ring-1 focus:ring-[var(--iberdrola-sunset)]"
-                          />
-                        ) : (
-                          <span className="text-gray-300">—</span>
-                        )}
-                      </td>
-                    ) : null}
+                    <td className="px-2 py-2 text-center">
+                      {isTied ? (
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={tbValue}
+                          onChange={(e) => {
+                            if (!groupCode) return;
+                            onChangeTiebreak?.(
+                              groupCode,
+                              row.teamId,
+                              e.target.value
+                            );
+                          }}
+                          className="w-14 rounded-lg border border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/5 px-2 py-1 text-center text-sm font-bold text-[var(--iberdrola-forest)] outline-none focus:border-[var(--iberdrola-sunset)] focus:ring-1 focus:ring-[var(--iberdrola-sunset)]"
+                        />
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -171,13 +167,12 @@ export default function GroupStandingsTable({
                 <th className="px-1.5 py-1.5 text-center font-bold">{labels.goalsAgainst}</th>
                 <th className="px-1.5 py-1.5 text-center font-bold text-[var(--iberdrola-green)]">{labels.pointsShort}</th>
                 {showTiebreak ? (
-                  <th className="px-1.5 py-1.5 text-center font-bold">{labels.tiebreak}</th>
-                ) : null}
+                <th className="px-1.5 py-1.5 text-center font-bold text-[var(--iberdrola-forest)]/40">{labels.tiebreak}</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row, index) => {
-                const isTied = tiedTeamIds?.has(row.teamId) ?? false;
+                const isTied = showTiebreak && (tiedTeamIds?.has(row.teamId) ?? false);
                 const tbKey = showTiebreak && groupCode ? getTiebreakKey(groupCode, row.teamId) : "";
                 const tbValue = showTiebreak && tbKey ? tiebreaks?.[tbKey] ?? "" : "";
                 return (
@@ -204,19 +199,18 @@ export default function GroupStandingsTable({
                     <td className="px-1.5 py-2 text-center text-[var(--iberdrola-forest)]/70">{row.goalsFor}</td>
                     <td className="px-1.5 py-2 text-center text-[var(--iberdrola-forest)]/70">{row.goalsAgainst}</td>
                     <td className="px-1.5 py-2 text-center font-black text-[var(--iberdrola-green)]">{row.points}</td>
-                    {showTiebreak ? (
-                      <td className="px-1.5 py-2 text-center">
-                        {isTied ? (
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            value={tbValue}
-                            onChange={(e) => {
-                              if (!groupCode) return;
-                              onChangeTiebreak?.(groupCode, row.teamId, e.target.value);
-                            }}
-                            className="w-10 rounded-lg border border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/5 px-1 py-0.5 text-center text-xs font-bold text-[var(--iberdrola-forest)] outline-none"
+                    <td className="px-1.5 py-2 text-center">
+                      {isTied ? (
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          value={tbValue}
+                          onChange={(e) => {
+                            if (!groupCode) return;
+                            onChangeTiebreak?.(groupCode, row.teamId, e.target.value);
+                          }}
+                          className="w-10 rounded-lg border border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/5 px-1 py-0.5 text-center text-xs font-bold text-[var(--iberdrola-forest)] outline-none"
                           />
                         ) : <span className="text-gray-300">—</span>}
                       </td>
