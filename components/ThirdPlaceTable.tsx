@@ -6,6 +6,7 @@ type Props = {
   rows: ThirdPlaceRow[];
   tiebreaks?: Record<string, number>;
   onChangeTiebreak?: (teamId: string, value: string) => void;
+  showTiebreak?: boolean;
   tiedTeamIds?: Set<string>;
   labels: {
     position: string;
@@ -36,6 +37,7 @@ export default function ThirdPlaceTable({
   rows,
   tiebreaks,
   onChangeTiebreak,
+  showTiebreak = false,
   tiedTeamIds,
   labels,
 }: Props) {
@@ -75,7 +77,7 @@ export default function ThirdPlaceTable({
 
             <tbody>
               {rows.map((row, index) => {
-                const isTied = tiedTeamIds?.has(row.teamId) ?? false;
+                const isTied = showTiebreak && (tiedTeamIds?.has(row.teamId) ?? false);
                 const tbKey = getTiebreakKey(row.teamId);
                 const tbValue = tiebreaks?.[tbKey] ?? "";
 
@@ -162,7 +164,7 @@ export default function ThirdPlaceTable({
             </thead>
             <tbody>
               {rows.map((row, index) => {
-                const isTied = tiedTeamIds?.has(row.teamId) ?? false;
+                const isTied = showTiebreak && (tiedTeamIds?.has(row.teamId) ?? false);
                 const tbKey = getTiebreakKey(row.teamId);
                 const tbValue = tiebreaks?.[tbKey] ?? "";
                 return (
