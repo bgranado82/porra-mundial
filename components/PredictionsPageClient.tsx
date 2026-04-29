@@ -146,7 +146,7 @@ function HeaderPill({
 
 
 function CountdownBanner({ label }: { label: string }) {
-  const TARGET = new Date("2026-06-11T15:00:00Z"); // 11 June 2026, 17:00 Madrid time (UTC+2)
+  const TARGET = new Date("2026-06-11T15:00:00Z");
 
   const [time, setTime] = useState(() => {
     const diff = TARGET.getTime() - Date.now();
@@ -176,34 +176,32 @@ function CountdownBanner({ label }: { label: string }) {
   if (!time) return null;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] px-5 py-4 shadow-lg mb-3">
-      {/* glow */}
-      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[var(--iberdrola-green)] opacity-15 blur-3xl pointer-events-none" />
-      <div className="absolute -left-8 -bottom-8 h-24 w-24 rounded-full bg-[var(--iberdrola-sky)] opacity-10 blur-3xl pointer-events-none" />
-      {/* label */}
-      <div className="relative text-center text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 mb-3">
-        {label}
-      </div>
-      {/* counters */}
-      <div className="relative grid grid-cols-4 gap-2 text-center">
-        {[
-          { v: time.days,    u: "D" },
-          { v: time.hours,   u: "H" },
-          { v: time.minutes, u: "M" },
-          { v: time.seconds, u: "S" },
-        ].map(({ v, u }) => (
-          <div key={u} className="flex flex-col items-center gap-1">
-            <div className="rounded-2xl bg-white/8 px-2 py-1.5 min-w-[48px]">
-              <span className="text-3xl font-black tracking-tight text-white leading-none tabular-nums">
-                {String(v).padStart(2, "0")}
-              </span>
+    <div className="relative overflow-hidden rounded-2xl bg-[var(--iberdrola-forest)] px-3 py-2.5 shadow-sm">
+      <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-[var(--iberdrola-green)] opacity-20 blur-2xl pointer-events-none" />
+      <div className="relative flex items-center justify-between gap-1">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 shrink-0">
+          {label}
+        </span>
+        <div className="flex items-center gap-1.5">
+          {[
+            { v: time.days,    u: "D" },
+            { v: time.hours,   u: "H" },
+            { v: time.minutes, u: "M" },
+            { v: time.seconds, u: "S" },
+          ].map(({ v, u }, i) => (
+            <div key={u} className="flex items-center gap-1.5">
+              {i > 0 && <span className="text-[10px] font-bold text-white/20">:</span>}
+              <div className="flex flex-col items-center">
+                <span className="text-base font-black tabular-nums leading-none text-white">
+                  {String(v).padStart(2, "0")}
+                </span>
+                <span className="text-[8px] font-bold text-white/30 tracking-widest">{u}</span>
+              </div>
             </div>
-            <span className="text-[10px] font-bold text-white/35 tracking-widest">{u}</span>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-      {/* bottom gradient line */}
-      <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-[var(--iberdrola-green)] via-[var(--iberdrola-sky)] to-[var(--iberdrola-green)]" />
+      <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-[var(--iberdrola-green)] to-[var(--iberdrola-sky)]" />
     </div>
   );
 }
@@ -1307,19 +1305,21 @@ const invalidKnockoutPicks = useMemo(() => {
               </div>
             </div>
 
-            <CountdownBanner label={t.countdownLabel} />
-            <div className="mt-2 grid gap-3 lg:grid-cols-[1.3fr_0.8fr_auto]">
+            <div className="mt-5 grid gap-3 lg:grid-cols-[1.3fr_0.8fr_auto]">
               <HeaderPill
                 label={t.totalPoints}
                 value={canSeeClassification ? totalPoints : "-"}
                 big
               />
-              <ClassificationHeaderCard
+              <div className="flex flex-col gap-2">
+                <CountdownBanner label={t.countdownLabel} />
+                <ClassificationHeaderCard
   currentUserStanding={canSeeClassification ? currentUserStanding : null}
   title={t.classificationCardTitle}
   movementLabel={t.classificationMovementLabel}
   pendingLabel={t.classificationPending}
 />
+              </div>
 
               <div className="flex flex-col gap-2">
                 <button
