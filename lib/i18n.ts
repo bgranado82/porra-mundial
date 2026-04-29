@@ -207,6 +207,7 @@ transparencyKnockoutSubtitle: string;
 classificationCardTitle: string;
 classificationMovementLabel: string;
 classificationPending: string;
+  countdownLabel: string;
 matchLabel: string;
 undefinedLabel: string;
 invalidLabel: string;
@@ -502,6 +503,7 @@ transparencyKnockoutSubtitle: "Predicción enviada por este participante",
 classificationCardTitle: "Clasificación",
 classificationMovementLabel: "Variación respecto a la última clasificación",
 classificationPending: "Pendiente de inicio",
+  countdownLabel: "Faltan para el Mundial 2026",
 matchLabel: "Partido",
 undefinedLabel: "Por definir",
 invalidLabel: "Inválido",
@@ -789,6 +791,7 @@ transparencyKnockoutSubtitle: "Prediction submitted by this participant",
 classificationCardTitle: "Standings",
 classificationMovementLabel: "Change compared to the latest standings",
 classificationPending: "Pending start",
+  countdownLabel: "Time to World Cup 2026",
 matchLabel: "Match",
 undefinedLabel: "To be decided",
 invalidLabel: "Invalid",
@@ -1075,6 +1078,7 @@ transparencyKnockoutSubtitle: "Palpite enviado por este participante",
 classificationCardTitle: "Classificação",
 classificationMovementLabel: "Variação em relação à última classificação",
 classificationPending: "Aguardando início",
+  countdownLabel: "Falta para o Mundial 2026",
 matchLabel: "Partida",
 undefinedLabel: "Por definir",
 invalidLabel: "Inválido",

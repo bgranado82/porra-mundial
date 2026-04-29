@@ -144,6 +144,70 @@ function HeaderPill({
   );
 }
 
+
+function CountdownBanner({ label }: { label: string }) {
+  const TARGET = new Date("2026-06-11T15:00:00Z"); // 11 June 2026, 17:00 Madrid time (UTC+2)
+
+  const [time, setTime] = useState(() => {
+    const diff = TARGET.getTime() - Date.now();
+    if (diff <= 0) return null;
+    return {
+      days:    Math.floor(diff / 86400000),
+      hours:   Math.floor((diff % 86400000) / 3600000),
+      minutes: Math.floor((diff % 3600000) / 60000),
+      seconds: Math.floor((diff % 60000) / 1000),
+    };
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const diff = TARGET.getTime() - Date.now();
+      if (diff <= 0) { setTime(null); clearInterval(timer); return; }
+      setTime({
+        days:    Math.floor(diff / 86400000),
+        hours:   Math.floor((diff % 86400000) / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+        seconds: Math.floor((diff % 60000) / 1000),
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!time) return null;
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] px-5 py-4 shadow-lg mb-3">
+      {/* glow */}
+      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[var(--iberdrola-green)] opacity-15 blur-3xl pointer-events-none" />
+      <div className="absolute -left-8 -bottom-8 h-24 w-24 rounded-full bg-[var(--iberdrola-sky)] opacity-10 blur-3xl pointer-events-none" />
+      {/* label */}
+      <div className="relative text-center text-[10px] font-bold uppercase tracking-[0.15em] text-white/40 mb-3">
+        {label}
+      </div>
+      {/* counters */}
+      <div className="relative grid grid-cols-4 gap-2 text-center">
+        {[
+          { v: time.days,    u: "D" },
+          { v: time.hours,   u: "H" },
+          { v: time.minutes, u: "M" },
+          { v: time.seconds, u: "S" },
+        ].map(({ v, u }) => (
+          <div key={u} className="flex flex-col items-center gap-1">
+            <div className="rounded-2xl bg-white/8 px-2 py-1.5 min-w-[48px]">
+              <span className="text-3xl font-black tracking-tight text-white leading-none tabular-nums">
+                {String(v).padStart(2, "0")}
+              </span>
+            </div>
+            <span className="text-[10px] font-bold text-white/35 tracking-widest">{u}</span>
+          </div>
+        ))}
+      </div>
+      {/* bottom gradient line */}
+      <div className="absolute bottom-0 left-0 h-0.5 w-full bg-gradient-to-r from-[var(--iberdrola-green)] via-[var(--iberdrola-sky)] to-[var(--iberdrola-green)]" />
+    </div>
+  );
+}
+
 function RulePill({
   label,
   value,
@@ -1243,7 +1307,8 @@ const invalidKnockoutPicks = useMemo(() => {
               </div>
             </div>
 
-            <div className="mt-5 grid gap-3 lg:grid-cols-[1.3fr_0.8fr_auto]">
+            <CountdownBanner label={t.countdownLabel} />
+            <div className="mt-2 grid gap-3 lg:grid-cols-[1.3fr_0.8fr_auto]">
               <HeaderPill
                 label={t.totalPoints}
                 value={canSeeClassification ? totalPoints : "-"}
