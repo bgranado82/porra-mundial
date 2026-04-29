@@ -145,11 +145,9 @@ function HeaderPill({
 }
 
 
-function CountdownBanner({ label }: { label: string }) {
-  const TARGET = new Date("2026-06-11T15:00:00Z");
-
-  const [time, setTime] = useState(() => {
-    const diff = TARGET.getTime() - Date.now();
+function useCountdown(target: Date) {
+  const calc = () => {
+    const diff = target.getTime() - Date.now();
     if (diff <= 0) return null;
     return {
       days:    Math.floor(diff / 86400000),
@@ -157,27 +155,27 @@ function CountdownBanner({ label }: { label: string }) {
       minutes: Math.floor((diff % 3600000) / 60000),
       seconds: Math.floor((diff % 60000) / 1000),
     };
-  });
-
+  };
+  const [time, setTime] = useState(calc);
   useEffect(() => {
-    const timer = setInterval(() => {
-      const diff = TARGET.getTime() - Date.now();
-      if (diff <= 0) { setTime(null); clearInterval(timer); return; }
-      setTime({
-        days:    Math.floor(diff / 86400000),
-        hours:   Math.floor((diff % 86400000) / 3600000),
-        minutes: Math.floor((diff % 3600000) / 60000),
-        seconds: Math.floor((diff % 60000) / 1000),
-      });
-    }, 1000);
+    const timer = setInterval(() => setTime(calc()), 1000);
     return () => clearInterval(timer);
   }, []);
+  return time;
+}
 
+function CountdownBlock({ target, label, accent }: { target: Date; label: string; accent?: boolean }) {
+  const time = useCountdown(target);
   if (!time) return null;
-
   return (
-    <div className="rounded-2xl bg-[var(--iberdrola-green)]/10 px-4 py-3 border border-[var(--iberdrola-green)]/20">
-      <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/40 mb-2 text-center">
+    <div className={`rounded-2xl px-4 py-3 border ${
+      accent
+        ? "bg-amber-50 border-amber-200"
+        : "bg-[var(--iberdrola-green)]/10 border-[var(--iberdrola-green)]/20"
+    }`}>
+      <div className={`text-[10px] font-bold uppercase tracking-widest mb-2 text-center ${
+        accent ? "text-amber-500" : "text-[var(--iberdrola-forest)]/40"
+      }`}>
         {label}
       </div>
       <div className="grid grid-cols-4 gap-1 text-center">
@@ -188,13 +186,35 @@ function CountdownBanner({ label }: { label: string }) {
           { v: time.seconds, u: "S" },
         ].map(({ v, u }) => (
           <div key={u} className="flex flex-col items-center gap-0.5">
-            <span className="text-xl font-black tabular-nums leading-none text-[var(--iberdrola-green)]">
+            <span className={`text-xl font-black tabular-nums leading-none ${
+              accent ? "text-amber-500" : "text-[var(--iberdrola-green)]"
+            }`}>
               {String(v).padStart(2, "0")}
             </span>
-            <span className="text-[9px] font-bold text-[var(--iberdrola-forest)]/35 tracking-widest">{u}</span>
+            <span className={`text-[9px] font-bold tracking-widest ${
+              accent ? "text-amber-400" : "text-[var(--iberdrola-forest)]/35"
+            }`}>{u}</span>
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function CountdownBanner({ label }: { label: string }) {
+  const DEADLINE = new Date("2026-06-10T16:00:00Z"); // 10 Jun 18:00 Spain (UTC+2)
+  const KICKOFF  = new Date("2026-06-11T19:00:00Z"); // 11 Jun 21:00 Spain (UTC+2)
+  const deadlineTime = useCountdown(DEADLINE);
+  const kickoffTime  = useCountdown(KICKOFF);
+  if (!deadlineTime && !kickoffTime) return null;
+  return (
+    <div className="flex flex-col gap-1.5">
+      {deadlineTime && (
+        <CountdownBlock target={DEADLINE} label={label.split("|")[0] ?? label} accent />
+      )}
+      {kickoffTime && (
+        <CountdownBlock target={KICKOFF} label={label.split("|")[1] ?? "⚽ Mundial"} />
+      )}
     </div>
   );
 }
