@@ -166,7 +166,6 @@ export default function GroupStandingsTable({
                 <th className="px-1.5 py-1.5 text-center font-bold">{labels.goalsFor}</th>
                 <th className="px-1.5 py-1.5 text-center font-bold">{labels.goalsAgainst}</th>
                 <th className="px-1.5 py-1.5 text-center font-bold text-[var(--iberdrola-green)]">{labels.pointsShort}</th>
-                {showTiebreak ? (
                 <th className="px-1.5 py-1.5 text-center font-bold text-[var(--iberdrola-forest)]/40">{labels.tiebreak}</th>
               </tr>
             </thead>
@@ -211,10 +210,11 @@ export default function GroupStandingsTable({
                             onChangeTiebreak?.(groupCode, row.teamId, e.target.value);
                           }}
                           className="w-10 rounded-lg border border-[var(--iberdrola-sunset)] bg-[var(--iberdrola-sunset)]/5 px-1 py-0.5 text-center text-xs font-bold text-[var(--iberdrola-forest)] outline-none"
-                          />
-                        ) : <span className="text-gray-300">—</span>}
-                      </td>
-                    ) : null}
+                        />
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
