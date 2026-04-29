@@ -1790,7 +1790,7 @@ const invalidKnockoutPicks = useMemo(() => {
                     rows={rows}
                     tiebreaks={userTiebreaks}
                     onChangeTiebreak={updateGroupTiebreak}
-                    showTiebreak
+                    showTiebreak={rows.every(r => r.played === 3) && (tiedTeamIdsByGroup[groupCode]?.size ?? 0) > 0}
                     tiedTeamIds={tiedTeamIdsByGroup[groupCode]}
                     labels={{
                       team: t.team,
@@ -1817,6 +1817,7 @@ const invalidKnockoutPicks = useMemo(() => {
           rows={predictedThirdPlaced}
           tiebreaks={userTiebreaks}
           onChangeTiebreak={updateThirdPlaceTiebreak}
+          showTiebreak={standingsByGroup.every(({ rows }) => rows.every(r => r.played === 3)) && (tiedThirdPlaceTeamIds?.size ?? 0) > 0}
           tiedTeamIds={tiedThirdPlaceTeamIds}
           labels={{
             position: t.position,
