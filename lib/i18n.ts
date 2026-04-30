@@ -208,6 +208,7 @@ classificationCardTitle: string;
 classificationMovementLabel: string;
 classificationPending: string;
   countdownLabel: string;
+  guideLink: string;
 matchLabel: string;
 undefinedLabel: string;
 invalidLabel: string;
@@ -504,6 +505,7 @@ classificationCardTitle: "Clasificación",
 classificationMovementLabel: "Variación respecto a la última clasificación",
 classificationPending: "Pendiente de inicio",
   countdownLabel: "🔒 Cierre porra|⚽ Inicio del Mundial",
+  guideLink: "📖 Guia del jugador",
 matchLabel: "Partido",
 undefinedLabel: "Por definir",
 invalidLabel: "Inválido",
@@ -792,6 +794,7 @@ classificationCardTitle: "Standings",
 classificationMovementLabel: "Change compared to the latest standings",
 classificationPending: "Pending start",
   countdownLabel: "🔒 Entry deadline|⚽ World Cup kickoff",
+  guideLink: "📖 Player guide",
 matchLabel: "Match",
 undefinedLabel: "To be decided",
 invalidLabel: "Invalid",
@@ -1079,6 +1082,7 @@ classificationCardTitle: "Classificação",
 classificationMovementLabel: "Variação em relação à última classificação",
 classificationPending: "Aguardando início",
   countdownLabel: "🔒 Fecho palpite|⚽ Início do Mundial",
+  guideLink: "📖 Guia do jogador",
 matchLabel: "Partida",
 undefinedLabel: "Por definir",
 invalidLabel: "Inválido",

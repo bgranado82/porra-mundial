@@ -193,6 +193,14 @@ export default function Home() {
             </h1>
 
             <p className="mt-2 text-sm text-[var(--iberdrola-forest)]/60">{t.authWelcome}</p>
+            <a
+              href="/guia.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-[var(--iberdrola-green-light)] border border-[var(--iberdrola-green-mid)] px-4 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:bg-[var(--iberdrola-green-mid)]"
+            >
+              📖 {t.guideLink}
+            </a>
           </div>
 
           <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl bg-[var(--iberdrola-green-light)] p-1">

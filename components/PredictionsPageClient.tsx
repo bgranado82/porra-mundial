@@ -1341,6 +1341,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
                   onChange={setLocale}
                   label={t.language}
                 />
+
               </div>
             </div>
 
