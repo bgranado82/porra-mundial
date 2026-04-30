@@ -681,10 +681,6 @@ export default function PredictionsPageClient({ entryId }: Props) {
     !!poolSettings?.is_predictions_editable &&
     !isDeadlinePassed;
 
-  const canSubmitPredictions =
-    entryStatus !== "submitted" &&
-    !!poolSettings?.is_submission_enabled &&
-    !isDeadlinePassed;
 
   const canSeeClassification =
     poolSettings?.classification_visibility === "always" ||
@@ -942,7 +938,38 @@ const validTeamsByMatch = useMemo(() => {
   return map;
 }, [userBracket]);
 
-const invalidKnockoutPicks = useMemo(() => {
+  const isPredictionComplete = useMemo(() => {
+    const allGroupsFilled = orderedGroupMatches.every((match) => {
+      const prediction = predictions[match.id];
+      return (
+        prediction &&
+        prediction.homeGoals !== null &&
+        prediction.awayGoals !== null
+      );
+    });
+
+    const allKnockoutFilled =
+      userBracket.round32.every((m) => knockoutPredictions[m.id]) &&
+      userBracket.round16.every((m) => knockoutPredictions[m.id]) &&
+      userBracket.quarterfinals.every((m) => knockoutPredictions[m.id]) &&
+      userBracket.semifinals.every((m) => knockoutPredictions[m.id]) &&
+      userBracket.finals.every((m) => knockoutPredictions[m.id]) &&
+      !!userBracket.championId;
+
+    const allExtrasFilled = EXTRA_QUESTIONS.every((question) => {
+      return (extraPredictions[question.key] ?? "").trim() !== "";
+    });
+
+    return allGroupsFilled && allKnockoutFilled && allExtrasFilled;
+  }, [orderedGroupMatches, predictions, userBracket, knockoutPredictions, extraPredictions]);
+
+  const canSubmitPredictions =
+    entryStatus !== "submitted" &&
+    !!poolSettings?.is_submission_enabled &&
+    !isDeadlinePassed &&
+    isPredictionComplete;
+
+  const invalidKnockoutPicks = useMemo(() => {
   const result: Record<string, boolean> = {};
 
   Object.entries(knockoutPredictions).forEach(([matchId, pickedTeamId]) => {
@@ -1142,30 +1169,7 @@ const invalidKnockoutPicks = useMemo(() => {
     }
   }
 
-  function isPredictionComplete() {
-    const allGroupsFilled = orderedGroupMatches.every((match) => {
-      const prediction = predictions[match.id];
-      return (
-        prediction &&
-        prediction.homeGoals !== null &&
-        prediction.awayGoals !== null
-      );
-    });
 
-    const allKnockoutFilled =
-      userBracket.round32.every((m) => knockoutPredictions[m.id]) &&
-      userBracket.round16.every((m) => knockoutPredictions[m.id]) &&
-      userBracket.quarterfinals.every((m) => knockoutPredictions[m.id]) &&
-      userBracket.semifinals.every((m) => knockoutPredictions[m.id]) &&
-      userBracket.finals.every((m) => knockoutPredictions[m.id]) &&
-      !!userBracket.championId;
-
-    const allExtrasFilled = EXTRA_QUESTIONS.every((question) => {
-      return (extraPredictions[question.key] ?? "").trim() !== "";
-    });
-
-    return allGroupsFilled && allKnockoutFilled && allExtrasFilled;
-  }
 
   async function handleSubmitEntry() {
     if (!activeEntryId) {
@@ -1173,7 +1177,7 @@ const invalidKnockoutPicks = useMemo(() => {
       return;
     }
 
-    if (!isPredictionComplete()) {
+    if (!isPredictionComplete) {
       setSubmitMessage(t.predictionIncomplete);
       return;
     }
