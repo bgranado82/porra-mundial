@@ -916,27 +916,27 @@ export default function PredictionsPageClient({ entryId }: Props) {
     ]
   );
 
-const validTeamsByMatch = useMemo(() => {
-  const map: Record<string, Set<string>> = {};
+  const validTeamsByMatch = useMemo(() => {
+    const map: Record<string, Set<string>> = {};
 
-  const allMatches = [
-    ...userBracket.round32,
-    ...userBracket.round16,
-    ...userBracket.quarterfinals,
-    ...userBracket.semifinals,
-    ...userBracket.finals,
-  ];
+    const allMatches = [
+      ...userBracket.round32,
+      ...userBracket.round16,
+      ...userBracket.quarterfinals,
+      ...userBracket.semifinals,
+      ...userBracket.finals,
+    ];
 
-  allMatches.forEach((match) => {
-    const teams = [match.homeTeamId, match.awayTeamId].filter(
-      (teamId): teamId is string => !!teamId
-    );
+    allMatches.forEach((match) => {
+      const teams = [match.homeTeamId, match.awayTeamId].filter(
+        (teamId): teamId is string => !!teamId
+      );
 
-    map[match.id] = new Set(teams);
-  });
+      map[match.id] = new Set(teams);
+    });
 
-  return map;
-}, [userBracket]);
+    return map;
+  }, [userBracket]);
 
   const isPredictionComplete = useMemo(() => {
     const allGroupsFilled = orderedGroupMatches.every((match) => {
@@ -948,12 +948,34 @@ const validTeamsByMatch = useMemo(() => {
       );
     });
 
+    // A pick is valid only if it exists AND is a valid team for that match
+    // This catches the case where TB changes and bracket invalidates previous picks
     const allKnockoutFilled =
-      userBracket.round32.every((m) => knockoutPredictions[m.id]) &&
-      userBracket.round16.every((m) => knockoutPredictions[m.id]) &&
-      userBracket.quarterfinals.every((m) => knockoutPredictions[m.id]) &&
-      userBracket.semifinals.every((m) => knockoutPredictions[m.id]) &&
-      userBracket.finals.every((m) => knockoutPredictions[m.id]) &&
+      userBracket.round32.every((m) => {
+        const pick = knockoutPredictions[m.id];
+        const valid = validTeamsByMatch[m.id];
+        return pick && valid && valid.has(pick);
+      }) &&
+      userBracket.round16.every((m) => {
+        const pick = knockoutPredictions[m.id];
+        const valid = validTeamsByMatch[m.id];
+        return pick && valid && valid.has(pick);
+      }) &&
+      userBracket.quarterfinals.every((m) => {
+        const pick = knockoutPredictions[m.id];
+        const valid = validTeamsByMatch[m.id];
+        return pick && valid && valid.has(pick);
+      }) &&
+      userBracket.semifinals.every((m) => {
+        const pick = knockoutPredictions[m.id];
+        const valid = validTeamsByMatch[m.id];
+        return pick && valid && valid.has(pick);
+      }) &&
+      userBracket.finals.every((m) => {
+        const pick = knockoutPredictions[m.id];
+        const valid = validTeamsByMatch[m.id];
+        return pick && valid && valid.has(pick);
+      }) &&
       !!userBracket.championId;
 
     const allExtrasFilled = EXTRA_QUESTIONS.every((question) => {
@@ -961,7 +983,7 @@ const validTeamsByMatch = useMemo(() => {
     });
 
     return allGroupsFilled && allKnockoutFilled && allExtrasFilled;
-  }, [orderedGroupMatches, predictions, userBracket, knockoutPredictions, extraPredictions]);
+  }, [orderedGroupMatches, predictions, userBracket, knockoutPredictions, extraPredictions, validTeamsByMatch]);
 
   const canSubmitPredictions =
     entryStatus !== "submitted" &&
