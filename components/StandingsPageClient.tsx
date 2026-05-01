@@ -22,7 +22,7 @@ type Quote = { es: string; en: string; pt: string } | null;
 
 export default function StandingsPageClient({ poolId, backHref }: Props) {
   const [locale, setLocale] = useState<Locale>("es");
-  const [data, setData] = useState<{ days: number[]; standings: unknown[] } | null>(null);
+  const [data, setData] = useState<{ days: number[]; standings: unknown[]; lastUpdate: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [quote, setQuote] = useState<Quote>(null);
@@ -96,18 +96,32 @@ export default function StandingsPageClient({ poolId, backHref }: Props) {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <LanguageSwitcher
-                locale={locale}
-                onChange={setLocale}
-                label={t.language}
-              />
-              <Link
-                href={backHref}
-                className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-green-light)]"
-              >
-                {t.standingsBackToPool}
-              </Link>
+            <div className="flex flex-col items-end gap-2">
+              {data?.lastUpdate ? (
+                <div className="text-right text-xs text-[var(--iberdrola-forest)]/50">
+                  <span className="font-semibold">Actualizado:</span>{" "}
+                  {new Intl.DateTimeFormat("es-ES", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: "Europe/Madrid",
+                  }).format(new Date(data.lastUpdate))}
+                </div>
+              ) : null}
+              <div className="flex items-center gap-3">
+                <LanguageSwitcher
+                  locale={locale}
+                  onChange={setLocale}
+                  label={t.language}
+                />
+                <Link
+                  href={backHref}
+                  className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-green-light)]"
+                >
+                  {t.standingsBackToPool}
+                </Link>
+              </div>
             </div>
           </div>
         </section>
