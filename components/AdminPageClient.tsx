@@ -177,9 +177,6 @@ export default function AdminPageClient() {
   const [selectedPoolId, setSelectedPoolId] = useState("");
   const [selectedPoolSlug, setSelectedPoolSlug] = useState("");
 
-    admin_note: "",
-  });
-
   const [groupResults, setGroupResults] = useState<GroupResultMap>({});
 
   const [knockoutResults, setKnockoutResults] =
