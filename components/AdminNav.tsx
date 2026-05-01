@@ -1,40 +1,55 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const items = [
-  { href: "/admin", label: "Inicio admin" },
-  { href: "/admin/results", label: "Resultados" },
-  { href: "/admin/participants", label: "Participantes y pagos" },
-  { href: "/admin/settings", label: "Configuración" },
+  {
+    href: "/admin/results",
+    label: "Resultados",
+    icon: "⚽",
+    description: "Marcadores y knockout",
+    aliases: ["/admin", "/admin/results"],
+  },
+  {
+    href: "/admin/participants",
+    label: "Participantes",
+    icon: "👥",
+    description: "Pagos y porras",
+    aliases: ["/admin/participants"],
+  },
+  {
+    href: "/admin/settings",
+    label: "Configuración",
+    icon: "⚙️",
+    description: "Pools y visibilidad",
+    aliases: ["/admin/settings", "/admin/pools"],
+  },
 ];
 
 export default function AdminNav() {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <nav className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
       {items.map((item) => {
-        const active =
-          pathname === item.href ||
-          (item.href === "/admin/results" && pathname === "/admin");
+        const active = item.aliases.includes(pathname);
 
         return (
           <Link
             key={item.href}
             href={item.href}
-            className={`inline-flex items-center justify-center rounded-2xl px-4 py-3 text-sm font-bold shadow-sm transition ${
+            className={`group flex min-w-0 shrink-0 items-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-bold shadow-sm transition-all sm:gap-3 sm:px-5 sm:py-3 ${
               active
-                ? "border border-[var(--iberdrola-green)] bg-[var(--iberdrola-green)] text-white"
-                : "border border-[var(--iberdrola-green)] bg-white text-[var(--iberdrola-forest)] hover:bg-[var(--iberdrola-sand)]"
+                ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green)] text-white"
+                : "border-[var(--iberdrola-green-mid)] bg-white text-[var(--iberdrola-forest)] hover:border-[var(--iberdrola-green)] hover:bg-[var(--iberdrola-green-light)]"
             }`}
           >
-            {item.label}
+            <span className="text-base leading-none">{item.icon}</span>
+            <span className="whitespace-nowrap">{item.label}</span>
           </Link>
         );
       })}
-    </div>
+    </nav>
   );
 }

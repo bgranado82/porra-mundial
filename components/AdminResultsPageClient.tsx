@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -14,13 +13,13 @@ import AdminGroupStandingsTable from "@/components/AdminGroupStandingsTable";
 import AdminThirdPlaceTable from "@/components/AdminThirdPlaceTable";
 import AdminGroupMatchCompactRow from "@/components/AdminGroupMatchCompactRow";
 import AdminGroupMatchRow from "@/components/AdminGroupMatchRow";
+import AdminNav from "@/components/AdminNav";
 import {
   KnockoutPredictionMap,
   Match,
   KnockoutBracketMatch,
 } from "@/types";
 import AdminKnockoutBracket from "@/components/AdminKnockoutBracket";
-
 
 type GroupResultMap = Record<string, { homeGoals: string; awayGoals: string }>;
 type OfficialExtraResultMap = Record<string, string>;
@@ -51,10 +50,8 @@ const EXTRA_LABELS: Record<string, string> = {
 
 function getDateKeySpain(kickoff: string | null | undefined) {
   if (!kickoff) return null;
-
   const date = new Date(kickoff);
   if (Number.isNaN(date.getTime())) return null;
-
   return new Intl.DateTimeFormat("sv-SE", {
     timeZone: "Europe/Madrid",
     year: "numeric",
@@ -65,8 +62,7 @@ function getDateKeySpain(kickoff: string | null | undefined) {
 
 function formatDateHeaderSpain(dateKey: string) {
   const [year, month, day] = dateKey.split("-");
-  const date = new Date(`${year}-${month}-${day}T12:00:00+02:00}`);
-
+  const date = new Date(`${year}-${month}-${day}T12:00:00+02:00`);
   return new Intl.DateTimeFormat("es-ES", {
     weekday: "long",
     day: "2-digit",
@@ -94,32 +90,22 @@ function RoundSection({
   matches: KnockoutBracketMatch[];
   picks: KnockoutPredictionMap;
   onPick: (matchId: string, teamId: string) => void;
-  teamMap: Map<
-    string,
-    { id: string; name: string; flag?: string; flagUrl?: string }
-  >;
+  teamMap: Map<string, { id: string; name: string; flag?: string; flagUrl?: string }>;
 }) {
   if (matches.length === 0) return null;
 
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
       <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-        <h3 className="text-lg font-black text-[var(--iberdrola-forest)]">
-          {title}
-        </h3>
+        <h3 className="text-lg font-black text-[var(--iberdrola-forest)]">{title}</h3>
       </div>
-
       <div className="p-4">
         <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
           {matches.map((match) => {
             const home = match.homeTeamId ? teamMap.get(match.homeTeamId) : null;
             const away = match.awayTeamId ? teamMap.get(match.awayTeamId) : null;
-
-            const homeLabel =
-              home?.name || match.homeLabel || "Pendiente de definir";
-            const awayLabel =
-              away?.name || match.awayLabel || "Pendiente de definir";
-
+            const homeLabel = home?.name || match.homeLabel || "Pendiente de definir";
+            const awayLabel = away?.name || match.awayLabel || "Pendiente de definir";
             const hasOptions = !!home || !!away;
 
             return (
@@ -130,33 +116,21 @@ function RoundSection({
                 <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
                   {match.id}
                 </div>
-
                 <div className="mb-3 space-y-2 text-sm font-semibold text-[var(--iberdrola-forest)]">
                   <div className="flex items-center gap-2">
                     {home?.flagUrl ? (
-                      <img
-                        src={home.flagUrl}
-                        alt={home.name}
-                        className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
-                      />
+                      <img src={home.flagUrl} alt={home.name} className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover" />
                     ) : null}
                     <span>{homeLabel}</span>
                   </div>
-
                   <div className="text-xs text-[var(--iberdrola-forest)]/45">vs</div>
-
                   <div className="flex items-center gap-2">
                     {away?.flagUrl ? (
-                      <img
-                        src={away.flagUrl}
-                        alt={away.name}
-                        className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover"
-                      />
+                      <img src={away.flagUrl} alt={away.name} className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover" />
                     ) : null}
                     <span>{awayLabel}</span>
                   </div>
                 </div>
-
                 <select
                   value={picks[match.id] ?? ""}
                   onChange={(e) => onPick(match.id, e.target.value)}
@@ -184,25 +158,18 @@ export default function AdminResultsPageClient() {
   const [selectedPoolSlug, setSelectedPoolSlug] = useState("");
 
   const [groupResults, setGroupResults] = useState<GroupResultMap>({});
-  const [knockoutResults, setKnockoutResults] =
-    useState<KnockoutPredictionMap>({});
-  const [officialExtras, setOfficialExtras] = useState<OfficialExtraResultMap>(
-    {}
-  );
+  const [knockoutResults, setKnockoutResults] = useState<KnockoutPredictionMap>({});
+  const [officialExtras, setOfficialExtras] = useState<OfficialExtraResultMap>({});
   const [adminTiebreaks, setAdminTiebreaks] = useState<AdminTiebreakMap>({});
 
   const [loading, setLoading] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"ok" | "error">("ok");
 
-  const teamMap = useMemo(
-    () => new Map(teams.map((team) => [team.id, team])),
-    []
-  );
-
+  const teamMap = useMemo(() => new Map(teams.map((team) => [team.id, team])), []);
   const groups = useMemo(
-    () =>
-      [...new Set(teams.map((team) => team.group).filter(Boolean))] as string[],
+    () => [...new Set(teams.map((team) => team.group).filter(Boolean))] as string[],
     []
   );
 
@@ -211,9 +178,7 @@ export default function AdminResultsPageClient() {
       initialMatches
         .filter((match) => match.stage === "group")
         .sort((a, b) => {
-          if ((a.order ?? 0) !== (b.order ?? 0)) {
-            return (a.order ?? 0) - (b.order ?? 0);
-          }
+          if ((a.order ?? 0) !== (b.order ?? 0)) return (a.order ?? 0) - (b.order ?? 0);
           return (a.matchNumber ?? 0) - (b.matchNumber ?? 0);
         }),
     []
@@ -221,7 +186,6 @@ export default function AdminResultsPageClient() {
 
   const groupedMatchesByDate = useMemo(() => {
     const map = new Map<string, Match[]>();
-
     groupMatches.forEach((match) => {
       const key = getDateKeySpain(match.kickoff);
       if (!key) return;
@@ -229,7 +193,6 @@ export default function AdminResultsPageClient() {
       current.push(match);
       map.set(key, current);
     });
-
     return Array.from(map.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([dateKey, matches], index) => ({
@@ -243,9 +206,7 @@ export default function AdminResultsPageClient() {
   const officialMatches = useMemo<Match[]>(() => {
     return initialMatches.map((match) => {
       if (match.stage !== "group") return match;
-
       const official = groupResults[match.id];
-
       return {
         ...match,
         homeGoals:
@@ -262,37 +223,26 @@ export default function AdminResultsPageClient() {
 
   const groupAdminTiebreaks = useMemo(() => {
     const result: Record<string, Record<string, number>> = {};
-
     groups.forEach((groupCode) => {
       result[groupCode] = {};
-
       teams
         .filter((team) => team.group === groupCode)
         .forEach((team) => {
           const key = getTiebreakKey("group", groupCode, team.id);
           const value = adminTiebreaks[key];
-
-          if (typeof value === "number") {
-            result[groupCode][team.id] = value;
-          }
+          if (typeof value === "number") result[groupCode][team.id] = value;
         });
     });
-
     return result;
   }, [groups, adminTiebreaks]);
 
   const thirdPlaceAdminTiebreaks = useMemo(() => {
     const result: Record<string, number> = {};
-
     teams.forEach((team) => {
       const key = getTiebreakKey("third_place", "overall", team.id);
       const value = adminTiebreaks[key];
-
-      if (typeof value === "number") {
-        result[team.id] = value;
-      }
+      if (typeof value === "number") result[team.id] = value;
     });
-
     return result;
   }, [adminTiebreaks]);
 
@@ -331,53 +281,41 @@ export default function AdminResultsPageClient() {
         groupAdminTiebreaks,
         thirdPlaceAdminTiebreaks,
       }),
-    [
-      officialMatches,
-      groups,
-      knockoutResults,
-      groupAdminTiebreaks,
-      thirdPlaceAdminTiebreaks,
-    ]
+    [officialMatches, groups, knockoutResults, groupAdminTiebreaks, thirdPlaceAdminTiebreaks]
   );
 
-useEffect(() => {
-  function sanitizePick(
-  currentValue: string | null | undefined,
-  match: KnockoutBracketMatch
-) {
-  if (!currentValue) return "";
-
-  const validOptions = new Set(
-    [match.homeTeamId, match.awayTeamId].filter(Boolean) as string[]
-  );
-
-  return validOptions.has(currentValue) ? currentValue : "";
-}
-
-  setKnockoutResults((prev) => {
-    const next = { ...prev };
-    let changed = false;
-
-    const allMatches = [
-      ...realBracket.round32,
-      ...realBracket.round16,
-      ...realBracket.quarterfinals,
-      ...realBracket.semifinals,
-      ...realBracket.finals,
-    ];
-
-    for (const match of allMatches) {
-      const sanitized = sanitizePick(prev[match.id], match);
-
-      if ((prev[match.id] ?? "") !== sanitized) {
-        next[match.id] = sanitized;
-        changed = true;
-      }
+  useEffect(() => {
+    function sanitizePick(
+      currentValue: string | null | undefined,
+      match: KnockoutBracketMatch
+    ) {
+      if (!currentValue) return "";
+      const validOptions = new Set(
+        [match.homeTeamId, match.awayTeamId].filter(Boolean) as string[]
+      );
+      return validOptions.has(currentValue) ? currentValue : "";
     }
 
-    return changed ? next : prev;
-  });
-}, [realBracket]);
+    setKnockoutResults((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      const allMatches = [
+        ...realBracket.round32,
+        ...realBracket.round16,
+        ...realBracket.quarterfinals,
+        ...realBracket.semifinals,
+        ...realBracket.finals,
+      ];
+      for (const match of allMatches) {
+        const sanitized = sanitizePick(prev[match.id], match);
+        if ((prev[match.id] ?? "") !== sanitized) {
+          next[match.id] = sanitized;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [realBracket]);
 
   useEffect(() => {
     async function loadInitialData() {
@@ -447,14 +385,14 @@ useEffect(() => {
 
         const nextTiebreaks: AdminTiebreakMap = {};
         ((tbRows ?? []) as AdminTiebreakRow[]).forEach((row) => {
-          nextTiebreaks[
-            getTiebreakKey(row.scope, row.scope_value, row.team_id)
-          ] = row.priority;
+          nextTiebreaks[getTiebreakKey(row.scope, row.scope_value, row.team_id)] =
+            row.priority;
         });
         setAdminTiebreaks(nextTiebreaks);
       } catch (err) {
         console.error(err);
         setMessage("Error cargando resultados.");
+        setMessageType("error");
       } finally {
         setLoading(false);
       }
@@ -468,13 +406,8 @@ useEffect(() => {
     setSelectedPoolSlug(currentPool?.slug ?? "");
   }, [selectedPoolId, pools]);
 
-  function updateGroupResult(
-    matchId: string,
-    side: "homeGoals" | "awayGoals",
-    value: string
-  ) {
+  function updateGroupResult(matchId: string, side: "homeGoals" | "awayGoals", value: string) {
     if (!/^\d*$/.test(value)) return;
-
     setGroupResults((prev) => ({
       ...prev,
       [matchId]: {
@@ -485,142 +418,55 @@ useEffect(() => {
     }));
   }
 
-function updateKnockoutResult(matchId: string, teamId: string | null) {
-  setKnockoutResults((prev) => {
-    const next: KnockoutPredictionMap = {
-      ...prev,
-      [matchId]: teamId || "",
-    };
+  function updateKnockoutResult(matchId: string, teamId: string | null) {
+    setKnockoutResults((prev) => {
+      const next: KnockoutPredictionMap = { ...prev, [matchId]: teamId || "" };
+      const clear = (ids: string[]) => ids.forEach((id) => { next[id] = ""; });
 
-    const clear = (ids: string[]) => {
-      ids.forEach((id) => {
-        next[id] = "";
-      });
-    };
-
-    switch (matchId) {
-      // ROUND OF 32 -> ROUND OF 16 -> QF -> SF -> FINAL
-      case "r32-1":
-      case "r32-3":
-        clear(["r16-2", "qf-1", "sf-1", "final-1"]);
-        break;
-
-      case "r32-2":
-      case "r32-5":
-        clear(["r16-1", "qf-1", "sf-1", "final-1"]);
-        break;
-
-      case "r32-4":
-      case "r32-6":
-        clear(["r16-3", "qf-3", "sf-2", "final-1"]);
-        break;
-
-      case "r32-7":
-      case "r32-8":
-        clear(["r16-4", "qf-3", "sf-2", "final-1"]);
-        break;
-
-      case "r32-9":
-      case "r32-10":
-        clear(["r16-6", "qf-2", "sf-1", "final-1"]);
-        break;
-
-      case "r32-11":
-      case "r32-12":
-        clear(["r16-5", "qf-2", "sf-1", "final-1"]);
-        break;
-
-      case "r32-13":
-      case "r32-15":
-        clear(["r16-8", "qf-4", "sf-2", "final-1"]);
-        break;
-
-      case "r32-14":
-      case "r32-16":
-        clear(["r16-7", "qf-4", "sf-2", "final-1"]);
-        break;
-
-      // ROUND OF 16 -> QF -> SF -> FINAL
-      case "r16-1":
-      case "r16-2":
-        clear(["qf-1", "sf-1", "final-1"]);
-        break;
-
-      case "r16-5":
-      case "r16-6":
-        clear(["qf-2", "sf-1", "final-1"]);
-        break;
-
-      case "r16-3":
-      case "r16-4":
-        clear(["qf-3", "sf-2", "final-1"]);
-        break;
-
-      case "r16-7":
-      case "r16-8":
-        clear(["qf-4", "sf-2", "final-1"]);
-        break;
-
-      // QUARTERS -> SEMIS -> FINAL
-      case "qf-1":
-      case "qf-2":
-        clear(["sf-1", "final-1"]);
-        break;
-
-      case "qf-3":
-      case "qf-4":
-        clear(["sf-2", "final-1"]);
-        break;
-
-      // SEMIS -> FINAL
-      case "sf-1":
-      case "sf-2":
-        clear(["final-1"]);
-        break;
-    }
-
-    return next;
-  });
-}
-  function updateOfficialExtra(questionKey: string, value: string) {
-    setOfficialExtras((prev) => ({
-      ...prev,
-      [questionKey]: value,
-    }));
-  }
-
-  function updateGroupTiebreak(groupCode: string, teamId: string, value: string) {
-    if (!/^\d*$/.test(value)) return;
-
-    const key = getTiebreakKey("group", groupCode, teamId);
-
-    setAdminTiebreaks((prev) => {
-      const next = { ...prev };
-
-      if (value === "") {
-        delete next[key];
-      } else {
-        next[key] = Number(value);
+      switch (matchId) {
+        case "r32-1": case "r32-3": clear(["r16-2", "qf-1", "sf-1", "final-1"]); break;
+        case "r32-2": case "r32-5": clear(["r16-1", "qf-1", "sf-1", "final-1"]); break;
+        case "r32-4": case "r32-6": clear(["r16-3", "qf-3", "sf-2", "final-1"]); break;
+        case "r32-7": case "r32-8": clear(["r16-4", "qf-3", "sf-2", "final-1"]); break;
+        case "r32-9": case "r32-10": clear(["r16-6", "qf-2", "sf-1", "final-1"]); break;
+        case "r32-11": case "r32-12": clear(["r16-5", "qf-2", "sf-1", "final-1"]); break;
+        case "r32-13": case "r32-15": clear(["r16-8", "qf-4", "sf-2", "final-1"]); break;
+        case "r32-14": case "r32-16": clear(["r16-7", "qf-4", "sf-2", "final-1"]); break;
+        case "r16-1": case "r16-2": clear(["qf-1", "sf-1", "final-1"]); break;
+        case "r16-5": case "r16-6": clear(["qf-2", "sf-1", "final-1"]); break;
+        case "r16-3": case "r16-4": clear(["qf-3", "sf-2", "final-1"]); break;
+        case "r16-7": case "r16-8": clear(["qf-4", "sf-2", "final-1"]); break;
+        case "qf-1": case "qf-2": clear(["sf-1", "final-1"]); break;
+        case "qf-3": case "qf-4": clear(["sf-2", "final-1"]); break;
+        case "sf-1": case "sf-2": clear(["final-1"]); break;
       }
 
       return next;
     });
   }
 
-  function updateThirdPlaceTiebreak(teamId: string, value: string) {
+  function updateOfficialExtra(questionKey: string, value: string) {
+    setOfficialExtras((prev) => ({ ...prev, [questionKey]: value }));
+  }
+
+  function updateGroupTiebreak(groupCode: string, teamId: string, value: string) {
     if (!/^\d*$/.test(value)) return;
-
-    const key = getTiebreakKey("third_place", "overall", teamId);
-
+    const key = getTiebreakKey("group", groupCode, teamId);
     setAdminTiebreaks((prev) => {
       const next = { ...prev };
+      if (value === "") delete next[key];
+      else next[key] = Number(value);
+      return next;
+    });
+  }
 
-      if (value === "") {
-        delete next[key];
-      } else {
-        next[key] = Number(value);
-      }
-
+  function updateThirdPlaceTiebreak(teamId: string, value: string) {
+    if (!/^\d*$/.test(value)) return;
+    const key = getTiebreakKey("third_place", "overall", teamId);
+    setAdminTiebreaks((prev) => {
+      const next = { ...prev };
+      if (value === "") delete next[key];
+      else next[key] = Number(value);
       return next;
     });
   }
@@ -647,23 +493,13 @@ function updateKnockoutResult(matchId: string, teamId: string | null) {
 
       const extraRows = EXTRA_QUESTIONS.map((question) => {
         const value = (officialExtras[question.key] ?? "").trim();
-        return value
-          ? {
-              question_key: question.key,
-              official_value: value,
-            }
-          : null;
+        return value ? { question_key: question.key, official_value: value } : null;
       }).filter(Boolean);
 
       const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
         ([key, priority]) => {
           const [scope, scopeValue, teamId] = key.split(":");
-          return {
-            scope: scope as "group" | "third_place",
-            scope_value: scopeValue,
-            team_id: teamId,
-            priority,
-          };
+          return { scope: scope as "group" | "third_place", scope_value: scopeValue, team_id: teamId, priority };
         }
       );
 
@@ -672,147 +508,147 @@ function updateKnockoutResult(matchId: string, teamId: string | null) {
         .upsert(extraRows, { onConflict: "question_key" });
 
       if (extrasError) {
-        console.error(extrasError);
         setMessage("Error guardando resultados extra.");
+        setMessageType("error");
         return;
       }
 
       const res = await fetch("/api/admin/update-results", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          groupResults: groupRows,
-          knockoutResults: knockoutRows,
-          extraResults: extraRows,
-          adminTiebreaks: tiebreakRows,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ groupResults: groupRows, knockoutResults: knockoutRows, extraResults: extraRows, adminTiebreaks: tiebreakRows }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         setMessage(data.error || "Error guardando resultados.");
+        setMessageType("error");
         return;
       }
 
-      setMessage("Resultados guardados y clasificación recalculada.");
+      setMessage("✅ Resultados guardados y clasificación recalculada.");
+      setMessageType("ok");
     } catch (err) {
       console.error(err);
       setMessage("Error guardando resultados.");
+      setMessageType("error");
     } finally {
       setSavingAll(false);
     }
   }
 
   if (loading) {
-    return <div className="p-6">Cargando admin...</div>;
+    return (
+      <div className="mx-auto max-w-[1600px] px-4 py-6">
+        <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 text-sm text-[var(--iberdrola-forest)]/60">
+          Cargando panel de resultados...
+        </div>
+      </div>
+    );
   }
 
   return (
     <main className="mx-auto max-w-[1600px] space-y-6 overflow-x-hidden px-4 py-4 sm:px-6">
+
+      {/* ── Header ── */}
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-        <div className="p-4 sm:p-5">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div className="p-4 sm:p-6">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
-              <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                Administración
+              <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
+                Administración · Ibe World Cup 2026
               </div>
-              <h1 className="text-2xl font-black text-[var(--iberdrola-forest)]">
+              <h1 className="mt-1.5 text-2xl font-black text-[var(--iberdrola-forest)]">
                 Resultados oficiales
               </h1>
-              <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                Gestiona fase de grupos, knockout, desempates y preguntas extra.
+              <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/65">
+                Fase de grupos · Knockout · Desempates · Preguntas extra
               </p>
+              <div className="mt-4">
+                <AdminNav />
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="w-full min-w-0 sm:w-[260px]">
-                <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+            {/* Acciones principales */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start xl:flex-col xl:items-stretch xl:min-w-[240px]">
+              <div>
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
                   Pool para clasificación
                 </label>
                 <select
                   value={selectedPoolId}
                   onChange={(e) => setSelectedPoolId(e.target.value)}
-                  className="w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
+                  className="w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--iberdrola-forest)]"
                 >
                   {pools.map((pool) => (
-                    <option key={pool.id} value={pool.id}>
-                      {pool.name}
-                    </option>
+                    <option key={pool.id} value={pool.id}>{pool.name}</option>
                   ))}
                 </select>
+              </div>
+
+              <div className="flex gap-2">
+                {selectedPoolId ? (
+                  <Link
+                    href={
+                      selectedPoolSlug
+                        ? `/standings?poolId=${selectedPoolId}&poolSlug=${selectedPoolSlug}`
+                        : `/standings?poolId=${selectedPoolId}`
+                    }
+                    className="flex-1 inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+                  >
+                    Ver clasificación
+                  </Link>
+                ) : null}
+
+                <button
+                  onClick={handleSaveAllResults}
+                  disabled={savingAll}
+                  className="flex-1 rounded-2xl bg-[var(--iberdrola-green)] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+                >
+                  {savingAll ? "Guardando..." : "Guardar y recalcular"}
+                </button>
               </div>
 
               {selectedPoolId ? (
                 <Link
                   href={
                     selectedPoolSlug
-                      ? `/standings?poolId=${selectedPoolId}&poolSlug=${selectedPoolSlug}`
-                      : `/standings?poolId=${selectedPoolId}`
+                      ? `/stats?poolId=${selectedPoolId}&poolSlug=${selectedPoolSlug}`
+                      : `/stats?poolId=${selectedPoolId}`
                   }
-                  className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
+                  className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
                 >
-                  Ver clasificación del pool
+                  Ver estadísticas del pool
                 </Link>
               ) : null}
-
-              <button
-                onClick={handleSaveAllResults}
-                disabled={savingAll}
-                className="rounded-2xl bg-[var(--iberdrola-green)] px-5 py-3 text-sm font-bold text-white shadow-sm disabled:opacity-50"
-              >
-                {savingAll ? "Guardando..." : "Guardar y recalcular todo"}
-              </button>
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              href="/admin"
-              className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
-            >
-              Inicio admin
-            </Link>
-
-            <Link
-              href="/admin/participants"
-              className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
-            >
-              Participantes y pagos
-            </Link>
-
-            {selectedPoolId ? (
-              <Link
-                href={
-                  selectedPoolSlug
-                    ? `/stats?poolId=${selectedPoolId}&poolSlug=${selectedPoolSlug}`
-                    : `/stats?poolId=${selectedPoolId}`
-                }
-                className="rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-bold text-[var(--iberdrola-forest)]"
-              >
-                Ver estadísticas
-              </Link>
-            ) : null}
-          </div>
-
           {message ? (
-            <div className="mt-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
+            <div
+              className={`mt-4 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+                messageType === "ok"
+                  ? "border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)] text-[var(--iberdrola-forest)]"
+                  : "border-red-200 bg-red-50 text-red-700"
+              }`}
+            >
               {message}
             </div>
           ) : null}
         </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-[1.45fr_0.15fr]">
-  <section className="min-w-0 rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      {/* ── Fase de grupos + Clasificaciones ── */}
+      <div className="grid gap-4 lg:grid-cols-[1.45fr_0.55fr]">
+        {/* Partidos de grupo */}
+        <section className="min-w-0 rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-              Resultados de la fase de grupos
+              Fase de grupos
             </h2>
-            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-              Partidos ordenados cronológicamente y agrupados por jornada lógica de España.
+            <p className="mt-0.5 text-sm text-[var(--iberdrola-forest)]/65">
+              Partidos ordenados por jornada (hora España)
             </p>
           </div>
 
@@ -831,22 +667,19 @@ function updateKnockoutResult(matchId: string, teamId: string | null) {
                   </div>
                 </div>
 
+                {/* Desktop */}
                 <div className="hidden lg:block overflow-hidden rounded-b-2xl bg-white">
                   <div className="grid grid-cols-[140px_minmax(0,1fr)_90px] gap-3 border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/35 px-4 py-3 text-[11px] font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/75">
                     <div>J / G / Fecha</div>
                     <div className="text-center">Resultado oficial</div>
                     <div className="text-right">Estado</div>
                   </div>
-
                   {block.matches.map((match) => {
                     const homeTeam = teamMap.get(match.homeTeamId ?? "");
                     const awayTeam = teamMap.get(match.awayTeamId ?? "");
-
                     if (!homeTeam || !awayTeam) return null;
-
                     const homeValue = groupResults[match.id]?.homeGoals ?? "";
                     const awayValue = groupResults[match.id]?.awayGoals ?? "";
-
                     return (
                       <AdminGroupMatchCompactRow
                         key={match.id}
@@ -857,27 +690,21 @@ function updateKnockoutResult(matchId: string, teamId: string | null) {
                         awayTeam={awayTeam}
                         homeValue={homeValue}
                         awayValue={awayValue}
-                        onChangeHome={(value) =>
-                          updateGroupResult(match.id, "homeGoals", value)
-                        }
-                        onChangeAway={(value) =>
-                          updateGroupResult(match.id, "awayGoals", value)
-                        }
+                        onChangeHome={(value) => updateGroupResult(match.id, "homeGoals", value)}
+                        onChangeAway={(value) => updateGroupResult(match.id, "awayGoals", value)}
                       />
                     );
                   })}
                 </div>
 
+                {/* Mobile */}
                 <div className="space-y-2 p-3 lg:hidden">
                   {block.matches.map((match) => {
                     const homeTeam = teamMap.get(match.homeTeamId ?? "");
                     const awayTeam = teamMap.get(match.awayTeamId ?? "");
-
                     if (!homeTeam || !awayTeam) return null;
-
                     const homeValue = groupResults[match.id]?.homeGoals ?? "";
                     const awayValue = groupResults[match.id]?.awayGoals ?? "";
-
                     return (
                       <AdminGroupMatchRow
                         key={match.id}
@@ -889,12 +716,8 @@ function updateKnockoutResult(matchId: string, teamId: string | null) {
                         awayTeam={awayTeam}
                         homeValue={homeValue}
                         awayValue={awayValue}
-                        onChangeHome={(value) =>
-                          updateGroupResult(match.id, "homeGoals", value)
-                        }
-                        onChangeAway={(value) =>
-                          updateGroupResult(match.id, "awayGoals", value)
-                        }
+                        onChangeHome={(value) => updateGroupResult(match.id, "homeGoals", value)}
+                        onChangeAway={(value) => updateGroupResult(match.id, "awayGoals", value)}
                       />
                     );
                   })}
@@ -904,120 +727,100 @@ function updateKnockoutResult(matchId: string, teamId: string | null) {
           </div>
         </section>
 
-        <section className="min-w-0 rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4 self-start">
-          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-            <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-              Clasificaciones
-            </h2>
-            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-              Clasificación actualizada por grupo según resultados oficiales.
-            </p>
-          </div>
+        {/* Clasificaciones + Terceros */}
+        <div className="flex flex-col gap-4">
+          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4">
+            <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+              <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+                Clasificaciones por grupo
+              </h2>
+              <p className="mt-0.5 text-sm text-[var(--iberdrola-forest)]/65">
+                Actualizadas con los resultados introducidos arriba
+              </p>
+            </div>
 
-          <div className="space-y-3 p-4">
-            {standingsByGroup.map(({ groupCode, rows }) => (
-              <div
-                key={groupCode}
-                className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3"
-              >
-                <AdminGroupStandingsTable
-                  title={`Grupo ${groupCode}`}
-                  groupCode={groupCode}
-                  rows={rows}
-                  tiebreaks={adminTiebreaks}
-                  onChangeTiebreak={updateGroupTiebreak}
-                  labels={{
-                    team: "Equipo",
-                    played: "PJ",
-                    won: "PG",
-                    drawn: "PE",
-                    lost: "PP",
-                    goalsFor: "GF",
-                    goalsAgainst: "GC",
-                    goalDifference: "DG",
-                    pointsShort: "Pts",
-                    tiebreak: "TB",
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
+            <div className="space-y-3 p-4">
+              {standingsByGroup.map(({ groupCode, rows }) => (
+                <div key={groupCode} className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-3">
+                  <AdminGroupStandingsTable
+                    title={`Grupo ${groupCode}`}
+                    groupCode={groupCode}
+                    rows={rows}
+                    tiebreaks={adminTiebreaks}
+                    onChangeTiebreak={updateGroupTiebreak}
+                    labels={{
+                      team: "Equipo", played: "PJ", won: "PG", drawn: "PE",
+                      lost: "PP", goalsFor: "GF", goalsAgainst: "GC",
+                      goalDifference: "DG", pointsShort: "Pts", tiebreak: "TB",
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Mejores terceros */}
+          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+            <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+              <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
+                Mejores terceros
+              </h2>
+              <p className="mt-0.5 text-sm text-[var(--iberdrola-forest)]/65">
+                Desempate manual solo si siguen igualados a todo
+              </p>
+            </div>
+            <div className="p-4">
+              <AdminThirdPlaceTable
+                title="Ranking de terceros"
+                rows={thirdPlaceRows}
+                tiebreaks={adminTiebreaks}
+                onChangeTiebreak={updateThirdPlaceTiebreak}
+                labels={{
+                  position: "#", group: "Grupo", team: "Equipo", played: "PJ",
+                  won: "PG", drawn: "PE", lost: "PP", goalsFor: "GF",
+                  goalsAgainst: "GC", goalDifference: "DG", pointsShort: "Pts",
+                  status: "Estado", qualified: "Clasifica", eliminated: "Fuera", tiebreak: "TB",
+                }}
+              />
+            </div>
+          </section>
+        </div>
       </div>
 
- <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-  <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-    <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
-      Mejores terceros
-    </h2>
-    <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-      Desempate manual solo si siguen empatados a todo.
-    </p>
-  </div>
-
-  <div className="p-4">
-    <AdminThirdPlaceTable
-      title="Ranking de terceros"
-      rows={thirdPlaceRows}
-      tiebreaks={adminTiebreaks}
-      onChangeTiebreak={updateThirdPlaceTiebreak}
-      labels={{
-        position: "#",
-        group: "Grupo",
-        team: "Equipo",
-        played: "PJ",
-        won: "PG",
-        drawn: "PE",
-        lost: "PP",
-        goalsFor: "GF",
-        goalsAgainst: "GC",
-        goalDifference: "DG",
-        pointsShort: "Pts",
-        status: "Estado",
-        qualified: "Clasifica",
-        eliminated: "Fuera",
-        tiebreak: "TB",
-      }}
-    />
-  </div>
-</section>
-
+      {/* ── Knockout ── */}
       <AdminKnockoutBracket
-  title="Knockout"
-  subtitle="Selecciona los ganadores oficiales de cada cruce."
-  round32={realBracket.round32}
-  round16={realBracket.round16}
-  quarterfinals={realBracket.quarterfinals}
-  semifinals={realBracket.semifinals}
-  finals={realBracket.finals}
-  teams={teams}
-  picks={knockoutResults}
-  onPick={updateKnockoutResult}
-/>
+        title="Fase eliminatoria"
+        subtitle="Selecciona los ganadores oficiales de cada cruce."
+        round32={realBracket.round32}
+        round16={realBracket.round16}
+        quarterfinals={realBracket.quarterfinals}
+        semifinals={realBracket.semifinals}
+        finals={realBracket.finals}
+        teams={teams}
+        picks={knockoutResults}
+        onPick={updateKnockoutResult}
+      />
 
+      {/* ── Preguntas extra ── */}
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
             Preguntas extra
           </h2>
+          <p className="mt-0.5 text-sm text-[var(--iberdrola-forest)]/65">
+            Introduce los resultados oficiales de los premios individuales
+          </p>
         </div>
-
-        <div className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {EXTRA_QUESTIONS.map((question) => (
-            <div
-              key={question.key}
-              className="rounded-2xl border border-[var(--iberdrola-sky)] p-4"
-            >
+            <div key={question.key} className="rounded-2xl border border-[var(--iberdrola-sky)] p-4">
               <label className="mb-2 block text-sm font-bold text-[var(--iberdrola-forest)]">
                 {EXTRA_LABELS[question.key] ?? question.key}
               </label>
-
               <input
                 type="text"
                 value={officialExtras[question.key] ?? ""}
-                onChange={(e) =>
-                  updateOfficialExtra(question.key, e.target.value)
-                }
+                onChange={(e) => updateOfficialExtra(question.key, e.target.value)}
                 placeholder="Resultado oficial"
                 className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
               />
@@ -1025,6 +828,21 @@ function updateKnockoutResult(matchId: string, teamId: string | null) {
           ))}
         </div>
       </section>
+
+      {/* ── Botón guardar flotante (bottom) ── */}
+      <div className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)] p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="text-sm font-semibold text-[var(--iberdrola-forest)]">
+          Recuerda guardar cuando hayas terminado de introducir todos los resultados del día.
+        </div>
+        <button
+          onClick={handleSaveAllResults}
+          disabled={savingAll}
+          className="shrink-0 rounded-2xl bg-[var(--iberdrola-green)] px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+        >
+          {savingAll ? "Guardando..." : "Guardar y recalcular todo"}
+        </button>
+      </div>
+
     </main>
   );
 }
