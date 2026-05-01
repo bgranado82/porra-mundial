@@ -5,24 +5,27 @@ import { usePathname } from "next/navigation";
 
 const items = [
   {
+    href: "/admin",
+    label: "Inicio",
+    icon: "🏠",
+    aliases: ["/admin"],
+  },
+  {
     href: "/admin/results",
     label: "Resultados",
     icon: "⚽",
-    description: "Marcadores y knockout",
-    aliases: ["/admin", "/admin/results"],
+    aliases: ["/admin/results"],
   },
   {
     href: "/admin/participants",
     label: "Participantes",
     icon: "👥",
-    description: "Pagos y porras",
     aliases: ["/admin/participants"],
   },
   {
     href: "/admin/settings",
     label: "Configuración",
     icon: "⚙️",
-    description: "Pools y visibilidad",
     aliases: ["/admin/settings", "/admin/pools"],
   },
 ];
