@@ -28,6 +28,12 @@ const items = [
     icon: "⚙️",
     aliases: ["/admin/settings", "/admin/pools"],
   },
+  {
+    href: "/admin/quote",
+    label: "Quote of the day",
+    icon: "💬",
+    aliases: ["/admin/quote"],
+  },
 ];
 
 export default function AdminNav() {

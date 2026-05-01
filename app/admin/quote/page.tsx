@@ -1,0 +1,27 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import AdminQuotePageClient from "@/components/AdminQuotePageClient";
+
+export default async function AdminQuotePage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/");
+  }
+
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !profile || profile.role !== "admin") {
+    redirect("/");
+  }
+
+  return <AdminQuotePageClient />;
+}

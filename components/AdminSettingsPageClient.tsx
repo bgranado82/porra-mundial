@@ -21,8 +21,6 @@ type Pool = {
   admin_note: string | null;
 };
 
-type Quote = { es: string; en: string; pt: string };
-
 const VISIBILITY_OPTIONS: { value: VisibilityMode; label: string }[] = [
   { value: "hidden", label: "Oculto" },
   { value: "after_submit", label: "Solo tras enviar porra" },
@@ -77,11 +75,6 @@ export default function AdminSettingsPageClient() {
   const [messageType, setMessageType] = useState<"ok" | "error">("ok");
   const [saving, setSaving] = useState(false);
 
-  const [quote, setQuote] = useState<Quote>({ es: "", en: "", pt: "" });
-  const [savingQuote, setSavingQuote] = useState(false);
-  const [quoteMessage, setQuoteMessage] = useState("");
-  const [quoteMessageType, setQuoteMessageType] = useState<"ok" | "error">("ok");
-
   useEffect(() => {
     async function load() {
       const { data } = await supabase.from("pools").select("*");
@@ -94,18 +87,6 @@ export default function AdminSettingsPageClient() {
       }
     }
     load();
-  }, []);
-
-  useEffect(() => {
-    async function loadQuote() {
-      const { data } = await supabase
-        .from("quote_of_the_day")
-        .select("es, en, pt")
-        .eq("id", 1)
-        .maybeSingle();
-      if (data) setQuote({ es: data.es ?? "", en: data.en ?? "", pt: data.pt ?? "" });
-    }
-    loadQuote();
   }, []);
 
   useEffect(() => {
@@ -131,23 +112,6 @@ export default function AdminSettingsPageClient() {
       setPools((prev) => prev.map((p) => (p.id === selectedPoolId ? settings : p)));
     }
     setSaving(false);
-  }
-
-  async function saveQuote() {
-    setSavingQuote(true);
-    setQuoteMessage("");
-    const { error } = await supabase
-      .from("quote_of_the_day")
-      .update({ es: quote.es.trim(), en: quote.en.trim(), pt: quote.pt.trim(), updated_at: new Date().toISOString() })
-      .eq("id", 1);
-    if (error) {
-      setQuoteMessage("Error guardando la frase.");
-      setQuoteMessageType("error");
-    } else {
-      setQuoteMessage("✅ Frase actualizada. Aparecerá en la clasificación.");
-      setQuoteMessageType("ok");
-    }
-    setSavingQuote(false);
   }
 
   if (!settings) {
@@ -192,57 +156,6 @@ export default function AdminSettingsPageClient() {
           </div>
         </section>
       ) : null}
-
-      {/* Quote of the day */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-        <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-          <h2 className="text-base font-black text-[var(--iberdrola-forest)]">💬 Quote of the day</h2>
-          <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">
-            Aparece en la página de clasificación. El cambio es inmediato para todos los usuarios.
-          </p>
-        </div>
-        <div className="space-y-3 p-4">
-          {[
-            { key: "es" as const, flag: "https://flagcdn.com/es.svg", lang: "Español", placeholder: "Lo que hacemos en la vida tiene su eco en la eternidad." },
-            { key: "en" as const, flag: "https://flagcdn.com/gb.svg", lang: "English", placeholder: "What we do in life echoes in eternity." },
-            { key: "pt" as const, flag: "https://flagcdn.com/br.svg", lang: "Português", placeholder: "O que fazemos na vida ecoa na eternidade." },
-          ].map(({ key, flag, lang, placeholder }) => (
-            <div key={key}>
-              <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                <img src={flag} alt={lang} className="h-3 w-5 rounded-[2px] border border-gray-200 object-cover" />
-                {lang}
-              </label>
-              <input
-                type="text"
-                value={quote[key]}
-                onChange={(e) => setQuote((q) => ({ ...q, [key]: e.target.value }))}
-                placeholder={placeholder}
-                className="w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2.5 text-sm text-[var(--iberdrola-forest)]"
-              />
-            </div>
-          ))}
-
-          <div className="flex items-center justify-between gap-3 pt-1">
-            {quoteMessage ? (
-              <div className={`text-sm font-semibold ${quoteMessageType === "ok" ? "text-[var(--iberdrola-green)]" : "text-red-600"}`}>
-                {quoteMessage}
-              </div>
-            ) : (
-              <div className="text-xs text-[var(--iberdrola-forest)]/45">
-                Vacío = no se muestra la sección en la clasificación
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={saveQuote}
-              disabled={savingQuote}
-              className="shrink-0 rounded-2xl bg-[var(--iberdrola-green)] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
-            >
-              {savingQuote ? "Guardando..." : "Publicar frase"}
-            </button>
-          </div>
-        </div>
-      </section>
 
       {/* Acceso y registro */}
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
