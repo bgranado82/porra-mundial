@@ -149,7 +149,8 @@ export async function GET(req: Request) {
     const { data: entries, error: entriesError } = await supabase
       .from("entries")
       .select("id, name, email, company, country, pool_id")
-      .eq("pool_id", poolId);
+      .eq("pool_id", poolId)
+      .eq("status", "submitted");
 
     if (entriesError) {
       return NextResponse.json({ error: entriesError.message }, { status: 500 });
