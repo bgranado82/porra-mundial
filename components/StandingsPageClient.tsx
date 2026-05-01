@@ -5,8 +5,6 @@ import Link from "next/link";
 import StandingsTable from "@/components/StandingsTable";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Locale, messages } from "@/lib/i18n";
-import { createClient } from "@/utils/supabase/client";
-
 const LOCALE_KEY = "porra-mundial-locale";
 
 const QUOTE_FLAGS = {
@@ -23,8 +21,6 @@ type Props = {
 type Quote = { es: string; en: string; pt: string } | null;
 
 export default function StandingsPageClient({ poolId, backHref }: Props) {
-  const supabase = createClient();
-
   const [locale, setLocale] = useState<Locale>("es");
   const [data, setData] = useState<{ days: number[]; standings: unknown[] } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,13 +59,13 @@ export default function StandingsPageClient({ poolId, backHref }: Props) {
 
   useEffect(() => {
     async function loadQuote() {
-      const { data } = await supabase
-        .from("quote_of_the_day")
-        .select("es, en, pt")
-        .eq("id", 1)
-        .maybeSingle();
-      if (data && (data.es || data.en || data.pt)) {
-        setQuote({ es: data.es ?? "", en: data.en ?? "", pt: data.pt ?? "" });
+      try {
+        const res = await fetch("/api/quote", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.es || data.en || data.pt) setQuote(data);
+      } catch {
+        // silently fail - quote is non-critical
       }
     }
     loadQuote();
