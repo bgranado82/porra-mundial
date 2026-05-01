@@ -133,6 +133,17 @@ function getMedal(position: number): string | null {
   return null;
 }
 
+
+const LOCALE_MAP: Record<string, string> = {
+  es: "es-ES",
+  en: "en-US",
+  pt: "pt-BR",
+};
+
+function fmtPts(n: number, locale: string): string {
+  return n.toLocaleString(LOCALE_MAP[locale] ?? "es-ES");
+}
+
 export default function StandingsTable({ days, standings, locale = "es" }: Props) {
   const [tab, setTab] = useState<TabKey>("groups");
   const t = messages[locale];
@@ -327,28 +338,28 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
         key={day}
         className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2"
       >
-        {row.day_points[String(day)] ?? 0}
+        {fmtPts(row.day_points[String(day)] ?? 0, locale)}
       </td>
     ))}
   </>
 ) : null}
 
 <td className="min-w-[95px] border-b border-l border-gray-100 px-2 py-3 text-center font-semibold">
-  {row.group_total}
+  {fmtPts(row.group_total, locale)}
 </td>
 
 <td className="min-w-[95px] border-b border-l border-gray-100 px-2 py-3 text-center">
-  {row.extra_points.first_goal_scorer_world}
+  {fmtPts(row.extra_points.first_goal_scorer_world, locale)}
 </td>
 
 <td className="min-w-[120px] border-b border-l border-gray-100 px-2 py-3 text-center">
-  {row.extra_points.first_goal_scorer_spain}
+  {fmtPts(row.extra_points.first_goal_scorer_spain, locale)}
 </td>
 
 <td
   className={`min-w-[110px] border-b border-l border-gray-100 px-2 py-3 text-center font-bold ${heatClass}`}
 >
-  {row.group_total + row.extra_group_points}
+  {fmtPts(row.group_total + row.extra_group_points, locale)}
 </td>
 
 <td className="min-w-[90px] border-b border-l border-gray-100 px-2 py-3 text-center text-slate-700">
@@ -532,53 +543,53 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
                       </td>
 
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center font-semibold md:px-2">
-                        {row.group_total}
+                        {fmtPts(row.group_total, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.r32_points}
+                        {fmtPts(row.r32_points, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.r16_points}
+                        {fmtPts(row.r16_points, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.qf_points}
+                        {fmtPts(row.qf_points, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.sf_points}
+                        {fmtPts(row.sf_points, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.final_points}
+                        {fmtPts(row.final_points, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.champion_points}
+                        {fmtPts(row.champion_points, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-  {row.extra_points.first_goal_scorer_world}
+  {fmtPts(row.extra_points.first_goal_scorer_world, locale)}
 </td>
 
 <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-  {row.extra_points.first_goal_scorer_spain}
+  {fmtPts(row.extra_points.first_goal_scorer_spain, locale)}
 </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.extra_points.golden_boot}
+                        {fmtPts(row.extra_points.golden_boot, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.extra_points.golden_ball}
+                        {fmtPts(row.extra_points.golden_ball, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.extra_points.best_young_player}
+                        {fmtPts(row.extra_points.best_young_player, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.extra_points.golden_glove}
+                        {fmtPts(row.extra_points.golden_glove, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-3 text-center md:px-2">
-                        {row.extra_points.top_spanish_scorer}
+                        {fmtPts(row.extra_points.top_spanish_scorer, locale)}
                       </td>
 
                       <td
                         className={`border-b border-l border-gray-100 px-1 py-3 text-center font-bold md:px-2 ${heatClass}`}
                       >
-                        {row.total_points}
+                        {fmtPts(row.total_points, locale)}
                       </td>
                       <td className="border-b border-l border-gray-100 px-1 py-2 text-center text-xs font-medium text-slate-600">
                         {row.ko_r32_total > 0 ? `${row.ko_r32_hits}/${row.ko_r32_total}` : "—"}

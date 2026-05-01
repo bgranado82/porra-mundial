@@ -17,6 +17,17 @@ import { buildRealKnockoutBracket } from "@/lib/realKnockout";
 import { calculateKnockoutScore } from "@/lib/knockoutScoring";
 import { getBestThirdPlacedTeams, getThirdPlacedTeamsNeedingTiebreak } from "@/lib/thirdPlace";
 import { Locale, messages } from "@/lib/i18n";
+
+const LOCALE_MAP: Record<string, string> = {
+  es: "es-ES",
+  en: "en-US",
+  pt: "pt-BR",
+};
+
+function fmtPts(n: number, locale: string): string {
+  return n.toLocaleString(LOCALE_MAP[locale] ?? "es-ES");
+}
+
 import { KnockoutPredictionMap, Match } from "@/types";
 import { createClient } from "@/utils/supabase/client";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
@@ -1517,7 +1528,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
                           </div>
                           <div className="shrink-0 text-right">
                             <div className="text-lg font-black text-[var(--iberdrola-forest)]">
-                              {row.total_points}
+                              {fmtPts(row.total_points, locale)}
                             </div>
                             <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/45">
                               {t.points}
@@ -1555,7 +1566,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
                         </div>
                         <div className="shrink-0 text-right">
                           <div className="text-xl font-black text-[var(--iberdrola-forest)]/60">
-                            {lastStanding.total_points}
+                            {fmtPts(lastStanding.total_points, locale)}
                           </div>
                           <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/40">
                             {t.points}
