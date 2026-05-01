@@ -5,14 +5,9 @@ import Link from "next/link";
 import StandingsTable from "@/components/StandingsTable";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Locale, messages } from "@/lib/i18n";
+import { createClient } from "@/utils/supabase/client";
 
 const LOCALE_KEY = "porra-mundial-locale";
-
-const QUOTE_OF_THE_DAY = {
-  es: "Lo que hacemos en la vida tiene su eco en la eternidad.",
-  en: "What we do in life echoes in eternity.",
-  pt: "O que fazemos na vida ecoa na eternidade.",
-};
 
 const QUOTE_FLAGS = {
   es: "https://flagcdn.com/es.svg",
@@ -25,11 +20,16 @@ type Props = {
   backHref: string;
 };
 
+type Quote = { es: string; en: string; pt: string } | null;
+
 export default function StandingsPageClient({ poolId, backHref }: Props) {
+  const supabase = createClient();
+
   const [locale, setLocale] = useState<Locale>("es");
   const [data, setData] = useState<{ days: number[]; standings: unknown[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [quote, setQuote] = useState<Quote>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(LOCALE_KEY) as Locale | null;
@@ -60,6 +60,20 @@ export default function StandingsPageClient({ poolId, backHref }: Props) {
     if (poolId) load();
     else setLoading(false);
   }, [poolId]);
+
+  useEffect(() => {
+    async function loadQuote() {
+      const { data } = await supabase
+        .from("quote_of_the_day")
+        .select("es, en, pt")
+        .eq("id", 1)
+        .maybeSingle();
+      if (data && (data.es || data.en || data.pt)) {
+        setQuote({ es: data.es ?? "", en: data.en ?? "", pt: data.pt ?? "" });
+      }
+    }
+    loadQuote();
+  }, []);
 
   const t = messages[locale];
 
@@ -102,26 +116,34 @@ export default function StandingsPageClient({ poolId, backHref }: Props) {
           </div>
         </section>
 
-        {/* QUOTE OF THE DAY */}
-        <section className="rounded-3xl card-glass px-5 py-3 shadow-sm">
-          <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-            Quote of the day
-          </div>
-          <div className="mt-1 text-center text-[var(--iberdrola-forest)]">
-            <div className="flex items-center justify-center gap-2 text-base font-bold italic">
-              <img src={QUOTE_FLAGS.es} alt="España" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover" />
-              <span>"{QUOTE_OF_THE_DAY.es}"</span>
+        {/* QUOTE OF THE DAY — solo si hay frase */}
+        {quote && (quote.es || quote.en || quote.pt) ? (
+          <section className="rounded-3xl card-glass px-5 py-3 shadow-sm">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+              Quote of the day
             </div>
-            <div className="mt-1 flex items-center justify-center gap-2 text-sm italic opacity-80">
-              <img src={QUOTE_FLAGS.en} alt="English" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover" />
-              <span>"{QUOTE_OF_THE_DAY.en}"</span>
+            <div className="mt-1 text-center text-[var(--iberdrola-forest)]">
+              {quote.es ? (
+                <div className="flex items-center justify-center gap-2 text-base font-bold italic">
+                  <img src={QUOTE_FLAGS.es} alt="España" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover" />
+                  <span>"{quote.es}"</span>
+                </div>
+              ) : null}
+              {quote.en ? (
+                <div className="mt-1 flex items-center justify-center gap-2 text-sm italic opacity-80">
+                  <img src={QUOTE_FLAGS.en} alt="English" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover" />
+                  <span>"{quote.en}"</span>
+                </div>
+              ) : null}
+              {quote.pt ? (
+                <div className="mt-1 flex items-center justify-center gap-2 text-sm italic opacity-80">
+                  <img src={QUOTE_FLAGS.pt} alt="Brasil" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover" />
+                  <span>"{quote.pt}"</span>
+                </div>
+              ) : null}
             </div>
-            <div className="mt-1 flex items-center justify-center gap-2 text-sm italic opacity-80">
-              <img src={QUOTE_FLAGS.pt} alt="Brasil" className="h-4 w-6 rounded-[2px] border border-gray-200 object-cover" />
-              <span>"{QUOTE_OF_THE_DAY.pt}"</span>
-            </div>
-          </div>
-        </section>
+          </section>
+        ) : null}
 
         {/* TABLE */}
         {!poolId || error ? (

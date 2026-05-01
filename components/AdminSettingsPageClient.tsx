@@ -21,77 +21,47 @@ type Pool = {
   admin_note: string | null;
 };
 
+type Quote = { es: string; en: string; pt: string };
+
 const VISIBILITY_OPTIONS: { value: VisibilityMode; label: string }[] = [
   { value: "hidden", label: "Oculto" },
   { value: "after_submit", label: "Solo tras enviar porra" },
   { value: "always", label: "Siempre visible" },
 ];
 
-function Toggle({
-  label,
-  description,
-  value,
-  onChange,
-}: {
-  label: string;
-  description?: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
+function Toggle({ label, description, value, onChange }: {
+  label: string; description?: string; value: boolean; onChange: (v: boolean) => void;
 }) {
   return (
     <div className="flex items-start justify-between gap-4 rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4">
       <div className="min-w-0">
         <div className="text-sm font-bold text-[var(--iberdrola-forest)]">{label}</div>
-        {description ? (
-          <div className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/60">{description}</div>
-        ) : null}
+        {description ? <div className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/60">{description}</div> : null}
       </div>
       <button
         type="button"
         onClick={() => onChange(!value)}
-        className={`relative shrink-0 h-6 w-11 rounded-full transition-colors ${
-          value ? "bg-[var(--iberdrola-green)]" : "bg-gray-200"
-        }`}
+        className={`relative shrink-0 h-6 w-11 rounded-full transition-colors ${value ? "bg-[var(--iberdrola-green)]" : "bg-gray-200"}`}
       >
-        <span
-          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-            value ? "translate-x-5" : "translate-x-0"
-          }`}
-        />
+        <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${value ? "translate-x-5" : "translate-x-0"}`} />
       </button>
     </div>
   );
 }
 
-function VisibilitySelect({
-  label,
-  description,
-  value,
-  onChange,
-}: {
-  label: string;
-  description?: string;
-  value: VisibilityMode;
-  onChange: (v: VisibilityMode) => void;
+function VisibilitySelect({ label, description, value, onChange }: {
+  label: string; description?: string; value: VisibilityMode; onChange: (v: VisibilityMode) => void;
 }) {
   return (
     <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4">
       <label className="block text-sm font-bold text-[var(--iberdrola-forest)]">{label}</label>
-      {description ? (
-        <div className="mt-0.5 mb-2 text-xs text-[var(--iberdrola-forest)]/60">{description}</div>
-      ) : (
-        <div className="mb-2" />
-      )}
+      {description ? <div className="mt-0.5 mb-2 text-xs text-[var(--iberdrola-forest)]/60">{description}</div> : <div className="mb-2" />}
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as VisibilityMode)}
         className="w-full rounded-xl border border-[var(--iberdrola-green)] bg-white px-3 py-2 text-sm font-semibold text-[var(--iberdrola-forest)]"
       >
-        {VISIBILITY_OPTIONS.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
+        {VISIBILITY_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
       </select>
     </div>
   );
@@ -106,6 +76,11 @@ export default function AdminSettingsPageClient() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"ok" | "error">("ok");
   const [saving, setSaving] = useState(false);
+
+  const [quote, setQuote] = useState<Quote>({ es: "", en: "", pt: "" });
+  const [savingQuote, setSavingQuote] = useState(false);
+  const [quoteMessage, setQuoteMessage] = useState("");
+  const [quoteMessageType, setQuoteMessageType] = useState<"ok" | "error">("ok");
 
   useEffect(() => {
     async function load() {
@@ -122,6 +97,18 @@ export default function AdminSettingsPageClient() {
   }, []);
 
   useEffect(() => {
+    async function loadQuote() {
+      const { data } = await supabase
+        .from("quote_of_the_day")
+        .select("es, en, pt")
+        .eq("id", 1)
+        .maybeSingle();
+      if (data) setQuote({ es: data.es ?? "", en: data.en ?? "", pt: data.pt ?? "" });
+    }
+    loadQuote();
+  }, []);
+
+  useEffect(() => {
     const pool = pools.find((p) => p.id === selectedPoolId);
     if (pool) setSettings(pool);
   }, [selectedPoolId, pools]);
@@ -134,9 +121,7 @@ export default function AdminSettingsPageClient() {
     if (!settings) return;
     setSaving(true);
     setMessage("");
-
     const { error } = await supabase.from("pools").update(settings).eq("id", selectedPoolId);
-
     if (error) {
       setMessage("Error guardando la configuración.");
       setMessageType("error");
@@ -145,8 +130,24 @@ export default function AdminSettingsPageClient() {
       setMessageType("ok");
       setPools((prev) => prev.map((p) => (p.id === selectedPoolId ? settings : p)));
     }
-
     setSaving(false);
+  }
+
+  async function saveQuote() {
+    setSavingQuote(true);
+    setQuoteMessage("");
+    const { error } = await supabase
+      .from("quote_of_the_day")
+      .update({ es: quote.es.trim(), en: quote.en.trim(), pt: quote.pt.trim(), updated_at: new Date().toISOString() })
+      .eq("id", 1);
+    if (error) {
+      setQuoteMessage("Error guardando la frase.");
+      setQuoteMessageType("error");
+    } else {
+      setQuoteMessage("✅ Frase actualizada. Aparecerá en la clasificación.");
+      setQuoteMessageType("ok");
+    }
+    setSavingQuote(false);
   }
 
   if (!settings) {
@@ -162,95 +163,112 @@ export default function AdminSettingsPageClient() {
   return (
     <main className="mx-auto max-w-4xl space-y-6 px-4 py-4 sm:px-6">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="p-4 sm:p-6">
           <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
             Administración · Ibe World Cup 2026
           </div>
-          <h1 className="mt-1.5 text-2xl font-black text-[var(--iberdrola-forest)]">
-            Configuración
-          </h1>
+          <h1 className="mt-1.5 text-2xl font-black text-[var(--iberdrola-forest)]">Configuración</h1>
           <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/65">
             Controla el acceso, registro, deadlines y visibilidad de cada pool
           </p>
-          <div className="mt-4">
-            <AdminNav />
-          </div>
+          <div className="mt-4"><AdminNav /></div>
         </div>
       </section>
 
-      {/* ── Selector de pool ── */}
+      {/* Selector de pool */}
       {pools.length > 1 ? (
         <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="p-4">
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-              Pool a configurar
-            </label>
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Pool a configurar</label>
             <select
               value={selectedPoolId}
               onChange={(e) => setSelectedPoolId(e.target.value)}
               className="w-full max-w-sm rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--iberdrola-forest)]"
             >
-              {pools.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
+              {pools.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
         </section>
       ) : null}
 
-      {/* ── Acceso y registro ── */}
+      {/* Quote of the day */}
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-          <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Acceso y registro</h2>
+          <h2 className="text-base font-black text-[var(--iberdrola-forest)]">💬 Quote of the day</h2>
           <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">
-            Controla quién puede entrar y qué puede hacer
+            Aparece en la página de clasificación. El cambio es inmediato para todos los usuarios.
           </p>
         </div>
-        <div className="grid gap-3 p-4 sm:grid-cols-2">
-          <Toggle
-            label="Registro abierto"
-            description="Los usuarios pueden registrarse con el código de acceso"
-            value={settings.is_registration_open}
-            onChange={(v) => update("is_registration_open", v)}
-          />
-          <Toggle
-            label="Pool visible"
-            description="El pool aparece listado en la aplicación"
-            value={settings.is_pool_visible}
-            onChange={(v) => update("is_pool_visible", v)}
-          />
-          <Toggle
-            label="Predicciones editables"
-            description="Los usuarios pueden modificar su porra (si no la han enviado)"
-            value={settings.is_predictions_editable}
-            onChange={(v) => update("is_predictions_editable", v)}
-          />
-          <Toggle
-            label="Envío habilitado"
-            description="Los usuarios pueden enviar su porra definitivamente"
-            value={settings.is_submission_enabled}
-            onChange={(v) => update("is_submission_enabled", v)}
-          />
+        <div className="space-y-3 p-4">
+          {[
+            { key: "es" as const, flag: "https://flagcdn.com/es.svg", lang: "Español", placeholder: "Lo que hacemos en la vida tiene su eco en la eternidad." },
+            { key: "en" as const, flag: "https://flagcdn.com/gb.svg", lang: "English", placeholder: "What we do in life echoes in eternity." },
+            { key: "pt" as const, flag: "https://flagcdn.com/br.svg", lang: "Português", placeholder: "O que fazemos na vida ecoa na eternidade." },
+          ].map(({ key, flag, lang, placeholder }) => (
+            <div key={key}>
+              <label className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                <img src={flag} alt={lang} className="h-3 w-5 rounded-[2px] border border-gray-200 object-cover" />
+                {lang}
+              </label>
+              <input
+                type="text"
+                value={quote[key]}
+                onChange={(e) => setQuote((q) => ({ ...q, [key]: e.target.value }))}
+                placeholder={placeholder}
+                className="w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2.5 text-sm text-[var(--iberdrola-forest)]"
+              />
+            </div>
+          ))}
+
+          <div className="flex items-center justify-between gap-3 pt-1">
+            {quoteMessage ? (
+              <div className={`text-sm font-semibold ${quoteMessageType === "ok" ? "text-[var(--iberdrola-green)]" : "text-red-600"}`}>
+                {quoteMessage}
+              </div>
+            ) : (
+              <div className="text-xs text-[var(--iberdrola-forest)]/45">
+                Vacío = no se muestra la sección en la clasificación
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={saveQuote}
+              disabled={savingQuote}
+              className="shrink-0 rounded-2xl bg-[var(--iberdrola-green)] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+            >
+              {savingQuote ? "Guardando..." : "Publicar frase"}
+            </button>
+          </div>
         </div>
       </section>
 
-      {/* ── Deadline ── */}
+      {/* Acceso y registro */}
+      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+        <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
+          <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Acceso y registro</h2>
+          <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">Controla quién puede entrar y qué puede hacer</p>
+        </div>
+        <div className="grid gap-3 p-4 sm:grid-cols-2">
+          <Toggle label="Registro abierto" description="Los usuarios pueden registrarse con el código de acceso" value={settings.is_registration_open} onChange={(v) => update("is_registration_open", v)} />
+          <Toggle label="Pool visible" description="El pool aparece listado en la aplicación" value={settings.is_pool_visible} onChange={(v) => update("is_pool_visible", v)} />
+          <Toggle label="Predicciones editables" description="Los usuarios pueden modificar su porra (si no la han enviado)" value={settings.is_predictions_editable} onChange={(v) => update("is_predictions_editable", v)} />
+          <Toggle label="Envío habilitado" description="Los usuarios pueden enviar su porra definitivamente" value={settings.is_submission_enabled} onChange={(v) => update("is_submission_enabled", v)} />
+        </div>
+      </section>
+
+      {/* Deadline */}
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Fecha límite de envío</h2>
-          <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">
-            Las porras no se podrán enviar después de esta fecha
-          </p>
+          <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">Las porras no se podrán enviar después de esta fecha</p>
         </div>
         <div className="p-4">
           <input
             type="datetime-local"
             value={settings.submission_deadline?.slice(0, 16) ?? ""}
-            onChange={(e) =>
-              update("submission_deadline", e.target.value ? e.target.value + ":00Z" : null)
-            }
+            onChange={(e) => update("submission_deadline", e.target.value ? e.target.value + ":00Z" : null)}
             className="w-full max-w-sm rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--iberdrola-forest)]"
           />
           {settings.submission_deadline ? (
@@ -263,43 +281,24 @@ export default function AdminSettingsPageClient() {
         </div>
       </section>
 
-      {/* ── Visibilidad ── */}
+      {/* Visibilidad */}
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Visibilidad de secciones</h2>
-          <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">
-            Controla qué puede ver cada usuario según su estado
-          </p>
+          <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">Controla qué puede ver cada usuario según su estado</p>
         </div>
         <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
-          <VisibilitySelect
-            label="Clasificación"
-            description="Tabla de posiciones del pool"
-            value={settings.classification_visibility}
-            onChange={(v) => update("classification_visibility", v)}
-          />
-          <VisibilitySelect
-            label="Estadísticas"
-            description="Análisis y métricas del pool"
-            value={settings.statistics_visibility}
-            onChange={(v) => update("statistics_visibility", v)}
-          />
-          <VisibilitySelect
-            label="Transparencia"
-            description="Ver predicciones de otros participantes"
-            value={settings.transparency_visibility}
-            onChange={(v) => update("transparency_visibility", v)}
-          />
+          <VisibilitySelect label="Clasificación" description="Tabla de posiciones del pool" value={settings.classification_visibility} onChange={(v) => update("classification_visibility", v)} />
+          <VisibilitySelect label="Estadísticas" description="Análisis y métricas del pool" value={settings.statistics_visibility} onChange={(v) => update("statistics_visibility", v)} />
+          <VisibilitySelect label="Transparencia" description="Ver predicciones de otros participantes" value={settings.transparency_visibility} onChange={(v) => update("transparency_visibility", v)} />
         </div>
       </section>
 
-      {/* ── Nota admin ── */}
+      {/* Nota admin */}
       <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Nota del administrador</h2>
-          <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">
-            Mensaje interno visible solo para administradores
-          </p>
+          <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">Mensaje interno visible solo para administradores</p>
         </div>
         <div className="p-4">
           <textarea
@@ -312,21 +311,13 @@ export default function AdminSettingsPageClient() {
         </div>
       </section>
 
-      {/* ── Guardar ── */}
+      {/* Guardar */}
       <div className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)] p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           {message ? (
-            <div
-              className={`text-sm font-semibold ${
-                messageType === "ok" ? "text-[var(--iberdrola-forest)]" : "text-red-700"
-              }`}
-            >
-              {message}
-            </div>
+            <div className={`text-sm font-semibold ${messageType === "ok" ? "text-[var(--iberdrola-forest)]" : "text-red-700"}`}>{message}</div>
           ) : (
-            <div className="text-sm text-[var(--iberdrola-forest)]/65">
-              Guarda los cambios para que surtan efecto inmediatamente.
-            </div>
+            <div className="text-sm text-[var(--iberdrola-forest)]/65">Guarda los cambios para que surtan efecto inmediatamente.</div>
           )}
         </div>
         <button
