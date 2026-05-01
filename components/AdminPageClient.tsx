@@ -430,7 +430,6 @@ setAdminTiebreaks(nextTiebreaks);
     setSelectedPoolSlug(currentPool?.slug ?? "");
   }, [selectedPoolId, pools]);
 
-  useEffect(() => {
   function updateGroupResult(
     matchId: string,
     side: "homeGoals" | "awayGoals",
@@ -498,6 +497,8 @@ function updateThirdPlaceTiebreak(teamId: string, value: string) {
   });
 }
 
+  async function handleSaveAllResults() {
+    setSavingAll(true);
     setMessage("");
 
     try {
@@ -592,8 +593,8 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
         <div className="p-4 sm:p-5">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div>
-              <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
-                Administración · Ibe World Cup 2026
+              <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                Administración
               </div>
               <h1 className="text-2xl font-black text-[var(--iberdrola-forest)]">
                 Resultados oficiales
@@ -601,9 +602,7 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
               <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
                 Fase de grupos · Knockout · Desempates · Preguntas extra
               </p>
-              <div className="mt-4">
-                <AdminNav />
-              </div>
+              <div className="mt-4"><AdminNav /></div>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -639,7 +638,6 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
           ) : null}
         </div>
       </section>
-
       <div className="grid gap-4 lg:grid-cols-[1.45fr_1.15fr]">
   <section className="min-w-0 rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
