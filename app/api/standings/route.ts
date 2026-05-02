@@ -250,6 +250,29 @@ export async function GET(req: Request) {
       );
     }
 
+    const { data: adminTiebreakRows, error: adminTiebreakError } = await supabase
+      .from("admin_tiebreaks")
+      .select("scope, scope_value, team_id, priority");
+
+    if (adminTiebreakError) {
+      return NextResponse.json(
+        { error: adminTiebreakError.message },
+        { status: 500 }
+      );
+    }
+
+    const groupAdminTiebreaks: Record<string, Record<string, number>> = {};
+    const thirdPlaceAdminTiebreaks: Record<string, number> = {};
+
+    (adminTiebreakRows ?? []).forEach((row: any) => {
+      if (row.scope === "group") {
+        if (!groupAdminTiebreaks[row.scope_value]) groupAdminTiebreaks[row.scope_value] = {};
+        groupAdminTiebreaks[row.scope_value][row.team_id] = row.priority;
+      } else if (row.scope === "third_place") {
+        thirdPlaceAdminTiebreaks[row.team_id] = row.priority;
+      }
+    });
+
     const { data: snapshots, error: snapshotsError } = await supabase
       .from("standings_snapshots")
       .select("entry_id, position, captured_at")
@@ -356,7 +379,8 @@ export async function GET(req: Request) {
       teams,
       officialMatches,
       groups,
-      realKnockoutPredictions
+      realKnockoutPredictions,
+      { groupAdminTiebreaks, thirdPlaceAdminTiebreaks }
     );
 
     for (const entry of entries ?? []) {
