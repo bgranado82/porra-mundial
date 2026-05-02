@@ -355,6 +355,8 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid">("pending");
   const [officialExtraResults, setOfficialExtraResults] = useState<Record<string, string>>({});
   const [userTiebreaks, setUserTiebreaks] = useState<UserTiebreakMap>({});
+  const [groupAdminTiebreaks, setGroupAdminTiebreaks] = useState<Record<string, Record<string, number>>>({});
+  const [thirdPlaceAdminTiebreaks, setThirdPlaceAdminTiebreaks] = useState<Record<string, number>>({});
   const [banquilloCount, setBanquilloCount] = useState(0);
   const [banquilloUnread, setBanquilloUnread] = useState(0);
   const [loadingBanquilloCount, setLoadingBanquilloCount] = useState(false);
@@ -576,6 +578,24 @@ export default function PredictionsPageClient({ entryId }: Props) {
         });
 
         setRealKnockoutPredictions(nextRealKo);
+
+        const { data: adminTbRows } = await supabase
+          .from("admin_tiebreaks")
+          .select("scope, scope_value, team_id, priority");
+
+        const nextGroupAdminTb: Record<string, Record<string, number>> = {};
+        const nextThirdPlaceAdminTb: Record<string, number> = {};
+        (adminTbRows ?? []).forEach((row) => {
+          if (row.scope === "group") {
+            if (!nextGroupAdminTb[row.scope_value]) nextGroupAdminTb[row.scope_value] = {};
+            nextGroupAdminTb[row.scope_value][row.team_id] = row.priority;
+          } else if (row.scope === "third_place") {
+            nextThirdPlaceAdminTb[row.team_id] = row.priority;
+          }
+        });
+        setGroupAdminTiebreaks(nextGroupAdminTb);
+        setThirdPlaceAdminTiebreaks(nextThirdPlaceAdminTb);
+
       } catch (err) {
         console.error(err);
         setSubmitMessage(t.loadEntryError);
@@ -1024,9 +1044,10 @@ export default function PredictionsPageClient({ entryId }: Props) {
         teams,
         officialMatches,
         groups,
-        realKnockoutPredictions
+        realKnockoutPredictions,
+        { groupAdminTiebreaks, thirdPlaceAdminTiebreaks }
       ),
-    [officialMatches, groups, realKnockoutPredictions]
+    [officialMatches, groups, realKnockoutPredictions, groupAdminTiebreaks, thirdPlaceAdminTiebreaks]
   );
 
   const groupPointsTotal = officialMatches
