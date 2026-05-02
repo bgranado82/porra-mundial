@@ -160,6 +160,26 @@ export async function recalculateScoresAll() {
     throw officialKnockoutResultsError;
   }
 
+  const { data: adminTiebreaksRows, error: adminTiebreaksError } = await supabase
+    .from("admin_tiebreaks")
+    .select("scope, scope_value, team_id, priority");
+
+  if (adminTiebreaksError) {
+    throw adminTiebreaksError;
+  }
+
+  const groupAdminTiebreaks: Record<string, Record<string, number>> = {};
+  const thirdPlaceAdminTiebreaks: Record<string, number> = {};
+
+  (adminTiebreaksRows ?? []).forEach((row) => {
+    if (row.scope === "group") {
+      if (!groupAdminTiebreaks[row.scope_value]) groupAdminTiebreaks[row.scope_value] = {};
+      groupAdminTiebreaks[row.scope_value][row.team_id] = row.priority;
+    } else if (row.scope === "third_place") {
+      thirdPlaceAdminTiebreaks[row.team_id] = row.priority;
+    }
+  });
+
   const entryById = new Map(
     (entries ?? []).map((entry) => [normalize(entry.id), entry])
   );
@@ -333,7 +353,8 @@ export async function recalculateScoresAll() {
     teams,
     officialMatchesWithResults,
     groups,
-    officialKnockoutMap
+    officialKnockoutMap,
+    { groupAdminTiebreaks, thirdPlaceAdminTiebreaks }
   );
 
   for (const entry of entries ?? []) {
