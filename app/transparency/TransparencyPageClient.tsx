@@ -242,6 +242,27 @@ export default function TransparencyPageClient() {
     return map;
   }, [data]);
 
+  const groupAdminTiebreaks = useMemo<Record<string, Record<string, number>>>(() => {
+    const result: Record<string, Record<string, number>> = {};
+    (data?.adminTiebreaks ?? []).forEach((row) => {
+      if (row.scope === "group") {
+        if (!result[row.scope_value]) result[row.scope_value] = {};
+        result[row.scope_value][row.team_id] = row.priority;
+      }
+    });
+    return result;
+  }, [data]);
+
+  const thirdPlaceAdminTiebreaks = useMemo<Record<string, number>>(() => {
+    const result: Record<string, number> = {};
+    (data?.adminTiebreaks ?? []).forEach((row) => {
+      if (row.scope === "third_place") {
+        result[row.team_id] = row.priority;
+      }
+    });
+    return result;
+  }, [data]);
+
   const realKnockoutPredictions = useMemo<KnockoutPredictionMap>(() => {
     const map: KnockoutPredictionMap = {};
     (data?.officialKO ?? []).forEach((row) => {
@@ -321,9 +342,10 @@ export default function TransparencyPageClient() {
         teams,
         officialMatches,
         groups,
-        realKnockoutPredictions
+        realKnockoutPredictions,
+        { groupAdminTiebreaks, thirdPlaceAdminTiebreaks }
       ),
-    [groups, officialMatches, realKnockoutPredictions]
+    [groups, officialMatches, realKnockoutPredictions, groupAdminTiebreaks, thirdPlaceAdminTiebreaks]
   );
 
   const realTeamsByRound = useMemo(
