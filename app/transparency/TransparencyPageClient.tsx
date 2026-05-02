@@ -60,6 +60,12 @@ type TransparencyEntryResponse = {
   question_key: string;
   official_value: string | null;
 }>;
+  adminTiebreaks: Array<{
+    scope: string;
+    scope_value: string;
+    team_id: string;
+    priority: number;
+  }>;
 };
 
 type PredictionMap = Record<
