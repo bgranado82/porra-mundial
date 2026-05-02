@@ -110,6 +110,31 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const { data: adminTiebreaks, error: adminTiebreaksError } = await supabase
+    .from("admin_tiebreaks")
+    .select("scope, scope_value, team_id, priority");
+
+  if (adminTiebreaksError) {
+    console.error(adminTiebreaksError);
+    return NextResponse.json(
+      { error: "Error loading admin tiebreaks" },
+      { status: 500 }
+    );
+  }
+
+  const { data: entryTiebreaks, error: entryTiebreaksError } = await supabase
+    .from("entry_tiebreaks")
+    .select("scope, scope_value, team_id, priority")
+    .eq("entry_id", entryId);
+
+  if (entryTiebreaksError) {
+    console.error(entryTiebreaksError);
+    return NextResponse.json(
+      { error: "Error loading entry tiebreaks" },
+      { status: 500 }
+    );
+  }
+
   return NextResponse.json({
     entry,
     groupPredictions: groupPredictions ?? [],
@@ -118,5 +143,7 @@ export async function GET(request: NextRequest) {
     officialGroup: officialGroup ?? [],
     officialKO: officialKO ?? [],
     officialExtraResults: officialExtraResults ?? [],
+    adminTiebreaks: adminTiebreaks ?? [],
+    entryTiebreaks: entryTiebreaks ?? [],
   });
 }

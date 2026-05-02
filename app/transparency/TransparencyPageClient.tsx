@@ -66,6 +66,12 @@ type TransparencyEntryResponse = {
     team_id: string;
     priority: number;
   }>;
+  entryTiebreaks: Array<{
+    scope: string;
+    scope_value: string;
+    team_id: string;
+    priority: number;
+  }>;
 };
 
 type PredictionMap = Record<
@@ -248,6 +254,17 @@ export default function TransparencyPageClient() {
     return map;
   }, [data]);
 
+  const groupUserTiebreaks = useMemo<Record<string, Record<string, number>>>(() => {
+    const result: Record<string, Record<string, number>> = {};
+    (data?.entryTiebreaks ?? []).forEach((row) => {
+      if (row.scope === "group") {
+        if (!result[row.scope_value]) result[row.scope_value] = {};
+        result[row.scope_value][row.team_id] = row.priority;
+      }
+    });
+    return result;
+  }, [data]);
+
   const groupAdminTiebreaks = useMemo<Record<string, Record<string, number>>>(() => {
     const result: Record<string, Record<string, number>> = {};
     (data?.adminTiebreaks ?? []).forEach((row) => {
@@ -324,10 +341,12 @@ export default function TransparencyPageClient() {
           teams,
           officialMatches,
           predictions,
-          groupCode
+          groupCode,
+          undefined,
+          groupUserTiebreaks[groupCode]
         ),
       })),
-    [groups, officialMatches, predictions]
+    [groups, officialMatches, predictions, groupUserTiebreaks]
   );
 
   const userBracket = useMemo(
