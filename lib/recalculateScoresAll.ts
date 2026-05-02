@@ -180,6 +180,31 @@ export async function recalculateScoresAll() {
     }
   });
 
+  const { data: entryTiebreakRows, error: entryTiebreaksError } = await supabase
+    .from("entry_tiebreaks")
+    .select("entry_id, scope, scope_value, team_id, priority");
+
+  if (entryTiebreaksError) {
+    throw entryTiebreaksError;
+  }
+
+  // Build per-entry tiebreak maps
+  const entryTiebreaksByEntryId = new Map<string, { group: Record<string, Record<string, number>>; thirdPlace: Record<string, number> }>();
+
+  (entryTiebreakRows ?? []).forEach((row) => {
+    const entryId = String(row.entry_id);
+    if (!entryTiebreaksByEntryId.has(entryId)) {
+      entryTiebreaksByEntryId.set(entryId, { group: {}, thirdPlace: {} });
+    }
+    const tb = entryTiebreaksByEntryId.get(entryId)!;
+    if (row.scope === "group") {
+      if (!tb.group[row.scope_value]) tb.group[row.scope_value] = {};
+      tb.group[row.scope_value][row.team_id] = row.priority;
+    } else if (row.scope === "third_place") {
+      tb.thirdPlace[row.team_id] = row.priority;
+    }
+  });
+
   const entryById = new Map(
     (entries ?? []).map((entry) => [normalize(entry.id), entry])
   );
@@ -384,12 +409,15 @@ export async function recalculateScoresAll() {
     };
   });
 
+  const entryTb = entryTiebreaksByEntryId.get(entryId) ?? { group: {}, thirdPlace: {} };
+
   const userBracket = buildUserKnockoutBracket(
     teams,
     officialMatchesWithResults,
     groups,
     groupPredictionMap,
-    picks
+    picks,
+    { groupUserTiebreaks: entryTb.group, thirdPlaceUserTiebreaks: entryTb.thirdPlace }
   );
 
   const knockoutScore = calculateKnockoutScore(
