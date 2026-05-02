@@ -265,6 +265,16 @@ export default function TransparencyPageClient() {
     return result;
   }, [data]);
 
+  const thirdPlaceUserTiebreaks = useMemo<Record<string, number>>(() => {
+    const result: Record<string, number> = {};
+    (data?.entryTiebreaks ?? []).forEach((row) => {
+      if (row.scope === "third_place") {
+        result[row.team_id] = row.priority;
+      }
+    });
+    return result;
+  }, [data]);
+
   const groupAdminTiebreaks = useMemo<Record<string, Record<string, number>>>(() => {
     const result: Record<string, Record<string, number>> = {};
     (data?.adminTiebreaks ?? []).forEach((row) => {
@@ -356,9 +366,10 @@ export default function TransparencyPageClient() {
         officialMatches,
         groups,
         predictions,
-        knockoutPredictions
+        knockoutPredictions,
+        { groupUserTiebreaks, thirdPlaceUserTiebreaks }
       ),
-    [groups, knockoutPredictions, officialMatches, predictions]
+    [groups, knockoutPredictions, officialMatches, predictions, groupUserTiebreaks, thirdPlaceUserTiebreaks]
   );
 
   const realBracket = useMemo(
