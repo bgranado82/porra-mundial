@@ -141,7 +141,7 @@ const LOCALE_MAP: Record<string, string> = {
 };
 
 function fmtPts(n: number, locale: string): string {
-  return n.toLocaleString(LOCALE_MAP[locale] ?? "es-ES");
+  return new Intl.NumberFormat(LOCALE_MAP[locale] ?? "es-ES", { useGrouping: true }).format(n);
 }
 
 export default function StandingsTable({ days, standings, locale = "es" }: Props) {

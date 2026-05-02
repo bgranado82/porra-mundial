@@ -25,7 +25,7 @@ const LOCALE_MAP: Record<string, string> = {
 };
 
 function fmtPts(n: number, locale: string): string {
-  return n.toLocaleString(LOCALE_MAP[locale] ?? "es-ES");
+  return new Intl.NumberFormat(LOCALE_MAP[locale] ?? "es-ES", { useGrouping: true }).format(n);
 }
 
 import { KnockoutPredictionMap, Match } from "@/types";
@@ -1359,7 +1359,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
             <div className="mt-5 grid gap-3 lg:grid-cols-[1.3fr_0.8fr_auto]">
               <HeaderPill
                 label={t.totalPoints}
-                value={canSeeClassification ? totalPoints : "-"}
+                value={canSeeClassification ? fmtPts(totalPoints, locale) : "-"}
                 big
               />
               <ClassificationHeaderCard
@@ -1445,7 +1445,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
                   {lastStandingsUpdate ? (
                     <div className="mt-2 text-xs font-medium text-[var(--iberdrola-forest)]/55">
                       {t.lastUpdate}:{" "}
-                      {new Date(lastStandingsUpdate).toLocaleString("es-ES", {
+                      {new Date(lastStandingsUpdate).toLocaleString(LOCALE_MAP[locale] ?? "es-ES", {
                         day: "2-digit",
                         month: "2-digit",
                         hour: "2-digit",
