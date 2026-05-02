@@ -527,7 +527,7 @@ export function generateRound32(
 
   return [
     { id: "r32-1", homeTeamId: A2.teamId, awayTeamId: B2.teamId, homeLabel: "2º Grupo A", awayLabel: "2º Grupo B" },
-    { id: "r32-2", homeTeamId: E1.teamId, awayTeamId: third74, homeLabel: "1º Grupo E", awayLabel: "3º oficial" },
+    { id: "r32-2", homeTeamId: E1.teamId, awayTeamId: third74, homeLabel: "1º Grupo E", awayLabel: "3º Grupo A/B/C/D/F" },
     { id: "r32-3", homeTeamId: F1.teamId, awayTeamId: C2.teamId, homeLabel: "1º Grupo F", awayLabel: "2º Grupo C" },
     { id: "r32-4", homeTeamId: C1.teamId, awayTeamId: F2.teamId, homeLabel: "1º Grupo C", awayLabel: "2º Grupo F" },
     { id: "r32-5", homeTeamId: I1.teamId, awayTeamId: third77, homeLabel: "1º Grupo I", awayLabel: "3º oficial" },
