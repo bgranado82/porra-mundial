@@ -27,12 +27,10 @@ export default function AdminStandingsPageClient() {
         <AdminNav />
 
         <div className="mt-6 rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white p-5 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-lg font-bold text-[var(--iberdrola-forest)]">📊 Clasificación</h1>
-              <p className="text-sm text-[var(--iberdrola-forest)]/60">Selecciona un pool para ver su clasificación</p>
-            </div>
-            <AdminPoolSelector selectedPoolId={poolId} onChange={setPoolId} />
+          <h1 className="mb-4 text-lg font-bold text-[var(--iberdrola-forest)]">📊 Clasificación</h1>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Pool</label>
+            <AdminPoolSelector selectedPoolId={poolId} onChange={setPoolId} className="w-full sm:w-72" />
           </div>
         </div>
 
