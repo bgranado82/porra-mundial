@@ -78,7 +78,11 @@ export async function GET(req: Request) {
       officialExtraRows: officialExtraRows ?? [],
     });
 
-    const days = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
+    const days = [...new Set(
+      (scores ?? [])
+        .filter((r: any) => r.stage === "group" && r.matchday != null)
+        .map((r: any) => Number(r.matchday))
+    )].sort((a, b) => a - b);
 
     const snapshotTimes = Array.from(
       new Set((snapshots ?? []).map((s: SnapshotRow) => s.captured_at))
