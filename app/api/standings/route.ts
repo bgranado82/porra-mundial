@@ -8,6 +8,16 @@ import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
 import { calculateKnockoutScore, calculateKnockoutPrecision } from "@/lib/knockoutScoring";
 import { KnockoutPredictionMap, Match } from "@/types";
+import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
+
+function normalizeExtraValue(value: string | null | undefined): string {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
 
 type EntryRow = {
   id: string;
@@ -286,6 +296,36 @@ export async function GET(req: Request) {
       );
     }
 
+    const { data: allExtraPredictions, error: extraPredictionsError } = await supabase
+      .from("entry_extra_predictions")
+      .select("entry_id, question_key, predicted_value")
+      .in("entry_id", (entries ?? []).map((e: EntryRow) => e.id));
+
+    if (extraPredictionsError) {
+      return NextResponse.json({ error: extraPredictionsError.message }, { status: 500 });
+    }
+
+    const { data: officialExtraRows, error: officialExtraError } = await supabase
+      .from("official_extra_results")
+      .select("question_key, official_value");
+
+    if (officialExtraError) {
+      return NextResponse.json({ error: officialExtraError.message }, { status: 500 });
+    }
+
+    const officialExtraMap: Record<string, string> = {};
+    (officialExtraRows ?? []).forEach((row: { question_key: string; official_value: string }) => {
+      officialExtraMap[row.question_key] = row.official_value;
+    });
+
+    // Extra predictions grouped by entry_id
+    const extraPredByEntry = new Map<string, Record<string, string>>();
+    (allExtraPredictions ?? []).forEach((row: { entry_id: string; question_key: string; predicted_value: string | null }) => {
+      const entryId = String(row.entry_id);
+      if (!extraPredByEntry.has(entryId)) extraPredByEntry.set(entryId, {});
+      extraPredByEntry.get(entryId)![row.question_key] = row.predicted_value ?? "";
+    });
+
     const grouped = new Map<string, StandingRow>();
 
     (entries ?? []).forEach((entry: EntryRow) => {
@@ -352,22 +392,32 @@ export async function GET(req: Request) {
         return;
       }
 
-      if (row.stage.startsWith("extra:")) {
-        const questionKey = row.stage.replace("extra:", "") as keyof ExtraPointsMap;
+    });
 
-        if (questionKey in current.extra_points) {
-          current.total_points += pts;
-          current.extra_points[questionKey] += pts;
-          current.extra_total_points += pts;
+    // Calcular extras en vivo desde official_extra_results + entry_extra_predictions
+    // (igual que PredictionsPageClient, para evitar dependencia de entry_scores)
+    grouped.forEach((current) => {
+      const entryPreds = extraPredByEntry.get(current.entry_id) ?? {};
 
-          if (
-            questionKey === "first_goal_scorer_world" ||
-            questionKey === "first_goal_scorer_spain"
-          ) {
-            current.extra_group_points += pts;
-          }
+      EXTRA_QUESTIONS.forEach((question) => {
+        const predicted = entryPreds[question.key] ?? "";
+        const official = officialExtraMap[question.key] ?? "";
+
+        if (!official || !predicted) return;
+
+        const isHit = normalizeExtraValue(predicted) === normalizeExtraValue(official);
+        if (!isHit) return;
+
+        const pts = (scoreSettings[question.pointsKey as keyof typeof scoreSettings] as number) ?? 0;
+
+        current.extra_points[question.key as keyof ExtraPointsMap] += pts;
+        current.extra_total_points += pts;
+        current.total_points += pts;
+
+        if (question.key === "first_goal_scorer_world" || question.key === "first_goal_scorer_spain") {
+          current.extra_group_points += pts;
         }
-      }
+      });
     });
 
     const realKnockoutPredictions: KnockoutPredictionMap = {};
@@ -514,7 +564,7 @@ export async function GET(req: Request) {
 
     const snapshotTimes = Array.from(
       new Set((snapshots ?? []).map((s: SnapshotRow) => s.captured_at))
-    ).sort((a, b) => (a < b ? 1 : -1));
+    ).sort((a, b) => (String(a) < String(b) ? 1 : -1));
 
     const lastUpdate = snapshotTimes[0] ?? null;
     const prevTime = snapshotTimes[1];
