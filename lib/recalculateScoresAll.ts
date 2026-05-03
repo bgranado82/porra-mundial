@@ -111,7 +111,8 @@ export async function recalculateScoresAll() {
 
   const { data: entries, error: entriesError } = await supabase
     .from("entries")
-    .select("id, pool_id");
+    .select("id, pool_id")
+    .range(0, 99999);
 
   if (entriesError) {
     throw entriesError;
@@ -127,7 +128,8 @@ export async function recalculateScoresAll() {
 
   const { data: predictions, error: predictionsError } = await supabase
     .from("entry_group_predictions")
-    .select("entry_id, match_id, home_goals, away_goals");
+    .select("entry_id, match_id, home_goals, away_goals")
+    .range(0, 99999);
 
   if (predictionsError) {
     throw predictionsError;
@@ -136,7 +138,8 @@ export async function recalculateScoresAll() {
   const { data: extraPredictions, error: extraPredictionsError } =
     await supabase
       .from("entry_extra_predictions")
-      .select("entry_id, question_key, predicted_value");
+      .select("entry_id, question_key, predicted_value")
+      .range(0, 99999);
 
   if (extraPredictionsError) {
     throw extraPredictionsError;
@@ -154,7 +157,8 @@ export async function recalculateScoresAll() {
   const { data: knockoutPredictions, error: knockoutPredictionsError } =
     await supabase
       .from("entry_knockout_predictions")
-      .select("entry_id, match_id, picked_team_id");
+      .select("entry_id, match_id, picked_team_id")
+      .range(0, 99999);
 
   if (knockoutPredictionsError) {
     throw knockoutPredictionsError;
@@ -191,7 +195,8 @@ export async function recalculateScoresAll() {
 
   const { data: entryTiebreakRows, error: entryTiebreaksError } = await supabase
     .from("entry_tiebreaks")
-    .select("entry_id, scope, scope_value, team_id, priority");
+    .select("entry_id, scope, scope_value, team_id, priority")
+    .range(0, 99999);
 
   if (entryTiebreaksError) {
     throw entryTiebreaksError;
