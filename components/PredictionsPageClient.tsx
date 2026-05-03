@@ -969,22 +969,16 @@ export default function PredictionsPageClient({ entryId }: Props) {
     return map;
   }, [userBracket]);
 
-  const isPredictionComplete = useMemo(() => {
+  const predictionStatus = useMemo(() => {
     const allGroupsFilled = orderedGroupMatches.every((match) => {
       const prediction = predictions[match.id];
-      return (
-        prediction &&
-        prediction.homeGoals !== null &&
-        prediction.awayGoals !== null
-      );
+      return prediction && prediction.homeGoals !== null && prediction.awayGoals !== null;
     });
 
-    // A pick is valid if it exists AND (the bracket has resolved teams for that match AND the pick is valid,
-    // OR the bracket hasn't resolved teams yet, in which case we just check the pick exists)
     const isPickValid = (matchId: string, pick: string | null | undefined) => {
       if (!pick) return false;
       const valid = validTeamsByMatch[matchId];
-      if (!valid || valid.size === 0) return true; // bracket not resolved yet, pick exists = valid
+      if (!valid || valid.size === 0) return true;
       return valid.has(pick);
     };
 
@@ -996,29 +990,14 @@ export default function PredictionsPageClient({ entryId }: Props) {
       userBracket.finals.every((m) => isPickValid(m.id, knockoutPredictions[m.id])) &&
       !!userBracket.championId;
 
-    // Debug: find which round fails
-    const r32ok = userBracket.round32.every((m) => isPickValid(m.id, knockoutPredictions[m.id]));
-    const r16ok = userBracket.round16.every((m) => isPickValid(m.id, knockoutPredictions[m.id]));
-    const qfok = userBracket.quarterfinals.every((m) => isPickValid(m.id, knockoutPredictions[m.id]));
-    const sfok = userBracket.semifinals.every((m) => isPickValid(m.id, knockoutPredictions[m.id]));
-    const fok = userBracket.finals.every((m) => isPickValid(m.id, knockoutPredictions[m.id]));
-    if (!allKnockoutFilled) {
-      console.log("[canSubmit] KO rounds:", {r32ok, r16ok, qfok, sfok, fok, champ: !!userBracket.championId});
-      if (!r32ok) userBracket.round32.forEach(m => { if (!isPickValid(m.id, knockoutPredictions[m.id])) console.log("r32 fail:", m.id, knockoutPredictions[m.id], validTeamsByMatch[m.id]?.size, m.homeTeamId, m.awayTeamId); });
-      if (!r16ok) userBracket.round16.forEach(m => { if (!isPickValid(m.id, knockoutPredictions[m.id])) console.log("r16 fail:", m.id, knockoutPredictions[m.id], validTeamsByMatch[m.id]?.size, m.homeTeamId, m.awayTeamId); });
-      if (!qfok) userBracket.quarterfinals.forEach(m => { if (!isPickValid(m.id, knockoutPredictions[m.id])) console.log("qf fail:", m.id, knockoutPredictions[m.id], validTeamsByMatch[m.id]?.size, m.homeTeamId, m.awayTeamId); });
-      if (!sfok) userBracket.semifinals.forEach(m => { if (!isPickValid(m.id, knockoutPredictions[m.id])) console.log("sf fail:", m.id, knockoutPredictions[m.id], validTeamsByMatch[m.id]?.size, m.homeTeamId, m.awayTeamId); });
-      if (!fok) userBracket.finals.forEach(m => { if (!isPickValid(m.id, knockoutPredictions[m.id])) console.log("final fail:", m.id, knockoutPredictions[m.id], validTeamsByMatch[m.id]?.size, m.homeTeamId, m.awayTeamId); });
-    }
-
     const allExtrasFilled = EXTRA_QUESTIONS.every((question) => {
       return (extraPredictions[question.key] ?? "").trim() !== "";
     });
 
-    console.log("[canSubmit] allGroupsFilled:", allGroupsFilled, "allKnockoutFilled:", allKnockoutFilled, "allExtrasFilled:", allExtrasFilled, "championId:", userBracket.championId);
-
-    return allGroupsFilled && allKnockoutFilled && allExtrasFilled;
+    return { allGroupsFilled, allKnockoutFilled, allExtrasFilled, complete: allGroupsFilled && allKnockoutFilled && allExtrasFilled };
   }, [orderedGroupMatches, predictions, userBracket, knockoutPredictions, extraPredictions, validTeamsByMatch]);
+
+  const isPredictionComplete = predictionStatus.complete;
 
   const canSubmitPredictions =
     entryStatus !== "submitted" &&
@@ -1396,6 +1375,27 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
               <div className="flex flex-col gap-2">
                 <CountdownBanner label={t.countdownLabel} />
+
+                {!isPredictionComplete && entryStatus !== "submitted" && !isDeadlinePassed && (
+                  <div className="flex flex-col gap-1.5">
+                    {!predictionStatus.allGroupsFilled && (
+                      <div className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                        {t.predictionIncompleteGroups}
+                      </div>
+                    )}
+                    {!predictionStatus.allKnockoutFilled && (
+                      <div className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                        {t.predictionIncompleteKnockout}
+                      </div>
+                    )}
+                    {!predictionStatus.allExtrasFilled && (
+                      <div className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700">
+                        {t.predictionIncompleteExtras}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={handleSubmitEntry}

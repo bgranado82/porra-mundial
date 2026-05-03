@@ -128,6 +128,9 @@ entrySaved: string;
 saveEntryError: string;
 activeEntryNotFound: string;
 predictionIncomplete: string;
+predictionIncompleteGroups: string;
+predictionIncompleteKnockout: string;
+predictionIncompleteExtras: string;
 submitEntryConfirm: string;
 submitEntrySuccess: string;
 submitEntryError: string;
@@ -425,6 +428,9 @@ entrySaved: "Porra guardada correctamente.",
 saveEntryError: "Error guardando la porra.",
 activeEntryNotFound: "No se ha encontrado la entry activa.",
 predictionIncomplete: "Tienes que completar toda la porra antes de enviarla.",
+  predictionIncompleteGroups: "⚽ Faltan resultados en la fase de grupos.",
+  predictionIncompleteKnockout: "🏆 Faltan picks en el cuadro eliminatorio.",
+  predictionIncompleteExtras: "✨ Faltan preguntas extra por rellenar.",
 submitEntryConfirm: "¿Seguro que quieres enviar la porra? Después no podrás modificarla.",
 submitEntrySuccess: "Porra enviada correctamente.",
 submitEntryError: "Error al enviar la porra.",
@@ -714,6 +720,9 @@ entrySaved: "Entry saved successfully.",
 saveEntryError: "Error saving entry.",
 activeEntryNotFound: "Active entry was not found.",
 predictionIncomplete: "You must complete the whole entry before submitting.",
+  predictionIncompleteGroups: "⚽ Some group stage results are missing.",
+  predictionIncompleteKnockout: "🏆 Some knockout bracket picks are missing.",
+  predictionIncompleteExtras: "✨ Some extra questions are not filled in.",
 submitEntryConfirm: "Are you sure you want to submit your entry? You will not be able to edit it afterwards.",
 submitEntrySuccess: "Entry submitted successfully.",
 submitEntryError: "Error submitting entry.",
@@ -1002,6 +1011,9 @@ entrySaved: "Bolão salvo com sucesso.",
 saveEntryError: "Erro ao salvar o bolão.",
 activeEntryNotFound: "Não foi possível encontrar a entry ativa.",
 predictionIncomplete: "Você precisa completar todo o bolão antes de enviá-lo.",
+  predictionIncompleteGroups: "⚽ Faltam resultados na fase de grupos.",
+  predictionIncompleteKnockout: "🏆 Faltam picks no quadro eliminatório.",
+  predictionIncompleteExtras: "✨ Faltam perguntas extra por preencher.",
 submitEntryConfirm: "Tem certeza de que deseja enviar o bolão? Depois disso não poderá modificá-lo.",
 submitEntrySuccess: "Bolão enviado com sucesso.",
 submitEntryError: "Erro ao enviar o bolão.",
