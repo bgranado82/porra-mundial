@@ -99,8 +99,8 @@ export default function StandingsPageClient({ poolId, backHref }: Props) {
             <div className="flex flex-col items-end gap-2">
               {data?.lastUpdate ? (
                 <div className="text-right text-xs text-[var(--iberdrola-forest)]/50">
-                  <span className="font-semibold">Actualizado:</span>{" "}
-                  {new Intl.DateTimeFormat("es-ES", {
+                  <span className="font-semibold">{t.lastUpdate}:</span>{" "}
+                  {new Intl.DateTimeFormat(locale === "en" ? "en-US" : locale === "pt" ? "pt-BR" : "es-ES", {
                     day: "2-digit",
                     month: "2-digit",
                     hour: "2-digit",
