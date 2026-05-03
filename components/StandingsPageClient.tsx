@@ -105,6 +105,7 @@ export default function StandingsPageClient({ poolId, backHref }: Props) {
                     month: "2-digit",
                     hour: "2-digit",
                     minute: "2-digit",
+                    hour12: false,
                     timeZone: "Europe/Madrid",
                   }).format(new Date(data.lastUpdate))}
                 </div>
