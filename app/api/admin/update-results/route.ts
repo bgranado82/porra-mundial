@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { recalculateScoresAll } from "@/lib/recalculateScoresAll";
+import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
+import { scoreSettings } from "@/data/settings";
 
 type GroupResultRow = {
   match_id: string;
@@ -194,6 +196,45 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: scoresError.message }, { status: 500 });
     }
 
+    // Fetch extras para incluirlos en el snapshot (igual que standings/route.ts)
+    const { data: allExtraPreds } = await adminSupabase
+      .from("entry_extra_predictions")
+      .select("entry_id, question_key, predicted_value");
+
+    const { data: officialExtrasSnap } = await adminSupabase
+      .from("official_extra_results")
+      .select("question_key, official_value");
+
+    const officialExtraSnapMap: Record<string, string> = {};
+    (officialExtrasSnap ?? []).forEach((row: any) => {
+      officialExtraSnapMap[row.question_key] = row.official_value;
+    });
+
+    const extraPredsByEntry = new Map<string, Record<string, string>>();
+    (allExtraPreds ?? []).forEach((row: any) => {
+      const id = String(row.entry_id);
+      if (!extraPredsByEntry.has(id)) extraPredsByEntry.set(id, {});
+      extraPredsByEntry.get(id)![row.question_key] = row.predicted_value ?? "";
+    });
+
+    function normalizeForSnapshot(v: string | null | undefined): string {
+      return String(v ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
+    }
+
+    function calcExtraPoints(entryId: string): number {
+      const preds = extraPredsByEntry.get(entryId) ?? {};
+      let pts = 0;
+      for (const [key, officialVal] of Object.entries(officialExtraSnapMap)) {
+        const predicted = preds[key] ?? "";
+        if (!predicted || !officialVal) continue;
+        if (normalizeForSnapshot(predicted) === normalizeForSnapshot(officialVal)) {
+          const q = EXTRA_QUESTIONS.find((q) => q.key === key);
+          if (q) pts += (scoreSettings[q.pointsKey as keyof typeof scoreSettings] as number) ?? 0;
+        }
+      }
+      return pts;
+    }
+
     const typedEntries = (entries ?? []) as EntryRow[];
     const typedScores = (scores ?? []) as ScoreRow[];
 
@@ -220,6 +261,11 @@ export async function POST(req: Request) {
 
       current.total_points += Number(row.points ?? 0);
       grouped.set(entryId, current);
+    });
+
+    // Añadir puntos extra a cada entrada del snapshot
+    grouped.forEach((row) => {
+      row.total_points += calcExtraPoints(row.entry_id);
     });
 
     const byPool = new Map<
