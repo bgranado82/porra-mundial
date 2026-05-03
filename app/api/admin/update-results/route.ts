@@ -95,19 +95,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // Solo borrar extras si vienen nuevos en el body (evitar borrar si no se tocaron)
-    if (extraResults.length > 0) {
-      const { error: deleteExtraError } = await adminSupabase
-        .from("official_extra_results")
-        .delete()
-        .not("question_key", "is", null);
+    // Borrar siempre los extras para que los campos vaciados se eliminen correctamente
+    const { error: deleteExtraError } = await adminSupabase
+      .from("official_extra_results")
+      .delete()
+      .not("question_key", "is", null);
 
-      if (deleteExtraError) {
-        return NextResponse.json(
-          { error: deleteExtraError.message },
-          { status: 500 }
-        );
-      }
+    if (deleteExtraError) {
+      return NextResponse.json(
+        { error: deleteExtraError.message },
+        { status: 500 }
+      );
     }
 
     // 2. Limpiar desempates admin actuales

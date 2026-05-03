@@ -503,14 +503,27 @@ export default function AdminResultsPageClient() {
         }
       );
 
-      const { error: extrasError } = await supabase
+      const { error: deleteExtrasError } = await supabase
         .from("official_extra_results")
-        .upsert(extraRows, { onConflict: "question_key" });
+        .delete()
+        .not("question_key", "is", null);
 
-      if (extrasError) {
-        setMessage("Error guardando resultados extra.");
+      if (deleteExtrasError) {
+        setMessage("Error borrando resultados extra.");
         setMessageType("error");
         return;
+      }
+
+      if (extraRows.length > 0) {
+        const { error: extrasError } = await supabase
+          .from("official_extra_results")
+          .insert(extraRows);
+
+        if (extrasError) {
+          setMessage("Error guardando resultados extra.");
+          setMessageType("error");
+          return;
+        }
       }
 
       const res = await fetch("/api/admin/update-results", {
