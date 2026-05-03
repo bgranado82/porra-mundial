@@ -4,6 +4,7 @@ import { scoreSettings } from "@/data/settings";
 import { buildUserKnockoutBracket } from "@/lib/knockoutBracket";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
 import { calculateKnockoutScore, calculateKnockoutPrecision } from "@/lib/knockoutScoring";
+import { calculateMatchPredictionScore } from "@/lib/scoring";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import { KnockoutPredictionMap, Match } from "@/types";
 
@@ -250,22 +251,49 @@ export function calculateStandings(input: CalculateStandingsInput): StandingRow[
     });
   });
 
-  // Group stage points from entry_scores
-  scores.forEach((row) => {
-    const current = grouped.get(String(row.entry_id));
-    if (!current) return;
-    const pts = Number(row.points ?? 0);
-    if (row.stage === "group") {
+  // Group stage points calculated live from predictions + official results
+  // (same approach as PredictionsPageClient — avoids dependency on entry_scores)
+  const officialGroupMap = new Map(
+    officialGroupRows.map((row) => [row.match_id, row])
+  );
+
+  const groupPredByEntry = new Map<string, Record<string, { homeGoals: number | null; awayGoals: number | null }>>();
+  allGroupPredictions.forEach((row) => {
+    const entryId = String(row.entry_id);
+    if (!groupPredByEntry.has(entryId)) groupPredByEntry.set(entryId, {});
+    groupPredByEntry.get(entryId)![row.match_id] = { homeGoals: row.home_goals, awayGoals: row.away_goals };
+  });
+
+  const groupMatches = initialMatches.filter((m) => m.stage === "group");
+
+  grouped.forEach((current) => {
+    const preds = groupPredByEntry.get(current.entry_id) ?? {};
+    groupMatches.forEach((match) => {
+      const official = officialGroupMap.get(match.id);
+      if (!official || official.home_goals === null || official.away_goals === null) return;
+      const pred = preds[match.id];
+      if (!pred || pred.homeGoals === null || pred.awayGoals === null) return;
+
+      const score = calculateMatchPredictionScore(
+        official.home_goals,
+        official.away_goals,
+        pred.homeGoals,
+        pred.awayGoals,
+        scoreSettings
+      );
+
+      const pts = score.points;
+      const isExact = pred.homeGoals === official.home_goals && pred.awayGoals === official.away_goals;
+      const isOutcome = (pred.homeGoals > pred.awayGoals ? "home" : pred.homeGoals < pred.awayGoals ? "away" : "draw") ===
+                        (official.home_goals > official.away_goals ? "home" : official.home_goals < official.away_goals ? "away" : "draw");
+
       current.total_points += pts;
       current.group_total += pts;
-      if (row.matchday != null) {
-        const day = Number(row.matchday);
-        current.day_points[String(day)] = (current.day_points[String(day)] ?? 0) + pts;
-      }
+      current.day_points[String(match.day)] = (current.day_points[String(match.day)] ?? 0) + pts;
       current.total_group_matches++;
-      if (row.is_outcome) current.outcome_hits++;
-      if (row.is_exact) current.exact_hits++;
-    }
+      if (isOutcome) current.outcome_hits++;
+      if (isExact) current.exact_hits++;
+    });
   });
 
   // Extra points calculated live
