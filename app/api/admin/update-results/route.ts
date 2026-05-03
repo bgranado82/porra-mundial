@@ -3,8 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { recalculateScoresAll } from "@/lib/recalculateScoresAll";
-import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
-import { scoreSettings } from "@/data/settings";
+import { calculateStandings } from "@/lib/calculateStandings";
 
 type GroupResultRow = {
   match_id: string;
@@ -179,128 +178,42 @@ export async function POST(req: Request) {
     // 4. Recalcular puntuaciones desde cero
     const debug = await recalculateScoresAll();
 
-    // 5. Crear snapshot de clasificación tras recalcular
-    const { data: entries, error: entriesError } = await adminSupabase
+    // 5. Crear snapshot usando exactamente la misma función que la clasificación en vivo
+    const { data: allEntries } = await adminSupabase
       .from("entries")
-      .select("id, pool_id, name, email");
+      .select("id, name, email, company, country, pool_id")
+      .eq("status", "submitted");
 
-    if (entriesError) {
-      return NextResponse.json({ error: entriesError.message }, { status: 500 });
-    }
+    const poolIds = [...new Set((allEntries ?? []).map((e: any) => String(e.pool_id)))] as string[];
 
-    const { data: scores, error: scoresError } = await adminSupabase
-      .from("entry_scores")
-      .select("entry_id, pool_id, points");
+    // Fetch datos compartidos (no dependen del pool)
+    const [
+      { data: officialGroupRows },
+      { data: officialKnockoutRows },
+      { data: adminTiebreakRows },
+      { data: officialExtraRows },
+      { data: allScores },
+      { data: allExtraPredictions },
+    ] = await Promise.all([
+      adminSupabase.from("official_group_results").select("match_id, home_goals, away_goals"),
+      adminSupabase.from("official_knockout_results").select("match_id, picked_team_id"),
+      adminSupabase.from("admin_tiebreaks").select("scope, scope_value, team_id, priority"),
+      adminSupabase.from("official_extra_results").select("question_key, official_value"),
+      adminSupabase.from("entry_scores").select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome"),
+      adminSupabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value"),
+    ]);
 
-    if (scoresError) {
-      return NextResponse.json({ error: scoresError.message }, { status: 500 });
-    }
+    const allEntryIds = (allEntries ?? []).map((e: any) => e.id);
 
-    // Fetch extras para incluirlos en el snapshot (igual que standings/route.ts)
-    const { data: allExtraPreds } = await adminSupabase
-      .from("entry_extra_predictions")
-      .select("entry_id, question_key, predicted_value");
-
-    const { data: officialExtrasSnap } = await adminSupabase
-      .from("official_extra_results")
-      .select("question_key, official_value");
-
-    const officialExtraSnapMap: Record<string, string> = {};
-    (officialExtrasSnap ?? []).forEach((row: any) => {
-      officialExtraSnapMap[row.question_key] = row.official_value;
-    });
-
-    const extraPredsByEntry = new Map<string, Record<string, string>>();
-    (allExtraPreds ?? []).forEach((row: any) => {
-      const id = String(row.entry_id);
-      if (!extraPredsByEntry.has(id)) extraPredsByEntry.set(id, {});
-      extraPredsByEntry.get(id)![row.question_key] = row.predicted_value ?? "";
-    });
-
-    function normalizeForSnapshot(v: string | null | undefined): string {
-      return String(v ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim().toLowerCase();
-    }
-
-    function calcExtraPoints(entryId: string): number {
-      const preds = extraPredsByEntry.get(entryId) ?? {};
-      let pts = 0;
-      for (const [key, officialVal] of Object.entries(officialExtraSnapMap)) {
-        const predicted = preds[key] ?? "";
-        if (!predicted || !officialVal) continue;
-        if (normalizeForSnapshot(predicted) === normalizeForSnapshot(officialVal)) {
-          const q = EXTRA_QUESTIONS.find((q) => q.key === key);
-          if (q) pts += (scoreSettings[q.pointsKey as keyof typeof scoreSettings] as number) ?? 0;
-        }
-      }
-      return pts;
-    }
-
-    function calcExtraGroupPoints(entryId: string): number {
-      const groupKeys = ["first_goal_scorer_world", "first_goal_scorer_spain"];
-      const preds = extraPredsByEntry.get(entryId) ?? {};
-      let pts = 0;
-      for (const key of groupKeys) {
-        const officialVal = officialExtraSnapMap[key] ?? "";
-        const predicted = preds[key] ?? "";
-        if (!predicted || !officialVal) continue;
-        if (normalizeForSnapshot(predicted) === normalizeForSnapshot(officialVal)) {
-          const q = EXTRA_QUESTIONS.find((q) => q.key === key);
-          if (q) pts += (scoreSettings[q.pointsKey as keyof typeof scoreSettings] as number) ?? 0;
-        }
-      }
-      return pts;
-    }
-
-    const typedEntries = (entries ?? []) as EntryRow[];
-    const typedScores = (scores ?? []) as ScoreRow[];
-
-    const entryMap = new Map<string, EntryRow>(
-      typedEntries.map((entry) => [String(entry.id), entry])
-    );
-
-    const grouped = new Map<
-      string,
-      { entry_id: string; pool_id: string; total_points: number; group_points: number; name: string }
-    >();
-
-    typedScores.forEach((row: any) => {
-      const entryId = String(row.entry_id);
-      const entry = entryMap.get(entryId);
-      if (!entry) return;
-
-      const current = grouped.get(entryId) ?? {
-        entry_id: entryId,
-        pool_id: String(row.pool_id),
-        total_points: 0,
-        group_points: 0,
-        name: entry.name || entry.email || "Jugador",
-      };
-
-      const pts = Number(row.points ?? 0);
-      current.total_points += pts;
-      if (row.stage === "group") current.group_points += pts;
-      grouped.set(entryId, current);
-    });
-
-    // Añadir puntos extra a cada entrada del snapshot
-    grouped.forEach((row) => {
-      const extraPts = calcExtraPoints(row.entry_id);
-      row.total_points += extraPts;
-      // extra_group_points (first_goal_scorer_world y first_goal_scorer_spain) van también a grupos
-      const extraGroupPts = calcExtraGroupPoints(row.entry_id);
-      row.group_points += extraGroupPts;
-    });
-
-    const byPool = new Map<
-      string,
-      Array<{ entry_id: string; pool_id: string; total_points: number; group_points: number; name: string }>
-    >();
-
-    Array.from(grouped.values()).forEach((row) => {
-      const current = byPool.get(row.pool_id) ?? [];
-      current.push(row);
-      byPool.set(row.pool_id, current);
-    });
+    const [
+      { data: allGroupPredictions },
+      { data: allKnockoutPredictions },
+      { data: allTiebreakRows },
+    ] = await Promise.all([
+      adminSupabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").in("entry_id", allEntryIds),
+      adminSupabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").in("entry_id", allEntryIds),
+      adminSupabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").in("entry_id", allEntryIds),
+    ]);
 
     const snapshotRows: Array<{
       pool_id: string;
@@ -310,20 +223,35 @@ export async function POST(req: Request) {
       group_position: number;
     }> = [];
 
-    for (const [poolId, poolRows] of byPool.entries()) {
-      const sortedGeneral = [...poolRows].sort((a, b) => {
-        if (b.total_points !== a.total_points) return b.total_points - a.total_points;
-        return a.name.localeCompare(b.name);
+    for (const poolId of poolIds) {
+      const poolEntries = (allEntries ?? []).filter((e: any) => String(e.pool_id) === poolId);
+      const poolEntryIds = new Set(poolEntries.map((e: any) => String(e.id)));
+
+      // Usar exactamente calculateStandings — misma función que standings/route.ts
+      const poolStandings = calculateStandings({
+        entries: poolEntries,
+        scores: (allScores ?? []).filter((r: any) => String(r.pool_id) === poolId),
+        officialGroupRows: officialGroupRows ?? [],
+        allGroupPredictions: (allGroupPredictions ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
+        allKnockoutPredictions: (allKnockoutPredictions ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
+        officialKnockoutRows: officialKnockoutRows ?? [],
+        tiebreakRows: (allTiebreakRows ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
+        adminTiebreakRows: adminTiebreakRows ?? [],
+        allExtraPredictions: (allExtraPredictions ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
+        officialExtraRows: officialExtraRows ?? [],
       });
 
-      const sortedGroups = [...poolRows].sort((a, b) => {
-        if (b.group_points !== a.group_points) return b.group_points - a.group_points;
+      // Posición general: ya viene ordenada de calculateStandings
+      // Posición de grupos: ordenar por group_total + extra_group_points
+      const sortedByGroups = [...poolStandings].sort((a, b) => {
+        const aG = a.group_total + a.extra_group_points;
+        const bG = b.group_total + b.extra_group_points;
+        if (bG !== aG) return bG - aG;
         return a.name.localeCompare(b.name);
       });
+      const groupPosMap = new Map(sortedByGroups.map((r, i) => [r.entry_id, i + 1]));
 
-      const groupPosMap = new Map(sortedGroups.map((r, i) => [r.entry_id, i + 1]));
-
-      sortedGeneral.forEach((row, index) => {
+      poolStandings.forEach((row, index) => {
         snapshotRows.push({
           pool_id: poolId,
           entry_id: row.entry_id,
@@ -335,15 +263,31 @@ export async function POST(req: Request) {
     }
 
     if (snapshotRows.length > 0) {
+      // Mantener solo el snapshot más reciente como "anterior" para calcular variación
+      for (const poolId of poolIds) {
+        const { data: existingSnaps } = await adminSupabase
+          .from("standings_snapshots")
+          .select("captured_at")
+          .eq("pool_id", poolId)
+          .order("captured_at", { ascending: false })
+          .limit(1);
+
+        if (existingSnaps && existingSnaps.length > 0) {
+          const latestTime = existingSnaps[0].captured_at;
+          await adminSupabase
+            .from("standings_snapshots")
+            .delete()
+            .eq("pool_id", poolId)
+            .neq("captured_at", latestTime);
+        }
+      }
+
       const { error: snapshotError } = await adminSupabase
         .from("standings_snapshots")
         .insert(snapshotRows);
 
       if (snapshotError) {
-        return NextResponse.json(
-          { error: snapshotError.message },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: snapshotError.message }, { status: 500 });
       }
     }
 
