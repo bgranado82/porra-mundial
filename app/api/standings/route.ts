@@ -41,6 +41,7 @@ type ScoreRow = {
 type SnapshotRow = {
   entry_id: string;
   position: number;
+  group_position: number | null;
   captured_at: string;
 };
 
@@ -285,7 +286,7 @@ export async function GET(req: Request) {
 
     const { data: snapshots, error: snapshotsError } = await supabase
       .from("standings_snapshots")
-      .select("entry_id, position, captured_at")
+      .select("entry_id, position, group_position, captured_at")
       .eq("pool_id", poolId)
       .order("captured_at", { ascending: false });
 
@@ -569,12 +570,16 @@ export async function GET(req: Request) {
     const lastUpdate = snapshotTimes[0] ?? null;
     const prevTime = snapshotTimes[1];
     const prevMap = new Map<string, number>();
+    const prevGroupMap = new Map<string, number>();
 
     if (prevTime) {
       (snapshots ?? [])
         .filter((s: SnapshotRow) => s.captured_at === prevTime)
         .forEach((s: SnapshotRow) => {
           prevMap.set(String(s.entry_id), s.position);
+          if (s.group_position != null) {
+            prevGroupMap.set(String(s.entry_id), s.group_position);
+          }
         });
     }
 
@@ -593,11 +598,16 @@ export async function GET(req: Request) {
         movement_value = position - prev;
       }
 
+      // group_movement: se calcula en el frontend con groupStandings,
+      // pero pasamos la posición de grupos anterior del snapshot
+      const prevGroupPos = prevGroupMap.get(row.entry_id) ?? null;
+
       return {
         ...row,
         position,
         movement,
         movement_value,
+        prev_group_position: prevGroupPos,
         outcome_percent:
           row.total_group_matches > 0
             ? Math.round((row.outcome_hits / row.total_group_matches) * 100)

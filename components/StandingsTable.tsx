@@ -47,6 +47,9 @@ type Standing = {
   position: number;
   movement: "up" | "down" | "same";
   movement_value: number;
+  prev_group_position?: number | null;
+  group_movement?: "up" | "down" | "same";
+  group_movement_value?: number;
 };
 
 type Props = {
@@ -150,6 +153,26 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
 
   const hasGroupDays = days.length > 0;
   const sortedDays = useMemo(() => [...days].sort((a, b) => a - b), [days]);
+
+  // Fase de grupos: ordenar por group_total + extra_group_points, con posición y variación propias
+  const groupStandings = useMemo(() => {
+    const sorted = [...standings].sort((a, b) => {
+      const aTotal = a.group_total + a.extra_group_points;
+      const bTotal = b.group_total + b.extra_group_points;
+      if (bTotal !== aTotal) return bTotal - aTotal;
+      return a.name.localeCompare(b.name);
+    });
+    return sorted.map((row, index) => {
+      const currentPos = index + 1;
+      const prevPos = row.prev_group_position ?? currentPos;
+      let movement: "up" | "down" | "same" = "same";
+      let movement_value = 0;
+      if (currentPos < prevPos) { movement = "up"; movement_value = prevPos - currentPos; }
+      else if (currentPos > prevPos) { movement = "down"; movement_value = currentPos - prevPos; }
+      return { ...row, position: currentPos, movement, movement_value };
+    });
+  }, [standings]);
+
   const totalRows = standings.length;
 
   return (
@@ -281,7 +304,7 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
               </thead>
 
               <tbody>
-                {standings.map((row) => {
+                {groupStandings.map((row) => {
                   const heatClass = getRankHeatClass(row.position, totalRows);
 
                   return (

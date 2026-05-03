@@ -235,6 +235,22 @@ export async function POST(req: Request) {
       return pts;
     }
 
+    function calcExtraGroupPoints(entryId: string): number {
+      const groupKeys = ["first_goal_scorer_world", "first_goal_scorer_spain"];
+      const preds = extraPredsByEntry.get(entryId) ?? {};
+      let pts = 0;
+      for (const key of groupKeys) {
+        const officialVal = officialExtraSnapMap[key] ?? "";
+        const predicted = preds[key] ?? "";
+        if (!predicted || !officialVal) continue;
+        if (normalizeForSnapshot(predicted) === normalizeForSnapshot(officialVal)) {
+          const q = EXTRA_QUESTIONS.find((q) => q.key === key);
+          if (q) pts += (scoreSettings[q.pointsKey as keyof typeof scoreSettings] as number) ?? 0;
+        }
+      }
+      return pts;
+    }
+
     const typedEntries = (entries ?? []) as EntryRow[];
     const typedScores = (scores ?? []) as ScoreRow[];
 
@@ -244,10 +260,10 @@ export async function POST(req: Request) {
 
     const grouped = new Map<
       string,
-      { entry_id: string; pool_id: string; total_points: number; name: string }
+      { entry_id: string; pool_id: string; total_points: number; group_points: number; name: string }
     >();
 
-    typedScores.forEach((row) => {
+    typedScores.forEach((row: any) => {
       const entryId = String(row.entry_id);
       const entry = entryMap.get(entryId);
       if (!entry) return;
@@ -256,21 +272,28 @@ export async function POST(req: Request) {
         entry_id: entryId,
         pool_id: String(row.pool_id),
         total_points: 0,
+        group_points: 0,
         name: entry.name || entry.email || "Jugador",
       };
 
-      current.total_points += Number(row.points ?? 0);
+      const pts = Number(row.points ?? 0);
+      current.total_points += pts;
+      if (row.stage === "group") current.group_points += pts;
       grouped.set(entryId, current);
     });
 
     // Añadir puntos extra a cada entrada del snapshot
     grouped.forEach((row) => {
-      row.total_points += calcExtraPoints(row.entry_id);
+      const extraPts = calcExtraPoints(row.entry_id);
+      row.total_points += extraPts;
+      // extra_group_points (first_goal_scorer_world y first_goal_scorer_spain) van también a grupos
+      const extraGroupPts = calcExtraGroupPoints(row.entry_id);
+      row.group_points += extraGroupPts;
     });
 
     const byPool = new Map<
       string,
-      Array<{ entry_id: string; pool_id: string; total_points: number; name: string }>
+      Array<{ entry_id: string; pool_id: string; total_points: number; group_points: number; name: string }>
     >();
 
     Array.from(grouped.values()).forEach((row) => {
@@ -284,22 +307,29 @@ export async function POST(req: Request) {
       entry_id: string;
       position: number;
       total_points: number;
+      group_position: number;
     }> = [];
 
     for (const [poolId, poolRows] of byPool.entries()) {
-      const sorted = poolRows.sort((a, b) => {
-        if (b.total_points !== a.total_points) {
-          return b.total_points - a.total_points;
-        }
+      const sortedGeneral = [...poolRows].sort((a, b) => {
+        if (b.total_points !== a.total_points) return b.total_points - a.total_points;
         return a.name.localeCompare(b.name);
       });
 
-      sorted.forEach((row, index) => {
+      const sortedGroups = [...poolRows].sort((a, b) => {
+        if (b.group_points !== a.group_points) return b.group_points - a.group_points;
+        return a.name.localeCompare(b.name);
+      });
+
+      const groupPosMap = new Map(sortedGroups.map((r, i) => [r.entry_id, i + 1]));
+
+      sortedGeneral.forEach((row, index) => {
         snapshotRows.push({
           pool_id: poolId,
           entry_id: row.entry_id,
           position: index + 1,
           total_points: row.total_points,
+          group_position: groupPosMap.get(row.entry_id) ?? index + 1,
         });
       });
     }
