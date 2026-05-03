@@ -95,7 +95,7 @@ function RoundSection({
   if (matches.length === 0) return null;
 
   return (
-    <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+    <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
         <h3 className="text-lg font-black text-[var(--iberdrola-forest)]">{title}</h3>
       </div>
@@ -562,10 +562,11 @@ export default function AdminResultsPageClient() {
   }
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-6 overflow-x-hidden px-4 py-4 sm:px-6">
+    <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
+    <main className="mx-auto max-w-[1600px] space-y-6 overflow-x-hidden px-4 py-6 sm:px-6">
 
       {/* ── Header ── */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="p-4 sm:p-6">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
@@ -655,7 +656,7 @@ export default function AdminResultsPageClient() {
       {/* ── Fase de grupos + Clasificaciones ── */}
       <div className="grid gap-4 lg:grid-cols-[1.45fr_0.55fr]">
         {/* Partidos de grupo */}
-        <section className="min-w-0 rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+        <section className="min-w-0 rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
               Fase de grupos
@@ -742,7 +743,7 @@ export default function AdminResultsPageClient() {
 
         {/* Clasificaciones + Terceros */}
         <div className="flex flex-col gap-4">
-          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm lg:sticky lg:top-4">
+          <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm lg:sticky lg:top-4">
             <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
               <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
                 Clasificaciones por grupo
@@ -773,7 +774,7 @@ export default function AdminResultsPageClient() {
           </section>
 
           {/* Mejores terceros */}
-          <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+          <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
             <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
               <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
                 Mejores terceros
@@ -815,7 +816,7 @@ export default function AdminResultsPageClient() {
       />
 
       {/* ── Preguntas extra ── */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-lg font-black text-[var(--iberdrola-forest)]">
             Preguntas extra
@@ -857,5 +858,6 @@ export default function AdminResultsPageClient() {
       </div>
 
     </main>
+    </div>
   );
 }
