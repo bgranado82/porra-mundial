@@ -979,39 +979,28 @@ export default function PredictionsPageClient({ entryId }: Props) {
       );
     });
 
-    // A pick is valid only if it exists AND is a valid team for that match
-    // This catches the case where TB changes and bracket invalidates previous picks
+    // A pick is valid if it exists AND (the bracket has resolved teams for that match AND the pick is valid,
+    // OR the bracket hasn't resolved teams yet, in which case we just check the pick exists)
+    const isPickValid = (matchId: string, pick: string | null | undefined) => {
+      if (!pick) return false;
+      const valid = validTeamsByMatch[matchId];
+      if (!valid || valid.size === 0) return true; // bracket not resolved yet, pick exists = valid
+      return valid.has(pick);
+    };
+
     const allKnockoutFilled =
-      userBracket.round32.every((m) => {
-        const pick = knockoutPredictions[m.id];
-        const valid = validTeamsByMatch[m.id];
-        return pick && valid && valid.has(pick);
-      }) &&
-      userBracket.round16.every((m) => {
-        const pick = knockoutPredictions[m.id];
-        const valid = validTeamsByMatch[m.id];
-        return pick && valid && valid.has(pick);
-      }) &&
-      userBracket.quarterfinals.every((m) => {
-        const pick = knockoutPredictions[m.id];
-        const valid = validTeamsByMatch[m.id];
-        return pick && valid && valid.has(pick);
-      }) &&
-      userBracket.semifinals.every((m) => {
-        const pick = knockoutPredictions[m.id];
-        const valid = validTeamsByMatch[m.id];
-        return pick && valid && valid.has(pick);
-      }) &&
-      userBracket.finals.every((m) => {
-        const pick = knockoutPredictions[m.id];
-        const valid = validTeamsByMatch[m.id];
-        return pick && valid && valid.has(pick);
-      }) &&
+      userBracket.round32.every((m) => isPickValid(m.id, knockoutPredictions[m.id])) &&
+      userBracket.round16.every((m) => isPickValid(m.id, knockoutPredictions[m.id])) &&
+      userBracket.quarterfinals.every((m) => isPickValid(m.id, knockoutPredictions[m.id])) &&
+      userBracket.semifinals.every((m) => isPickValid(m.id, knockoutPredictions[m.id])) &&
+      userBracket.finals.every((m) => isPickValid(m.id, knockoutPredictions[m.id])) &&
       !!userBracket.championId;
 
     const allExtrasFilled = EXTRA_QUESTIONS.every((question) => {
       return (extraPredictions[question.key] ?? "").trim() !== "";
     });
+
+    console.log("[canSubmit] allGroupsFilled:", allGroupsFilled, "allKnockoutFilled:", allKnockoutFilled, "allExtrasFilled:", allExtrasFilled, "championId:", userBracket.championId);
 
     return allGroupsFilled && allKnockoutFilled && allExtrasFilled;
   }, [orderedGroupMatches, predictions, userBracket, knockoutPredictions, extraPredictions, validTeamsByMatch]);
