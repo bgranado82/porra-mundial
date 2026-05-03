@@ -13,6 +13,15 @@ function normalize(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase();
 }
 
+function normalizeExtraValue(value: string | null | undefined): string {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
 function getOutcome(
   homeGoals: number,
   awayGoals: number
@@ -345,8 +354,8 @@ export async function recalculateScoresAll() {
       continue;
     }
 
-    const predictedValue = normalize(pred.predicted_value);
-    const officialValue = normalize(official.official_value);
+    const predictedValue = normalizeExtraValue(pred.predicted_value);
+    const officialValue = normalizeExtraValue(official.official_value);
     const isExact = predictedValue === officialValue;
     const points = isExact ? getExtraQuestionPoints(pred.question_key) : 0;
 
