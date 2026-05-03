@@ -60,10 +60,11 @@ export default function AdminQuotePageClient() {
   ];
 
   return (
-    <main className="mx-auto max-w-2xl space-y-6 px-4 py-4 sm:px-6">
+    <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
+      <main className="mx-auto max-w-2xl space-y-6 px-4 py-6 sm:px-6">
 
       {/* Header */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="p-4 sm:p-6">
           <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
             Administración · Ibe World Cup 2026
@@ -81,7 +82,7 @@ export default function AdminQuotePageClient() {
       </section>
 
       {/* Formulario */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Frase actual</h2>
           <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">
@@ -116,7 +117,7 @@ export default function AdminQuotePageClient() {
 
       {/* Preview */}
       {(quote.es || quote.en || quote.pt) ? (
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
           <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Vista previa</h2>
             <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">Así se verá en la clasificación</p>
@@ -173,5 +174,6 @@ export default function AdminQuotePageClient() {
       </div>
 
     </main>
+  </div>
   );
 }

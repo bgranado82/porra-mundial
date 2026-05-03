@@ -292,19 +292,22 @@ export default function AdminParticipantsPageClient() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-[1600px] px-4 py-6">
-        <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 text-sm text-[var(--iberdrola-forest)]/60">
-          Cargando participantes...
+      <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
+        <div className="mx-auto max-w-[1600px] px-4 py-6">
+          <div className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white p-6 text-sm text-[var(--iberdrola-forest)]/60">
+            Cargando participantes...
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-4 sm:px-6">
+    <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
+      <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
 
       {/* ── Header ── */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="p-4 sm:p-6">
           <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
             Administración · Ibe World Cup 2026
@@ -322,7 +325,7 @@ export default function AdminParticipantsPageClient() {
       </section>
 
       {/* ── Filtros y stats ── */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Filtros</h2>
         </div>
@@ -428,7 +431,7 @@ export default function AdminParticipantsPageClient() {
       </section>
 
       {/* ── Lista de participantes ── */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3 flex items-center justify-between">
           <h2 className="text-base font-black text-[var(--iberdrola-forest)]">
             {selectedPool?.name ?? "Participantes"}
@@ -579,5 +582,6 @@ export default function AdminParticipantsPageClient() {
         </div>
       </section>
     </main>
+  </div>
   );
 }

@@ -116,19 +116,22 @@ export default function AdminSettingsPageClient() {
 
   if (!settings) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-6">
-        <div className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white p-6 text-sm text-[var(--iberdrola-forest)]/60">
-          Cargando configuración...
+      <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
+        <div className="mx-auto max-w-4xl px-4 py-6">
+          <div className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white p-6 text-sm text-[var(--iberdrola-forest)]/60">
+            Cargando configuración...
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 px-4 py-4 sm:px-6">
+    <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
+      <main className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6">
 
       {/* Header */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="p-4 sm:p-6">
           <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
             Administración · Ibe World Cup 2026
@@ -143,7 +146,7 @@ export default function AdminSettingsPageClient() {
 
       {/* Selector de pool */}
       {pools.length > 1 ? (
-        <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
           <div className="p-4">
             <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Pool a configurar</label>
             <select
@@ -158,7 +161,7 @@ export default function AdminSettingsPageClient() {
       ) : null}
 
       {/* Acceso y registro */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Acceso y registro</h2>
           <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">Controla quién puede entrar y qué puede hacer</p>
@@ -172,7 +175,7 @@ export default function AdminSettingsPageClient() {
       </section>
 
       {/* Deadline */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Fecha límite de envío</h2>
           <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">Las porras no se podrán enviar después de esta fecha</p>
@@ -195,7 +198,7 @@ export default function AdminSettingsPageClient() {
       </section>
 
       {/* Visibilidad */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Visibilidad de secciones</h2>
           <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">Controla qué puede ver cada usuario según su estado</p>
@@ -208,7 +211,7 @@ export default function AdminSettingsPageClient() {
       </section>
 
       {/* Nota admin */}
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
         <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
           <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Nota del administrador</h2>
           <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">Mensaje interno visible solo para administradores</p>
@@ -244,5 +247,6 @@ export default function AdminSettingsPageClient() {
       </div>
 
     </main>
+  </div>
   );
 }
