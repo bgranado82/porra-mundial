@@ -17,6 +17,24 @@ const items = [
     aliases: ["/admin/results"],
   },
   {
+    href: "/admin/standings",
+    label: "Clasificación",
+    icon: "📊",
+    aliases: ["/admin/standings"],
+  },
+  {
+    href: "/admin/transparency",
+    label: "Predicciones",
+    icon: "🔍",
+    aliases: ["/admin/transparency"],
+  },
+  {
+    href: "/admin/explorer",
+    label: "Explorador",
+    icon: "🔎",
+    aliases: ["/admin/explorer"],
+  },
+  {
     href: "/admin/participants",
     label: "Participantes",
     icon: "👥",
