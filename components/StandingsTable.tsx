@@ -344,7 +344,6 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
                   return (
                     <tr
                       key={row.entry_id}
-                      ref={isOwn ? (el) => el?.scrollIntoView({ block: "center", behavior: "smooth" }) : undefined}
                       className={`transition ${
                         isOwn
                           ? "ring-2 ring-inset ring-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]"
@@ -563,7 +562,6 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
                   return (
                     <tr
                       key={row.entry_id}
-                      ref={isOwn ? (el) => el?.scrollIntoView({ block: "center", behavior: "smooth" }) : undefined}
                       className={`transition ${
                         isOwn
                           ? "ring-2 ring-inset ring-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]"
