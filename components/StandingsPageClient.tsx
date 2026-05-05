@@ -16,11 +16,12 @@ const QUOTE_FLAGS = {
 type Props = {
   poolId: string;
   backHref: string;
+  entryId?: string;
 };
 
 type Quote = { es: string; en: string; pt: string } | null;
 
-export default function StandingsPageClient({ poolId, backHref }: Props) {
+export default function StandingsPageClient({ poolId, backHref, entryId = "" }: Props) {
   const [locale, setLocale] = useState<Locale>("es");
   const [data, setData] = useState<{ days: number[]; standings: unknown[]; lastUpdate: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -177,6 +178,7 @@ export default function StandingsPageClient({ poolId, backHref }: Props) {
             days={data.days}
             standings={data.standings as never}
             locale={locale}
+            entryId={entryId}
           />
         ) : null}
 

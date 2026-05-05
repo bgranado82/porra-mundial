@@ -19,5 +19,5 @@ export default async function StandingsPage({ searchParams }: PageProps) {
       ? `/pool/${poolSlug}/entry/${entryId}`
       : "/dashboard";
 
-  return <StandingsPageClient poolId={poolId} backHref={backHref} />;
+  return <StandingsPageClient poolId={poolId} backHref={backHref} entryId={entryId ?? ""} />;
 }

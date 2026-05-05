@@ -56,6 +56,7 @@ type Props = {
   days: number[];
   standings: Standing[];
   locale?: Locale;
+  entryId?: string;
 };
 
 type TabKey = "groups" | "general";
@@ -147,16 +148,28 @@ function fmtPts(n: number, locale: string): string {
   return new Intl.NumberFormat(LOCALE_MAP[locale] ?? "es-ES", { useGrouping: true }).format(n);
 }
 
-export default function StandingsTable({ days, standings, locale = "es" }: Props) {
+export default function StandingsTable({ days, standings, locale = "es", entryId = "" }: Props) {
   const [tab, setTab] = useState<TabKey>("groups");
+  const [search, setSearch] = useState("");
   const t = messages[locale];
 
   const hasGroupDays = days.length > 0;
   const sortedDays = useMemo(() => [...days].sort((a, b) => a - b), [days]);
 
+  const filteredStandings = useMemo(() => {
+    if (!search.trim()) return standings;
+    const q = search.trim().toLowerCase();
+    return standings.filter(
+      (r) =>
+        (r.name || "").toLowerCase().includes(q) ||
+        (r.email || "").toLowerCase().includes(q) ||
+        (r.company || "").toLowerCase().includes(q)
+    );
+  }, [standings, search]);
+
   // Fase de grupos: ordenar por group_total + extra_group_points, con posición y variación propias
   const groupStandings = useMemo(() => {
-    const sorted = [...standings].sort((a, b) => {
+    const sorted = [...filteredStandings].sort((a, b) => {
       const aTotal = a.group_total + a.extra_group_points;
       const bTotal = b.group_total + b.extra_group_points;
       if (bTotal !== aTotal) return bTotal - aTotal;
@@ -173,34 +186,54 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
     });
   }, [standings]);
 
-  const totalRows = standings.length;
+  const totalRows = filteredStandings.length;
 
   return (
     <section className="space-y-4">
-      {/* BOTONES */}
-    <div className="flex gap-2">
-      <button
-        onClick={() => setTab("groups")}
-        className={`rounded-full px-4 py-2 text-sm font-semibold ${
-          tab === "groups"
-            ? "bg-[var(--iberdrola-green)] text-white"
-            : "border border-[var(--iberdrola-green)] bg-white text-[var(--iberdrola-forest)]"
-        }`}
-      >
-        {t.groupStage}
-      </button>
+      {/* BÚSQUEDA + BOTONES */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setTab("groups")}
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              tab === "groups"
+                ? "bg-[var(--iberdrola-green)] text-white"
+                : "border border-[var(--iberdrola-green)] bg-white text-[var(--iberdrola-forest)]"
+            }`}
+          >
+            {t.groupStage}
+          </button>
+          <button
+            onClick={() => setTab("general")}
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              tab === "general"
+                ? "bg-[var(--iberdrola-green)] text-white"
+                : "border border-[var(--iberdrola-green)] bg-white text-[var(--iberdrola-forest)]"
+            }`}
+          >
+            {t.standingsTabGeneral}
+          </button>
+        </div>
 
-      <button
-        onClick={() => setTab("general")}
-        className={`rounded-full px-4 py-2 text-sm font-semibold ${
-          tab === "general"
-            ? "bg-[var(--iberdrola-green)] text-white"
-            : "border border-[var(--iberdrola-green)] bg-white text-[var(--iberdrola-forest)]"
-        }`}
-      >
-        {t.standingsTabGeneral}
-      </button>
-    </div>
+        <div className="relative w-full sm:w-64">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--iberdrola-forest)]/40 text-sm">🔍</span>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar participante..."
+            className="w-full rounded-full border border-[var(--iberdrola-green-mid)] bg-white py-2 pl-8 pr-4 text-sm text-[var(--iberdrola-forest)] placeholder:text-[var(--iberdrola-forest)]/40 focus:border-[var(--iberdrola-green)] focus:outline-none focus:ring-1 focus:ring-[var(--iberdrola-green)]"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--iberdrola-forest)]/40 hover:text-[var(--iberdrola-forest)]"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
         
       <div className="rounded-3xl border border-[var(--iberdrola-green)] bg-white shadow-sm">
         <div className="overflow-x-auto overflow-y-auto rounded-3xl" style={{ maxHeight: "75vh" }}>
@@ -306,14 +339,21 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
               <tbody>
                 {groupStandings.map((row) => {
                   const heatClass = getRankHeatClass(row.position, totalRows);
+                  const isOwn = entryId && row.entry_id === entryId;
 
                   return (
-                    <tr key={row.entry_id} className={`transition ${
-                      row.position === 1 ? "bg-amber-50/60 hover:bg-amber-50" :
-                      row.position === 2 ? "bg-gray-50/80 hover:bg-gray-100/60" :
-                      row.position === 3 ? "bg-orange-50/40 hover:bg-orange-50/60" :
-                      "hover:bg-gray-50"
-                    }`}>
+                    <tr
+                      key={row.entry_id}
+                      ref={isOwn ? (el) => el?.scrollIntoView({ block: "center", behavior: "smooth" }) : undefined}
+                      className={`transition ${
+                        isOwn
+                          ? "ring-2 ring-inset ring-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]"
+                          : row.position === 1 ? "bg-amber-50/60 hover:bg-amber-50" :
+                            row.position === 2 ? "bg-gray-50/80 hover:bg-gray-100/60" :
+                            row.position === 3 ? "bg-orange-50/40 hover:bg-orange-50/60" :
+                            "hover:bg-gray-50"
+                      }`}
+                    >
                       <td className={`sticky left-0 z-10 border-b border-gray-100 px-1 py-3 text-center md:px-2 ${
                         row.position <= 3 ? "bg-transparent" : "bg-white"
                       }`}>
@@ -516,16 +556,23 @@ export default function StandingsTable({ days, standings, locale = "es" }: Props
               </thead>
 
               <tbody>
-                {standings.map((row) => {
+                {filteredStandings.map((row) => {
                   const heatClass = getRankHeatClass(row.position, totalRows);
+                  const isOwn = entryId && row.entry_id === entryId;
 
                   return (
-                    <tr key={row.entry_id} className={`transition ${
-                      row.position === 1 ? "bg-amber-50/60 hover:bg-amber-50" :
-                      row.position === 2 ? "bg-gray-50/80 hover:bg-gray-100/60" :
-                      row.position === 3 ? "bg-orange-50/40 hover:bg-orange-50/60" :
-                      "hover:bg-gray-50"
-                    }`}>
+                    <tr
+                      key={row.entry_id}
+                      ref={isOwn ? (el) => el?.scrollIntoView({ block: "center", behavior: "smooth" }) : undefined}
+                      className={`transition ${
+                        isOwn
+                          ? "ring-2 ring-inset ring-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]"
+                          : row.position === 1 ? "bg-amber-50/60 hover:bg-amber-50" :
+                            row.position === 2 ? "bg-gray-50/80 hover:bg-gray-100/60" :
+                            row.position === 3 ? "bg-orange-50/40 hover:bg-orange-50/60" :
+                            "hover:bg-gray-50"
+                      }`}
+                    >
                       <td className={`sticky left-0 z-10 border-b border-gray-100 px-1 py-3 text-center md:px-2 ${
                         row.position <= 3 ? "bg-transparent" : "bg-white"
                       }`}>
