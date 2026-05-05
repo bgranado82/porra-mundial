@@ -169,13 +169,13 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
 
   // Fase de grupos: ordenar por group_total + extra_group_points, con posición y variación propias
   const groupStandings = useMemo(() => {
-    const sorted = [...filteredStandings].sort((a, b) => {
+    const sorted = [...standings].sort((a, b) => {
       const aTotal = a.group_total + a.extra_group_points;
       const bTotal = b.group_total + b.extra_group_points;
       if (bTotal !== aTotal) return bTotal - aTotal;
       return a.name.localeCompare(b.name);
     });
-    return sorted.map((row, index) => {
+    const withPositions = sorted.map((row, index) => {
       const currentPos = index + 1;
       const prevPos = row.prev_group_position ?? currentPos;
       let movement: "up" | "down" | "same" = "same";
@@ -184,7 +184,16 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
       else if (currentPos > prevPos) { movement = "down"; movement_value = currentPos - prevPos; }
       return { ...row, position: currentPos, movement, movement_value };
     });
-  }, [filteredStandings]);
+    // Filtrar después de calcular posiciones para no alterarlas
+    if (!search.trim()) return withPositions;
+    const q = search.trim().toLowerCase();
+    return withPositions.filter(
+      (r) =>
+        (r.name || "").toLowerCase().includes(q) ||
+        (r.email || "").toLowerCase().includes(q) ||
+        (r.company || "").toLowerCase().includes(q)
+    );
+  }, [standings, search]);
 
   const totalRows = filteredStandings.length;
 
