@@ -157,7 +157,7 @@ function ChampionDonutCard({ items }: { items: StatsResponse["champion"]["items"
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value: number) => [`${value} votos`]} />
+              <Tooltip formatter={(value) => [`${value} votos`]} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -215,7 +215,7 @@ function ExtraBarCard({ title, icon, flagImg, items }: {
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="label" width={90} tick={{ fontSize: 11, fill: "#1a3a2a" }} tickLine={false} axisLine={false} />
-                <Tooltip formatter={(v: number) => [`${v} votos`]} />
+                <Tooltip formatter={(v) => [`${v} votos`]} />
                 <Bar dataKey="count" radius={[0, 6, 6, 0]}>
                   {visible.map((_, idx) => (
                     <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
