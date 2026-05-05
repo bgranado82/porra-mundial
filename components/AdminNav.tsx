@@ -47,6 +47,12 @@ const items = [
     aliases: ["/admin/settings", "/admin/pools"],
   },
   {
+    href: "/admin/stats",
+    label: "Estadísticas",
+    icon: "📈",
+    aliases: ["/admin/stats"],
+  },
+  {
     href: "/admin/quote",
     label: "Quote of the day",
     icon: "💬",
