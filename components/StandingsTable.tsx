@@ -184,7 +184,7 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
       else if (currentPos > prevPos) { movement = "down"; movement_value = currentPos - prevPos; }
       return { ...row, position: currentPos, movement, movement_value };
     });
-  }, [standings]);
+  }, [filteredStandings]);
 
   const totalRows = filteredStandings.length;
 
