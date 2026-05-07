@@ -186,9 +186,8 @@ export default function ExplorerPageClient({ poolId, poolSlug, entryId, backHref
                   </div>
                   <div className="divide-y divide-gray-50">
                     {group.entries.map((e) => (
-                      <div key={e.entry_id} className="flex items-center justify-between px-5 py-2.5">
+                      <div key={e.entry_id} className="px-5 py-2.5">
                         <span className="text-sm font-medium text-[var(--iberdrola-forest)]">{e.name}</span>
-                        <span className="text-xs text-[var(--iberdrola-forest)]/50">{e.email}</span>
                       </div>
                     ))}
                   </div>
