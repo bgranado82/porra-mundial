@@ -144,7 +144,9 @@ export async function POST(req: Request) {
         }
 
         if (snapRows.length > 0) {
-          await adminSupabase.from("standings_snapshots").insert(snapRows);
+          await adminSupabase
+            .from("standings_snapshots")
+            .upsert(snapRows, { onConflict: "pool_id,entry_id" });
         }
       }
     } catch (snapErr) {

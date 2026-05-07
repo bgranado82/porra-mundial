@@ -7,7 +7,7 @@ type SnapshotRow = {
   entry_id: string;
   position: number;
   group_position: number | null;
-  captured_at: string;
+  captured_at: string | null;
 };
 
 export async function GET(req: Request) {
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
       supabase.from("official_knockout_results").select("match_id, picked_team_id").range(0, 99999),
       supabase.from("admin_tiebreaks").select("scope, scope_value, team_id, priority").range(0, 99999),
       supabase.from("official_extra_results").select("question_key, official_value").range(0, 99999),
-      supabase.from("standings_snapshots").select("entry_id, position, group_position, captured_at").eq("pool_id", poolId).order("captured_at", { ascending: false }).range(0, 99999),
+      supabase.from("standings_snapshots").select("entry_id, position, group_position, captured_at").eq("pool_id", poolId).range(0, 99999),
     ]);
 
     if (entriesError) return NextResponse.json({ error: entriesError.message }, { status: 500 });
@@ -80,23 +80,19 @@ export async function GET(req: Request) {
 
     const days = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18];
 
-    const snapshotTimes = Array.from(
-      new Set((snapshots ?? []).map((s: SnapshotRow) => s.captured_at))
-    ).sort((a, b) => (String(a) < String(b) ? 1 : -1));
-
-    const lastUpdate = snapshotTimes[0] ?? null;
-    const prevTime = snapshotTimes[0]; // el único snapshot es el "anterior" — las posiciones actuales se calculan en vivo
+    // Posiciones anteriores: una sola fila por entry (upsert en update-results),
+    // así que basta con leer directamente la tabla filtrada por pool.
     const prevMap = new Map<string, number>();
     const prevGroupMap = new Map<string, number>();
+    let lastUpdate: string | null = null;
 
-    if (prevTime) {
-      (snapshots ?? [])
-        .filter((s: SnapshotRow) => s.captured_at === prevTime)
-        .forEach((s: SnapshotRow) => {
-          prevMap.set(String(s.entry_id), s.position);
-          if (s.group_position != null) prevGroupMap.set(String(s.entry_id), s.group_position);
-        });
-    }
+    (snapshots ?? []).forEach((s: SnapshotRow) => {
+      prevMap.set(String(s.entry_id), s.position);
+      if (s.group_position != null) prevGroupMap.set(String(s.entry_id), s.group_position);
+      if (s.captured_at && (!lastUpdate || s.captured_at > lastUpdate)) {
+        lastUpdate = s.captured_at;
+      }
+    });
 
     const standings = currentStandings.map((row, index) => {
       const position = index + 1;
@@ -112,6 +108,9 @@ export async function GET(req: Request) {
         position,
         movement,
         movement_value,
+        // El front (StandingsTable) usa prev_group_position para calcular
+        // la variación de la pestaña "fase de grupos" comparándola con la
+        // posición que toca AHORA en ese orden distinto.
         prev_group_position: prevGroupMap.get(row.entry_id) ?? null,
         outcome_percent: row.total_group_matches > 0
           ? Math.round((row.outcome_hits / row.total_group_matches) * 100) : 0,
