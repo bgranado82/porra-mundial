@@ -263,23 +263,21 @@ export async function POST(req: Request) {
     }
 
     if (snapshotRows.length > 0) {
-      // Mantener los 2 últimos snapshots: el actual y el anterior, para calcular variación
+      // Mantener solo el snapshot más reciente como "anterior" — borrar todos excepto el último
       for (const poolId of poolIds) {
         const { data: allSnaps } = await adminSupabase
           .from("standings_snapshots")
-          .select("captured_at")
+          .select("id, captured_at")
           .eq("pool_id", poolId)
           .order("captured_at", { ascending: false });
 
-        const uniqueTimes = [...new Set((allSnaps ?? []).map((s: any) => String(s.captured_at)))];
-        const timesToKeep = uniqueTimes.slice(0, 2); // mantener los 2 más recientes
-
-        if (timesToKeep.length > 0) {
+        if (allSnaps && allSnaps.length > 1) {
+          // Mantener solo el más reciente (índice 0), borrar el resto por id
+          const idsToDelete = allSnaps.slice(1).map((s: any) => s.id);
           await adminSupabase
             .from("standings_snapshots")
             .delete()
-            .eq("pool_id", poolId)
-            .not("captured_at", "in", `(${timesToKeep.map((t) => `"${t}"`).join(",")})`);
+            .in("id", idsToDelete);
         }
       }
 
