@@ -231,6 +231,7 @@ stats: {
 
   viewStandings: string;
   viewTransparency: string;
+  viewExplorer: string;
   backToPrediction: string;
 
   participants: string;
@@ -531,6 +532,7 @@ stats: {
 
   viewStandings: "Ver clasificación",
   viewTransparency: "Ver predicciones por participante",
+  viewExplorer: "Ver predicciones por resultado",
   backToPrediction: "Volver a la porra",
 
   participants: "Participantes",
@@ -823,6 +825,7 @@ stats: {
 
   viewStandings: "View standings",
   viewTransparency: "View participant predictions",
+  viewExplorer: "View predictions by result",
   backToPrediction: "Back to prediction",
 
   participants: "Participants",
@@ -1114,6 +1117,7 @@ stats: {
 
   viewStandings: "Ver classificação",
   viewTransparency: "Ver palpites por participante",
+  viewExplorer: "Ver palpites por resultado",
   backToPrediction: "Voltar ao bolão",
 
   participants: "Participantes",

@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { teams } from "@/data/teams";
 
@@ -22,12 +21,6 @@ function titleCase(value: string) {
 
 export async function GET(req: Request) {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "No autenticado" }, { status: 401 });
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-    if (!profile || profile.role !== "admin") return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-
     const adminSupabase = createAdminClient();
     const { searchParams } = new URL(req.url);
     const poolId = searchParams.get("poolId");
@@ -44,7 +37,7 @@ export async function GET(req: Request) {
       .eq("status", "submitted");
 
     if (entriesError) return NextResponse.json({ error: entriesError.message }, { status: 500 });
-    if (!entries || entries.length === 0) return NextResponse.json({ results: [] });
+    if (!entries || entries.length === 0) return NextResponse.json({ results: [], total: 0 });
 
     const entryIds = entries.map((e: any) => e.id);
     const entryMap = new Map<string, { name: string; email: string }>(
@@ -102,6 +95,7 @@ export async function GET(req: Request) {
         });
     }
 
+    // Agrupar por normalized_value, mostrar con titleCase
     const grouped: Record<string, { entries: typeof rows; displayValue: string; flagUrl: string | null }> = {};
     rows.forEach((r) => {
       if (!grouped[r.normalizedValue]) {

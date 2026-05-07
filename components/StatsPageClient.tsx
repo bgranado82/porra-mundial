@@ -682,6 +682,12 @@ export default function StatsPageClient() {
                   {t.stats.viewTransparency}
                 </Link>
                 <Link
+                  href={poolId ? `/explorer?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : "/explorer"}
+                  className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+                >
+                  {t.stats.viewExplorer}
+                </Link>
+                <Link
                   href={poolId ? `/banquillo?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : "/banquillo"}
                   onClick={() => {
                     if (poolId) {
