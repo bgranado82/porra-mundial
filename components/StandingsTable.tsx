@@ -355,7 +355,7 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
                       key={row.entry_id}
                       className={`transition ${
                         isOwn
-                          ? "ring-2 ring-inset ring-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]"
+                          ? "bg-[var(--iberdrola-green-light)]"
                           : row.position === 1 ? "bg-amber-50/60 hover:bg-amber-50" :
                             row.position === 2 ? "bg-gray-50/80 hover:bg-gray-100/60" :
                             row.position === 3 ? "bg-orange-50/40 hover:bg-orange-50/60" :
@@ -574,7 +574,7 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
                       key={row.entry_id}
                       className={`transition ${
                         isOwn
-                          ? "ring-2 ring-inset ring-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]"
+                          ? "bg-[var(--iberdrola-green-light)]"
                           : row.position === 1 ? "bg-amber-50/60 hover:bg-amber-50" :
                             row.position === 2 ? "bg-gray-50/80 hover:bg-gray-100/60" :
                             row.position === 3 ? "bg-orange-50/40 hover:bg-orange-50/60" :
