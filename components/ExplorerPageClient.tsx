@@ -82,8 +82,8 @@ export default function ExplorerPageClient({ poolId, poolSlug, entryId, backHref
   }, [results, searchValue]);
 
   return (
-    <main className="page-bg p-4 md:p-6">
-      <div className="mx-auto max-w-3xl space-y-4">
+    <main className="page-bg">
+      <div className="mx-auto max-w-[1600px] space-y-4 px-4 py-6">
 
         {/* HEADER */}
         <section className="rounded-3xl card-glass p-5 shadow-md">
@@ -103,16 +103,22 @@ export default function ExplorerPageClient({ poolId, poolSlug, entryId, backHref
               <LanguageSwitcher locale={locale} onChange={setLocale} label={t.language} />
               <div className="flex flex-wrap gap-2">
                 <Link
-                  href={poolSlug ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/standings?poolId=${poolId}&entryId=${entryId}`}
+                  href={poolId && poolSlug && entryId ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/standings?poolId=${poolId}`}
                   className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
                 >
                   {t.stats.viewStandings}
                 </Link>
                 <Link
-                  href={poolSlug ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/transparency?poolId=${poolId}&entryId=${entryId}`}
+                  href={poolId && poolSlug && entryId ? `/transparency?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/transparency?poolId=${poolId}`}
                   className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
                 >
                   {t.stats.viewTransparency}
+                </Link>
+                <Link
+                  href={poolSlug && entryId ? `/banquillo?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/banquillo`}
+                  className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+                >
+                  {t.banquillo.title}
                 </Link>
                 <Link
                   href={backHref}

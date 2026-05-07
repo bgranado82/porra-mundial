@@ -484,8 +484,29 @@ export default function TransparencyPageClient() {
               </Link>
 
               <Link
-                href={backToPredictionHref}
+                href={poolId && poolSlug && entryId ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/standings?poolId=${poolId}`}
                 className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+              >
+                {t.stats.viewStandings}
+              </Link>
+
+              <Link
+                href={poolId && poolSlug && entryId ? `/explorer?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/explorer?poolId=${poolId}`}
+                className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+              >
+                {t.stats.viewExplorer}
+              </Link>
+
+              <Link
+                href={poolSlug && entryId ? `/banquillo?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/banquillo`}
+                className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+              >
+                {t.banquillo.title}
+              </Link>
+
+              <Link
+                href={backToPredictionHref}
+                className="rounded-2xl bg-[var(--iberdrola-green)] px-3 py-2 text-xs font-black text-white shadow-sm transition hover:brightness-110"
               >
                 {t.banquillo.backToPrediction}
               </Link>
