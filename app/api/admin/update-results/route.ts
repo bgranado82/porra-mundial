@@ -80,7 +80,7 @@ export async function POST(req: Request) {
         .range(0, 99999);
 
       if (snapEntries && snapEntries.length > 0) {
-        const snapEntryIds = snapEntries.map((e: any) => e.id);
+        const submittedEntryIdSet = new Set(snapEntries.map((e: any) => String(e.id)));
 
         const [
           { data: snapScores },
@@ -88,21 +88,28 @@ export async function POST(req: Request) {
           { data: snapOfficialKnockout },
           { data: snapAdminTiebreaks },
           { data: snapOfficialExtra },
-          { data: snapGroupPreds },
-          { data: snapKoPreds },
-          { data: snapTiebreaks },
-          { data: snapExtraPreds },
+          { data: snapGroupPredsAll },
+          { data: snapKoPredsAll },
+          { data: snapTiebreaksAll },
+          { data: snapExtraPredsAll },
         ] = await Promise.all([
-          adminSupabase.from("entry_scores").select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome").in("entry_id", snapEntryIds).range(0, 99999),
+          adminSupabase.from("entry_scores").select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome").range(0, 99999),
           adminSupabase.from("official_group_results").select("match_id, home_goals, away_goals").range(0, 99999),
           adminSupabase.from("official_knockout_results").select("match_id, picked_team_id").range(0, 99999),
           adminSupabase.from("admin_tiebreaks").select("scope, scope_value, team_id, priority").range(0, 99999),
           adminSupabase.from("official_extra_results").select("question_key, official_value").range(0, 99999),
-          adminSupabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").in("entry_id", snapEntryIds).range(0, 99999),
-          adminSupabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").in("entry_id", snapEntryIds).range(0, 99999),
-          adminSupabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").in("entry_id", snapEntryIds).range(0, 99999),
-          adminSupabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value").in("entry_id", snapEntryIds).range(0, 99999),
+          adminSupabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").range(0, 99999),
+          adminSupabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").range(0, 99999),
+          adminSupabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").range(0, 99999),
+          adminSupabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value").range(0, 99999),
         ]);
+
+        // Filtrar a entries submitted en memoria (evita el .in() con cientos de IDs,
+        // que Supabase trunca silenciosamente cuando la URL es muy larga).
+        const snapGroupPreds = (snapGroupPredsAll ?? []).filter((r: any) => submittedEntryIdSet.has(String(r.entry_id)));
+        const snapKoPreds = (snapKoPredsAll ?? []).filter((r: any) => submittedEntryIdSet.has(String(r.entry_id)));
+        const snapTiebreaks = (snapTiebreaksAll ?? []).filter((r: any) => submittedEntryIdSet.has(String(r.entry_id)));
+        const snapExtraPreds = (snapExtraPredsAll ?? []).filter((r: any) => submittedEntryIdSet.has(String(r.entry_id)));
 
         const snapPoolIds = [...new Set(snapEntries.map((e: any) => String(e.pool_id)))] as string[];
         const snapRows: any[] = [];
