@@ -499,7 +499,7 @@ export default function TransparencyPageClient() {
 
               <Link
                 href={poolSlug && entryId ? `/banquillo?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/banquillo`}
-                className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+                className="rounded-2xl bg-[var(--iberdrola-green)] px-3 py-2 text-xs font-black text-white shadow-sm transition hover:brightness-110"
               >
                 {t.banquillo.title}
               </Link>

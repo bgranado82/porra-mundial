@@ -363,7 +363,7 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
                       }`}
                     >
                       <td className={`sticky left-0 z-10 border-b border-gray-100 px-1 py-3 text-center md:px-2 ${
-                        row.position <= 3 ? "bg-transparent" : "bg-white"
+                        isOwn ? "bg-[var(--iberdrola-green-light)]" : row.position <= 3 ? "bg-transparent" : "bg-white"
                       }`}>
                         <MovementBadge
                           movement={row.movement}
@@ -372,12 +372,13 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
                       </td>
 
                       <td className={`sticky left-[95px] z-10 border-b border-gray-100 px-1 py-3 text-center font-bold whitespace-nowrap md:px-2 ${
-                        row.position <= 3 ? "bg-transparent" : "bg-white"
+                        isOwn ? "bg-[var(--iberdrola-green-light)]" : row.position <= 3 ? "bg-transparent" : "bg-white"
                       }`}>
                         {getMedal(row.position) ?? row.position}
                       </td>
 
                       <td className={`sticky left-[155px] z-10 border-b border-gray-100 px-1 py-3 font-medium md:px-2 ${
+                        isOwn ? "bg-[var(--iberdrola-green-light)]" :
                         row.position === 1 ? "bg-amber-50/60" :
                         row.position === 2 ? "bg-gray-50/80" :
                         row.position === 3 ? "bg-orange-50/40" :
@@ -581,7 +582,7 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
                       }`}
                     >
                       <td className={`sticky left-0 z-10 border-b border-gray-100 px-1 py-3 text-center md:px-2 ${
-                        row.position <= 3 ? "bg-transparent" : "bg-white"
+                        isOwn ? "bg-[var(--iberdrola-green-light)]" : row.position <= 3 ? "bg-transparent" : "bg-white"
                       }`}>
                         <MovementBadge
                           movement={row.movement}
@@ -590,12 +591,13 @@ export default function StandingsTable({ days, standings, locale = "es", entryId
                       </td>
 
                       <td className={`sticky left-[95px] z-10 border-b border-gray-100 px-1 py-3 text-center font-bold whitespace-nowrap md:px-2 ${
-                        row.position <= 3 ? "bg-transparent" : "bg-white"
+                        isOwn ? "bg-[var(--iberdrola-green-light)]" : row.position <= 3 ? "bg-transparent" : "bg-white"
                       }`}>
                         {getMedal(row.position) ?? row.position}
                       </td>
 
                       <td className={`sticky left-[155px] z-10 border-b border-gray-100 px-1 py-3 font-medium md:px-2 ${
+                        isOwn ? "bg-[var(--iberdrola-green-light)]" :
                         row.position === 1 ? "bg-amber-50/60" :
                         row.position === 2 ? "bg-gray-50/80" :
                         row.position === 3 ? "bg-orange-50/40" :

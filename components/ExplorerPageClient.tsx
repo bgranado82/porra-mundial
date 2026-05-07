@@ -103,6 +103,12 @@ export default function ExplorerPageClient({ poolId, poolSlug, entryId, backHref
               <LanguageSwitcher locale={locale} onChange={setLocale} label={t.language} />
               <div className="flex flex-wrap gap-2">
                 <Link
+                  href={poolId && poolSlug && entryId ? `/stats?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/stats?poolId=${poolId}`}
+                  className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+                >
+                  {t.banquillo.backToStats}
+                </Link>
+                <Link
                   href={poolId && poolSlug && entryId ? `/standings?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/standings?poolId=${poolId}`}
                   className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
                 >
@@ -116,7 +122,7 @@ export default function ExplorerPageClient({ poolId, poolSlug, entryId, backHref
                 </Link>
                 <Link
                   href={poolSlug && entryId ? `/banquillo?poolId=${poolId}&poolSlug=${poolSlug}&entryId=${entryId}` : `/banquillo`}
-                  className="rounded-2xl border border-[var(--iberdrola-green)]/40 bg-white/80 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] transition hover:border-[var(--iberdrola-green)] hover:bg-white"
+                  className="rounded-2xl bg-[var(--iberdrola-green)] px-3 py-2 text-xs font-black text-white shadow-sm transition hover:brightness-110"
                 >
                   {t.banquillo.title}
                 </Link>
