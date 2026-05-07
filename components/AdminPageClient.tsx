@@ -530,16 +530,6 @@ function updateThirdPlaceTiebreak(teamId: string, value: string) {
         official_value: string;
       }>;
 
-      const { error: extrasError } = await supabase
-        .from("official_extra_results")
-        .upsert(extraRows, { onConflict: "question_key" });
-
-      if (extrasError) {
-        console.error(extrasError);
-        setMessage("Error guardando resultados extra.");
-        return;
-      }
-
 // 🔥 guardar desempates
 const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
   ([key, priority]) => {

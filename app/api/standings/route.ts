@@ -29,13 +29,13 @@ export async function GET(req: Request) {
       { data: officialExtraRows, error: officialExtraError },
       { data: snapshots, error: snapshotsError },
     ] = await Promise.all([
-      supabase.from("entries").select("id, name, email, company, country, pool_id").eq("pool_id", poolId).eq("status", "submitted"),
-      supabase.from("entry_scores").select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome").eq("pool_id", poolId),
-      supabase.from("official_group_results").select("match_id, home_goals, away_goals"),
-      supabase.from("official_knockout_results").select("match_id, picked_team_id"),
-      supabase.from("admin_tiebreaks").select("scope, scope_value, team_id, priority"),
-      supabase.from("official_extra_results").select("question_key, official_value"),
-      supabase.from("standings_snapshots").select("entry_id, position, group_position, captured_at").eq("pool_id", poolId).order("captured_at", { ascending: false }),
+      supabase.from("entries").select("id, name, email, company, country, pool_id").eq("pool_id", poolId).eq("status", "submitted").range(0, 99999),
+      supabase.from("entry_scores").select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome").eq("pool_id", poolId).range(0, 99999),
+      supabase.from("official_group_results").select("match_id, home_goals, away_goals").range(0, 99999),
+      supabase.from("official_knockout_results").select("match_id, picked_team_id").range(0, 99999),
+      supabase.from("admin_tiebreaks").select("scope, scope_value, team_id, priority").range(0, 99999),
+      supabase.from("official_extra_results").select("question_key, official_value").range(0, 99999),
+      supabase.from("standings_snapshots").select("entry_id, position, group_position, captured_at").eq("pool_id", poolId).order("captured_at", { ascending: false }).range(0, 99999),
     ]);
 
     if (entriesError) return NextResponse.json({ error: entriesError.message }, { status: 500 });
@@ -54,10 +54,10 @@ export async function GET(req: Request) {
       { data: tiebreakRows, error: tiebreakError },
       { data: allExtraPredictions, error: extraPredictionsError },
     ] = await Promise.all([
-      supabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").in("entry_id", entryIds),
-      supabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").in("entry_id", entryIds),
-      supabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").in("entry_id", entryIds),
-      supabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value").in("entry_id", entryIds),
+      supabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").in("entry_id", entryIds).range(0, 99999),
+      supabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").in("entry_id", entryIds).range(0, 99999),
+      supabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").in("entry_id", entryIds).range(0, 99999),
+      supabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value").in("entry_id", entryIds).range(0, 99999),
     ]);
 
     if (groupPredictionsError) return NextResponse.json({ error: groupPredictionsError.message }, { status: 500 });
