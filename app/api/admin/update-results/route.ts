@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { recalculateScoresAll } from "@/lib/recalculateScoresAll";
-import { calculateStandings } from "@/lib/calculateStandings";
 
 type GroupResultRow = {
   match_id: string;
@@ -71,90 +70,60 @@ export async function POST(req: Request) {
     const extraResults = (body.extraResults ?? []) as ExtraResultRow[];
     const adminTiebreaks = (body.adminTiebreaks ?? []) as AdminTiebreakRow[];
 
-    // 0. Guardar snapshot de posiciones ANTES de tocar nada
+    // 0. Guardar snapshot de posiciones ANTES de tocar nada.
+    //    En vez de duplicar la lógica de cálculo, llamamos al MISMO endpoint
+    //    /api/standings que ya pinta la clasificación del usuario y guardamos
+    //    las posiciones que devuelve. Misma fuente, mismo resultado.
     try {
-      const { data: snapEntries } = await adminSupabase
+      const { data: snapPools } = await adminSupabase
         .from("entries")
-        .select("id, name, email, company, country, pool_id")
+        .select("pool_id")
         .eq("status", "submitted")
         .range(0, 99999);
 
-      if (snapEntries && snapEntries.length > 0) {
-        const submittedEntryIdSet = new Set(snapEntries.map((e: any) => String(e.id)));
+      const poolIds = [...new Set((snapPools ?? []).map((e: any) => String(e.pool_id)))];
 
-        const [
-          { data: snapScores },
-          { data: snapOfficialGroup },
-          { data: snapOfficialKnockout },
-          { data: snapAdminTiebreaks },
-          { data: snapOfficialExtra },
-          { data: snapGroupPredsAll },
-          { data: snapKoPredsAll },
-          { data: snapTiebreaksAll },
-          { data: snapExtraPredsAll },
-        ] = await Promise.all([
-          adminSupabase.from("entry_scores").select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome").range(0, 99999),
-          adminSupabase.from("official_group_results").select("match_id, home_goals, away_goals").range(0, 99999),
-          adminSupabase.from("official_knockout_results").select("match_id, picked_team_id").range(0, 99999),
-          adminSupabase.from("admin_tiebreaks").select("scope, scope_value, team_id, priority").range(0, 99999),
-          adminSupabase.from("official_extra_results").select("question_key, official_value").range(0, 99999),
-          adminSupabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").range(0, 99999),
-          adminSupabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").range(0, 99999),
-          adminSupabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").range(0, 99999),
-          adminSupabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value").range(0, 99999),
-        ]);
+      // Construir URL absoluta a partir de la request actual
+      const origin = new URL(req.url).origin;
 
-        // Filtrar a entries submitted en memoria (evita el .in() con cientos de IDs,
-        // que Supabase trunca silenciosamente cuando la URL es muy larga).
-        const snapGroupPreds = (snapGroupPredsAll ?? []).filter((r: any) => submittedEntryIdSet.has(String(r.entry_id)));
-        const snapKoPreds = (snapKoPredsAll ?? []).filter((r: any) => submittedEntryIdSet.has(String(r.entry_id)));
-        const snapTiebreaks = (snapTiebreaksAll ?? []).filter((r: any) => submittedEntryIdSet.has(String(r.entry_id)));
-        const snapExtraPreds = (snapExtraPredsAll ?? []).filter((r: any) => submittedEntryIdSet.has(String(r.entry_id)));
+      const snapRows: any[] = [];
 
-        const snapPoolIds = [...new Set(snapEntries.map((e: any) => String(e.pool_id)))] as string[];
-        const snapRows: any[] = [];
+      for (const pid of poolIds) {
+        const resp = await fetch(`${origin}/api/standings?poolId=${pid}`, {
+          headers: { cookie: req.headers.get("cookie") ?? "" },
+        });
+        if (!resp.ok) continue;
+        const json = await resp.json();
+        const standings = json.standings ?? [];
 
-        for (const pid of snapPoolIds) {
-          const poolEntries = snapEntries.filter((e: any) => String(e.pool_id) === pid);
-          const poolEntryIds = new Set(poolEntries.map((e: any) => String(e.id)));
+        // standings viene ordenado por la posición general (position = index + 1).
+        // group_position se calcula igual que en el front (ordenando por
+        // group_total + extra_group_points).
+        const sortedByGroups = [...standings].sort((a: any, b: any) => {
+          const aG = (a.group_total ?? 0) + (a.extra_group_points ?? 0);
+          const bG = (b.group_total ?? 0) + (b.extra_group_points ?? 0);
+          if (bG !== aG) return bG - aG;
+          return String(a.name ?? "").localeCompare(String(b.name ?? ""));
+        });
+        const groupPosMap = new Map<string, number>(
+          sortedByGroups.map((r: any, i: number) => [String(r.entry_id), i + 1])
+        );
 
-          const poolStandings = calculateStandings({
-            entries: poolEntries,
-            scores: (snapScores ?? []).filter((r: any) => String(r.pool_id) === pid),
-            officialGroupRows: snapOfficialGroup ?? [],
-            allGroupPredictions: (snapGroupPreds ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
-            allKnockoutPredictions: (snapKoPreds ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
-            officialKnockoutRows: snapOfficialKnockout ?? [],
-            tiebreakRows: (snapTiebreaks ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
-            adminTiebreakRows: snapAdminTiebreaks ?? [],
-            allExtraPredictions: (snapExtraPreds ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
-            officialExtraRows: snapOfficialExtra ?? [],
+        standings.forEach((row: any) => {
+          snapRows.push({
+            pool_id: pid,
+            entry_id: row.entry_id,
+            position: row.position,
+            total_points: row.total_points,
+            group_position: groupPosMap.get(String(row.entry_id)) ?? row.position,
           });
+        });
+      }
 
-          const sortedByGroups = [...poolStandings].sort((a, b) => {
-            const aG = a.group_total + a.extra_group_points;
-            const bG = b.group_total + b.extra_group_points;
-            if (bG !== aG) return bG - aG;
-            return a.name.localeCompare(b.name);
-          });
-          const groupPosMap = new Map(sortedByGroups.map((r, i) => [r.entry_id, i + 1]));
-
-          poolStandings.forEach((row, index) => {
-            snapRows.push({
-              pool_id: pid,
-              entry_id: row.entry_id,
-              position: index + 1,
-              total_points: row.total_points,
-              group_position: groupPosMap.get(row.entry_id) ?? index + 1,
-            });
-          });
-        }
-
-        if (snapRows.length > 0) {
-          await adminSupabase
-            .from("standings_snapshots")
-            .upsert(snapRows, { onConflict: "pool_id,entry_id" });
-        }
+      if (snapRows.length > 0) {
+        await adminSupabase
+          .from("standings_snapshots")
+          .upsert(snapRows, { onConflict: "pool_id,entry_id" });
       }
     } catch (snapErr) {
       console.error("Snapshot error (non-blocking):", snapErr);
