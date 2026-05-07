@@ -85,7 +85,7 @@ export async function GET(req: Request) {
     ).sort((a, b) => (String(a) < String(b) ? 1 : -1));
 
     const lastUpdate = snapshotTimes[0] ?? null;
-    const prevTime = snapshotTimes[1];
+    const prevTime = snapshotTimes[0]; // el único snapshot es el "anterior" — las posiciones actuales se calculan en vivo
     const prevMap = new Map<string, number>();
     const prevGroupMap = new Map<string, number>();
 

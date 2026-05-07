@@ -71,6 +71,89 @@ export async function POST(req: Request) {
     const extraResults = (body.extraResults ?? []) as ExtraResultRow[];
     const adminTiebreaks = (body.adminTiebreaks ?? []) as AdminTiebreakRow[];
 
+    // 0. Guardar snapshot de posiciones ANTES de tocar nada
+    // Esto es el "estado anterior" que se usará para calcular variaciones
+    try {
+      const [
+        { data: snapEntries },
+        { data: snapScores },
+        { data: snapOfficialGroup },
+        { data: snapOfficialKnockout },
+        { data: snapAdminTiebreaks },
+        { data: snapOfficialExtra },
+      ] = await Promise.all([
+        adminSupabase.from("entries").select("id, name, email, company, country, pool_id").eq("status", "submitted"),
+        adminSupabase.from("entry_scores").select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome"),
+        adminSupabase.from("official_group_results").select("match_id, home_goals, away_goals"),
+        adminSupabase.from("official_knockout_results").select("match_id, picked_team_id"),
+        adminSupabase.from("admin_tiebreaks").select("scope, scope_value, team_id, priority"),
+        adminSupabase.from("official_extra_results").select("question_key, official_value"),
+      ]);
+
+      if (snapEntries && snapEntries.length > 0) {
+        const snapEntryIds = snapEntries.map((e: any) => e.id);
+        const [
+          { data: snapGroupPreds },
+          { data: snapKoPreds },
+          { data: snapTiebreaks },
+          { data: snapExtraPreds },
+        ] = await Promise.all([
+          adminSupabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").in("entry_id", snapEntryIds),
+          adminSupabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").in("entry_id", snapEntryIds),
+          adminSupabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").in("entry_id", snapEntryIds),
+          adminSupabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value").in("entry_id", snapEntryIds),
+        ]);
+
+        const snapPoolIds = [...new Set(snapEntries.map((e: any) => String(e.pool_id)))] as string[];
+        const snapRows: any[] = [];
+
+        for (const pid of snapPoolIds) {
+          const poolEntries = snapEntries.filter((e: any) => String(e.pool_id) === pid);
+          const poolEntryIds = new Set(poolEntries.map((e: any) => String(e.id)));
+
+          const poolStandings = calculateStandings({
+            entries: poolEntries,
+            scores: (snapScores ?? []).filter((r: any) => String(r.pool_id) === pid),
+            officialGroupRows: snapOfficialGroup ?? [],
+            allGroupPredictions: (snapGroupPreds ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
+            allKnockoutPredictions: (snapKoPreds ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
+            officialKnockoutRows: snapOfficialKnockout ?? [],
+            tiebreakRows: (snapTiebreaks ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
+            adminTiebreakRows: snapAdminTiebreaks ?? [],
+            allExtraPredictions: (snapExtraPreds ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
+            officialExtraRows: snapOfficialExtra ?? [],
+          });
+
+          const sortedByGroups = [...poolStandings].sort((a, b) => {
+            const aG = a.group_total + a.extra_group_points;
+            const bG = b.group_total + b.extra_group_points;
+            if (bG !== aG) return bG - aG;
+            return a.name.localeCompare(b.name);
+          });
+          const groupPosMap = new Map(sortedByGroups.map((r, i) => [r.entry_id, i + 1]));
+
+          poolStandings.forEach((row, index) => {
+            snapRows.push({
+              pool_id: pid,
+              entry_id: row.entry_id,
+              position: index + 1,
+              total_points: row.total_points,
+              group_position: groupPosMap.get(row.entry_id) ?? index + 1,
+            });
+          });
+        }
+
+        if (snapRows.length > 0) {
+          await adminSupabase
+            .from("standings_snapshots")
+            .upsert(snapRows, { onConflict: "pool_id,entry_id" });
+        }
+      }
+    } catch (snapErr) {
+      // No bloqueamos el recálculo si el snapshot falla
+      console.error("Snapshot error (non-blocking):", snapErr);
+    }
+
     // 1. Limpiar resultados oficiales actuales
     const { error: deleteGroupError } = await adminSupabase
       .from("official_group_results")
@@ -177,118 +260,6 @@ export async function POST(req: Request) {
 
     // 4. Recalcular puntuaciones desde cero
     const debug = await recalculateScoresAll();
-
-    // 5. Crear snapshot usando exactamente la misma función que la clasificación en vivo
-    const { data: allEntries } = await adminSupabase
-      .from("entries")
-      .select("id, name, email, company, country, pool_id")
-      .eq("status", "submitted");
-
-    const poolIds = [...new Set((allEntries ?? []).map((e: any) => String(e.pool_id)))] as string[];
-
-    // Fetch datos compartidos (no dependen del pool)
-    const [
-      { data: officialGroupRows },
-      { data: officialKnockoutRows },
-      { data: adminTiebreakRows },
-      { data: officialExtraRows },
-      { data: allScores },
-      { data: allExtraPredictions },
-    ] = await Promise.all([
-      adminSupabase.from("official_group_results").select("match_id, home_goals, away_goals"),
-      adminSupabase.from("official_knockout_results").select("match_id, picked_team_id"),
-      adminSupabase.from("admin_tiebreaks").select("scope, scope_value, team_id, priority"),
-      adminSupabase.from("official_extra_results").select("question_key, official_value"),
-      adminSupabase.from("entry_scores").select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome"),
-      adminSupabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value"),
-    ]);
-
-    const allEntryIds = (allEntries ?? []).map((e: any) => e.id);
-
-    const [
-      { data: allGroupPredictions },
-      { data: allKnockoutPredictions },
-      { data: allTiebreakRows },
-    ] = await Promise.all([
-      adminSupabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").in("entry_id", allEntryIds),
-      adminSupabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").in("entry_id", allEntryIds),
-      adminSupabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").in("entry_id", allEntryIds),
-    ]);
-
-    const snapshotRows: Array<{
-      pool_id: string;
-      entry_id: string;
-      position: number;
-      total_points: number;
-      group_position: number;
-    }> = [];
-
-    for (const poolId of poolIds) {
-      const poolEntries = (allEntries ?? []).filter((e: any) => String(e.pool_id) === poolId);
-      const poolEntryIds = new Set(poolEntries.map((e: any) => String(e.id)));
-
-      // Usar exactamente calculateStandings — misma función que standings/route.ts
-      const poolStandings = calculateStandings({
-        entries: poolEntries,
-        scores: (allScores ?? []).filter((r: any) => String(r.pool_id) === poolId),
-        officialGroupRows: officialGroupRows ?? [],
-        allGroupPredictions: (allGroupPredictions ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
-        allKnockoutPredictions: (allKnockoutPredictions ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
-        officialKnockoutRows: officialKnockoutRows ?? [],
-        tiebreakRows: (allTiebreakRows ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
-        adminTiebreakRows: adminTiebreakRows ?? [],
-        allExtraPredictions: (allExtraPredictions ?? []).filter((r: any) => poolEntryIds.has(String(r.entry_id))),
-        officialExtraRows: officialExtraRows ?? [],
-      });
-
-      // Posición general: ya viene ordenada de calculateStandings
-      // Posición de grupos: ordenar por group_total + extra_group_points
-      const sortedByGroups = [...poolStandings].sort((a, b) => {
-        const aG = a.group_total + a.extra_group_points;
-        const bG = b.group_total + b.extra_group_points;
-        if (bG !== aG) return bG - aG;
-        return a.name.localeCompare(b.name);
-      });
-      const groupPosMap = new Map(sortedByGroups.map((r, i) => [r.entry_id, i + 1]));
-
-      poolStandings.forEach((row, index) => {
-        snapshotRows.push({
-          pool_id: poolId,
-          entry_id: row.entry_id,
-          position: index + 1,
-          total_points: row.total_points,
-          group_position: groupPosMap.get(row.entry_id) ?? index + 1,
-        });
-      });
-    }
-
-    if (snapshotRows.length > 0) {
-      // Mantener solo el snapshot más reciente como "anterior" — borrar todos excepto el último
-      for (const poolId of poolIds) {
-        const { data: allSnaps } = await adminSupabase
-          .from("standings_snapshots")
-          .select("id, captured_at")
-          .eq("pool_id", poolId)
-          .order("captured_at", { ascending: false });
-
-        if (allSnaps && allSnaps.length > 1) {
-          // Mantener solo el más reciente (índice 0), borrar el resto por id
-          const idsToDelete = allSnaps.slice(1).map((s: any) => s.id);
-          await adminSupabase
-            .from("standings_snapshots")
-            .delete()
-            .in("id", idsToDelete);
-        }
-      }
-
-      const { error: snapshotError } = await adminSupabase
-        .from("standings_snapshots")
-        .insert(snapshotRows);
-
-      if (snapshotError) {
-        return NextResponse.json({ error: snapshotError.message }, { status: 500 });
-      }
-    }
 
     return NextResponse.json({ success: true, debug });
   } catch (error: any) {
