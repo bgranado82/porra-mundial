@@ -72,32 +72,31 @@ export async function POST(req: Request) {
     const adminTiebreaks = (body.adminTiebreaks ?? []) as AdminTiebreakRow[];
 
     // 0. Guardar snapshot de posiciones ANTES de tocar nada
-    // Esto es el "estado anterior" que se usará para calcular variaciones
     try {
-      const [
-        { data: snapEntries },
-        { data: snapScores },
-        { data: snapOfficialGroup },
-        { data: snapOfficialKnockout },
-        { data: snapAdminTiebreaks },
-        { data: snapOfficialExtra },
-      ] = await Promise.all([
-        adminSupabase.from("entries").select("id, name, email, company, country, pool_id").eq("status", "submitted"),
-        adminSupabase.from("entry_scores").select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome"),
-        adminSupabase.from("official_group_results").select("match_id, home_goals, away_goals"),
-        adminSupabase.from("official_knockout_results").select("match_id, picked_team_id"),
-        adminSupabase.from("admin_tiebreaks").select("scope, scope_value, team_id, priority"),
-        adminSupabase.from("official_extra_results").select("question_key, official_value"),
-      ]);
+      const { data: snapEntries } = await adminSupabase
+        .from("entries")
+        .select("id, name, email, company, country, pool_id")
+        .eq("status", "submitted");
 
       if (snapEntries && snapEntries.length > 0) {
         const snapEntryIds = snapEntries.map((e: any) => e.id);
+
         const [
+          { data: snapScores },
+          { data: snapOfficialGroup },
+          { data: snapOfficialKnockout },
+          { data: snapAdminTiebreaks },
+          { data: snapOfficialExtra },
           { data: snapGroupPreds },
           { data: snapKoPreds },
           { data: snapTiebreaks },
           { data: snapExtraPreds },
         ] = await Promise.all([
+          adminSupabase.from("entry_scores").select("entry_id, pool_id, matchday, stage, points, is_exact, is_outcome").in("entry_id", snapEntryIds),
+          adminSupabase.from("official_group_results").select("match_id, home_goals, away_goals"),
+          adminSupabase.from("official_knockout_results").select("match_id, picked_team_id"),
+          adminSupabase.from("admin_tiebreaks").select("scope, scope_value, team_id, priority"),
+          adminSupabase.from("official_extra_results").select("question_key, official_value"),
           adminSupabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").in("entry_id", snapEntryIds),
           adminSupabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").in("entry_id", snapEntryIds),
           adminSupabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").in("entry_id", snapEntryIds),
@@ -144,13 +143,10 @@ export async function POST(req: Request) {
         }
 
         if (snapRows.length > 0) {
-          await adminSupabase
-            .from("standings_snapshots")
-            .insert(snapRows);
+          await adminSupabase.from("standings_snapshots").insert(snapRows);
         }
       }
     } catch (snapErr) {
-      // No bloqueamos el recálculo si el snapshot falla
       console.error("Snapshot error (non-blocking):", snapErr);
     }
 
