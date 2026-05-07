@@ -95,7 +95,7 @@ export default function ExplorerPageClient({ poolId, poolSlug, entryId, backHref
                   {t.stats.viewExplorer}
                 </h1>
                 <p className="mt-1 text-sm text-gray-600">
-                  {t.explorerSubtitle ?? "Consulta quién apostó por cada resultado"}
+                  Consulta quién apostó por cada resultado
                 </p>
               </div>
             </div>
