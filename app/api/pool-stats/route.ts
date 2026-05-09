@@ -48,28 +48,44 @@ function getText(locale: string) {
 
   return {
     es: {
-      championInsight: (label: string, percentage: number) =>
-        `${label} es la selección más elegida como campeona con un ${percentage.toFixed(1)}% de los pronósticos.`,
-      strongestExtraInsight: (title: string, label: string, percentage: number) =>
-        `La predicción más concentrada en preguntas extra es "${title}": ${label} lidera con un ${percentage.toFixed(1)}%.`,
-      mostOpenExtraInsight: (title: string, percentage: number) =>
-        `"${title}" es la categoría más abierta: su opción líder solo alcanza un ${percentage.toFixed(1)}%.`,
+      // Insight 1: combo más popular (campeón + balón de oro)
+      comboInsight: (champion: string, ball: string, count: number) =>
+        `La combinación más popular es ${champion} campeón + ${ball} balón de oro, apostada por ${count} ${count === 1 ? "persona" : "personas"}.`,
+      // Insight 2: consenso global
+      consensusInsight: (clearCount: number, totalCount: number) =>
+        `En ${clearCount} de los ${totalCount} extras hay un favorito claro (>40%).`,
+      consensusNoneInsight: (totalCount: number) =>
+        `En ninguno de los ${totalCount} extras hay un favorito claro (>40%): el grupo está muy abierto.`,
+      // Insight 3: apuesta más solitaria
+      uniquePickInsight: (label: string, questionTitle: string) =>
+        `Solo una persona apuesta por ${label} como ${questionTitle.toLowerCase()}.`,
+      // Insight 4: extra con más dispersión
+      mostScatteredInsight: (title: string, distinctCount: number) =>
+        `En "${title}" hay ${distinctCount} opciones diferentes votadas: el extra con más dispersión.`,
     },
     en: {
-      championInsight: (label: string, percentage: number) =>
-        `${label} is the most selected champion with ${percentage.toFixed(1)}% of the picks.`,
-      strongestExtraInsight: (title: string, label: string, percentage: number) =>
-        `The most concentrated extra-question prediction is "${title}": ${label} leads with ${percentage.toFixed(1)}%.`,
-      mostOpenExtraInsight: (title: string, percentage: number) =>
-        `"${title}" is the most open category: its leading option only reaches ${percentage.toFixed(1)}%.`,
+      comboInsight: (champion: string, ball: string, count: number) =>
+        `The most popular combo is ${champion} as champion + ${ball} as Golden Ball, picked by ${count} ${count === 1 ? "person" : "people"}.`,
+      consensusInsight: (clearCount: number, totalCount: number) =>
+        `${clearCount} out of ${totalCount} extras have a clear favorite (>40%).`,
+      consensusNoneInsight: (totalCount: number) =>
+        `None of the ${totalCount} extras has a clear favorite (>40%): the group is wide open.`,
+      uniquePickInsight: (label: string, questionTitle: string) =>
+        `Only one person picks ${label} as ${questionTitle.toLowerCase()}.`,
+      mostScatteredInsight: (title: string, distinctCount: number) =>
+        `"${title}" has ${distinctCount} different options voted: the most scattered extra.`,
     },
     pt: {
-      championInsight: (label: string, percentage: number) =>
-        `${label} é a seleção mais escolhida como campeã com ${percentage.toFixed(1)}% dos palpites.`,
-      strongestExtraInsight: (title: string, label: string, percentage: number) =>
-        `A previsão mais concentrada nas perguntas extras é "${title}": ${label} lidera com ${percentage.toFixed(1)}%.`,
-      mostOpenExtraInsight: (title: string, percentage: number) =>
-        `"${title}" é a categoria mais aberta: sua opção líder alcança apenas ${percentage.toFixed(1)}%.`,
+      comboInsight: (champion: string, ball: string, count: number) =>
+        `A combinação mais popular é ${champion} campeão + ${ball} bola de ouro, apostada por ${count} ${count === 1 ? "pessoa" : "pessoas"}.`,
+      consensusInsight: (clearCount: number, totalCount: number) =>
+        `Em ${clearCount} dos ${totalCount} extras há um favorito claro (>40%).`,
+      consensusNoneInsight: (totalCount: number) =>
+        `Em nenhum dos ${totalCount} extras há um favorito claro (>40%): o grupo está muito aberto.`,
+      uniquePickInsight: (label: string, questionTitle: string) =>
+        `Apenas uma pessoa aposta em ${label} como ${questionTitle.toLowerCase()}.`,
+      mostScatteredInsight: (title: string, distinctCount: number) =>
+        `Em "${title}" há ${distinctCount} opções diferentes votadas: o extra mais disperso.`,
     },
   }[lang];
 }
@@ -185,6 +201,10 @@ const text = getText(locale);
         percentage: number;
       }>;
     }> = [];
+
+    // Buffer de insights — se rellena dentro del if (entryIds.length > 0)
+    // porque los 4 insights necesitan koRows y extraRows.
+    const insightsBuffer: string[] = [];
 
     if (entryIds.length > 0) {
       const { data: koRows, error: koError } = await supabase
@@ -304,51 +324,111 @@ const text = getText(locale);
           items,
         };
       });
+
+      // ─── Cálculo de los 4 insights ─────────────────────────────────────
+      // 1) Combo más popular: campeón + balón de oro juntos
+      // Cruzamos koRows (campeón por entry) con extraRows filtrado por golden_ball.
+      const championByEntry = new Map<string, string>();
+      (koRows ?? []).forEach((row: any) => {
+        if (row.picked_team_id) {
+          championByEntry.set(String(row.entry_id), String(row.picked_team_id));
+        }
+      });
+
+      const ballByEntry = new Map<string, { normalized: string; raw: string }>();
+      (extraRows ?? []).forEach((row: any) => {
+        if (row.question_key !== "golden_ball") return;
+        const normalized = row.normalized_value?.trim();
+        const raw = row.predicted_value?.trim();
+        if (!normalized || !raw) return;
+        ballByEntry.set(String(row.entry_id), { normalized, raw });
+      });
+
+      const comboCounter = new Map<string, { championId: string; ball: string; count: number }>();
+      championByEntry.forEach((championId, entryId) => {
+        const ball = ballByEntry.get(entryId);
+        if (!ball) return;
+        const key = `${championId}::${ball.normalized}`;
+        const current = comboCounter.get(key);
+        if (current) {
+          current.count += 1;
+        } else {
+          comboCounter.set(key, { championId, ball: ball.raw, count: 1 });
+        }
+      });
+
+      const topCombo = Array.from(comboCounter.values()).sort((a, b) => b.count - a.count)[0];
+      if (topCombo && topCombo.count >= 2) {
+        const team = teamMap.get(topCombo.championId);
+        const championName = team?.name ?? topCombo.championId;
+        insightsBuffer.push(text.comboInsight(championName, prettifyValue(topCombo.ball), topCombo.count));
+      }
+
+      // 2) Consenso global: cuántos extras tienen un favorito >40%
+      const extrasWithClearFavorite = extras.filter((extra) => {
+        const top = extra.items.find((item) => item.key !== "__no_answer__");
+        return top && top.percentage > 40;
+      }).length;
+      const totalExtras = extras.length;
+      if (totalExtras > 0) {
+        if (extrasWithClearFavorite > 0) {
+          insightsBuffer.push(text.consensusInsight(extrasWithClearFavorite, totalExtras));
+        } else {
+          insightsBuffer.push(text.consensusNoneInsight(totalExtras));
+        }
+      }
+
+      // 3) Apuesta más solitaria: pick único en algún extra (campeón incluido)
+      // Priorizamos campeón > golden_ball > resto, y elegimos el primer único encontrado.
+      const candidatesUnique: Array<{ label: string; questionTitle: string; priority: number }> = [];
+
+      // Champion uniques
+      championItems.forEach((item) => {
+        if (item.key !== "__no_answer__" && item.count === 1) {
+          candidatesUnique.push({
+            label: item.label,
+            questionTitle: locale === "en" ? "Champion" : locale === "pt" ? "Campeão" : "Campeón",
+            priority: 0,
+          });
+        }
+      });
+
+      // Extra uniques
+      extras.forEach((extra) => {
+        const priority = extra.questionKey === "golden_ball" ? 1 : 2;
+        extra.items.forEach((item) => {
+          if (item.key !== "__no_answer__" && item.count === 1) {
+            candidatesUnique.push({
+              label: item.label,
+              questionTitle: extra.title,
+              priority,
+            });
+          }
+        });
+      });
+
+      if (candidatesUnique.length > 0) {
+        candidatesUnique.sort((a, b) => a.priority - b.priority);
+        const pick = candidatesUnique[0];
+        insightsBuffer.push(text.uniquePickInsight(pick.label, pick.questionTitle));
+      }
+
+      // 4) Extra más comodín: el extra con MÁS opciones distintas votadas
+      const extrasByDistinct = extras
+        .map((extra) => ({
+          title: extra.title,
+          // contar opciones reales (sin __no_answer__) que tengan al menos 1 voto
+          distinctCount: extra.items.filter((item) => item.key !== "__no_answer__" && item.count > 0).length,
+        }))
+        .sort((a, b) => b.distinctCount - a.distinctCount);
+
+      const mostScattered = extrasByDistinct[0];
+      if (mostScattered && mostScattered.distinctCount >= 3) {
+        insightsBuffer.push(text.mostScatteredInsight(mostScattered.title, mostScattered.distinctCount));
+      }
     }
 
-    const insights: string[] = [];
-
-    if (championItems.length > 0) {
-      const topChampion = championItems[0];
-      insights.push(
-  text.championInsight(topChampion.label, topChampion.percentage)
-);
-    }
-
-    const strongestExtra = extras
-      .map((extra) => ({
-        title: extra.title,
-        item: extra.items[0],
-      }))
-      .filter((entry) => !!entry.item)
-      .sort((a, b) => (b.item?.percentage ?? 0) - (a.item?.percentage ?? 0))[0];
-
-    if (strongestExtra?.item) {
-      insights.push(
-  text.strongestExtraInsight(
-    strongestExtra.title,
-    strongestExtra.item.label,
-    strongestExtra.item.percentage
-  )
-);
-    }
-
-    const mostOpenExtra = extras
-      .map((extra) => ({
-        title: extra.title,
-        item: extra.items[0],
-      }))
-      .filter((entry) => !!entry.item)
-      .sort((a, b) => (a.item?.percentage ?? 0) - (b.item?.percentage ?? 0))[0];
-
-    if (mostOpenExtra?.item) {
-      insights.push(
-  text.mostOpenExtraInsight(
-    mostOpenExtra.title,
-    mostOpenExtra.item.percentage
-  )
-);
-    }
+    const insights: string[] = insightsBuffer;
 
     const response = {
       summary: {

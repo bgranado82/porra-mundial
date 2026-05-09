@@ -328,6 +328,25 @@ function ExtraQuestionBarCard({
   const othersCount = otherItems.reduce((sum, item) => sum + item.count, 0);
   const othersPercentage = otherItems.reduce((sum, item) => sum + item.percentage, 0);
 
+  // Indicador de consenso: cómo de unánime es la votación
+  // - "abierto"  : top1 < 25%
+  // - "moderado" : 25% <= top1 < 50%
+  // - "claro"    : top1 >= 50%
+  const realItems = items.filter((item) => item.key !== NO_ANSWER_KEY);
+  const topPercentage = realItems[0]?.percentage ?? 0;
+  let consensusLevel: "open" | "moderate" | "clear" = "open";
+  let consensusColor = "#6CC24A"; // verde — abierto
+  let consensusWidth = "33%";
+  if (topPercentage >= 50) {
+    consensusLevel = "clear";
+    consensusColor = "#EF4444"; // rojo — claro
+    consensusWidth = "100%";
+  } else if (topPercentage >= 25) {
+    consensusLevel = "moderate";
+    consensusColor = "#F59E0B"; // ámbar — moderado
+    consensusWidth = "66%";
+  }
+
   const data = [
     ...topItems.map((item) => ({
       name: item.key === NO_ANSWER_KEY ? noAnswerLabel : item.label,
@@ -341,7 +360,23 @@ function ExtraQuestionBarCard({
   return (
     <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <SectionHeader title={title} icon={icon} flagImg={flagImg} />
-      <div className="p-4 pt-3">
+      {/* Mini barra de consenso */}
+      {realItems.length > 0 && (
+        <div className="px-5 pt-2 pb-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--iberdrola-forest)]/40">
+              {consensusLevel === "clear" ? "Consenso alto" : consensusLevel === "moderate" ? "Favorito" : "Abierto"}
+            </span>
+            <div className="h-1 flex-1 rounded-full bg-gray-100 overflow-hidden">
+              <div className="h-full rounded-full transition-all" style={{ width: consensusWidth, backgroundColor: consensusColor }} />
+            </div>
+            <span className="text-[10px] font-black tabular-nums" style={{ color: consensusColor }}>
+              {topPercentage.toFixed(0)}%
+            </span>
+          </div>
+        </div>
+      )}
+      <div className="p-4 pt-2">
         <div className="h-[220px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical" margin={{ top: 0, right: 36, left: 8, bottom: 0 }}>
@@ -382,6 +417,177 @@ function ExtraQuestionBarCard({
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── PODIUM CARD ─────────────────────────────────────────────────────────────
+// Para preguntas tipo "primer goleador" donde hay muchas respuestas únicas
+// y cuesta leer en una barra horizontal con muchos nombres apilados.
+// Muestra 1º grande, 2º y 3º a los lados, con un "+ X más" desplegable.
+function PodiumCard({
+  title,
+  icon,
+  flagImg,
+  items,
+  notEnoughDataLabel,
+  noAnswerLabel,
+  othersLabel,
+  picksUnit,
+}: {
+  title: string;
+  icon?: string;
+  flagImg?: string;
+  items: Array<{ key: string; label: string; count: number; percentage: number }>;
+  notEnoughDataLabel: string;
+  noAnswerLabel: string;
+  othersLabel: string;
+  picksUnit: string;
+}) {
+  const realItems = items.filter((i) => i.key !== NO_ANSWER_KEY);
+  const noAnswerItem = items.find((i) => i.key === NO_ANSWER_KEY);
+  const top3 = realItems.slice(0, 3);
+  const restCount = realItems.slice(3).reduce((sum, i) => sum + i.count, 0);
+  const restDistinct = realItems.slice(3).length;
+
+  const [expanded, setExpanded] = useState(false);
+
+  if (top3.length === 0) {
+    return (
+      <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+        <SectionHeader title={title} icon={icon} flagImg={flagImg} />
+        <div className="p-5">
+          <div className="rounded-2xl border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-[var(--iberdrola-forest)]/45">
+            {notEnoughDataLabel}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const first = top3[0];
+  const second = top3[1];
+  const third = top3[2];
+
+  return (
+    <section className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+      <SectionHeader title={title} icon={icon} flagImg={flagImg} />
+      <div className="px-4 pb-4 pt-3">
+        {/* 1º grande, destacado */}
+        <div className="rounded-2xl bg-gradient-to-br from-[var(--iberdrola-green-light)] to-white p-4 border border-[var(--iberdrola-green)]/20">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--iberdrola-green)] text-base font-black text-white shadow-sm">
+              🥇
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-base font-black text-[var(--iberdrola-forest)]">
+                {first.label}
+              </div>
+              <div className="text-[11px] font-semibold text-[var(--iberdrola-forest)]/50">
+                {first.count} {picksUnit}
+              </div>
+            </div>
+            <div className="shrink-0 text-right">
+              <div className="text-2xl font-black tabular-nums text-[var(--iberdrola-green)]">
+                {first.percentage.toFixed(1)}%
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 2º y 3º en una fila a 50/50 */}
+        {(second || third) && (
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {second && (
+              <div className="rounded-2xl border border-gray-100 bg-white p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base shrink-0">🥈</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-bold text-[var(--iberdrola-forest)]/80">
+                      {second.label}
+                    </div>
+                    <div className="text-[10px] text-[var(--iberdrola-forest)]/40">
+                      {second.count} {picksUnit}
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-sm font-black tabular-nums text-[var(--iberdrola-forest)]/60">
+                    {second.percentage.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            )}
+            {third && (
+              <div className="rounded-2xl border border-gray-100 bg-white p-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-base shrink-0">🥉</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-bold text-[var(--iberdrola-forest)]/80">
+                      {third.label}
+                    </div>
+                    <div className="text-[10px] text-[var(--iberdrola-forest)]/40">
+                      {third.count} {picksUnit}
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-sm font-black tabular-nums text-[var(--iberdrola-forest)]/60">
+                    {third.percentage.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Resto desplegable */}
+        {restDistinct > 0 && (
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => setExpanded(!expanded)}
+              className="flex w-full items-center justify-between rounded-2xl bg-gray-50 px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)]/65 transition hover:bg-gray-100"
+            >
+              <span>+ {restDistinct} {othersLabel.toLowerCase()} ({restCount} {picksUnit})</span>
+              <span className={`transition-transform ${expanded ? "rotate-180" : ""}`}></span>
+            </button>
+            {expanded && (
+              <div className="mt-2 max-h-48 overflow-y-auto rounded-2xl border border-gray-100 bg-white">
+                {realItems.slice(3).map((item, idx) => (
+                  <div
+                    key={item.key}
+                    className={`flex items-center gap-3 px-3 py-2 text-xs ${
+                      idx > 0 ? "border-t border-gray-50" : ""
+                    }`}
+                  >
+                    <span className="w-6 shrink-0 text-center font-bold text-[var(--iberdrola-forest)]/30">
+                      {idx + 4}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate font-semibold text-[var(--iberdrola-forest)]/75">
+                      {item.label}
+                    </span>
+                    <span className="shrink-0 text-[var(--iberdrola-forest)]/45">
+                      {item.count} {picksUnit}
+                    </span>
+                    <span className="w-12 shrink-0 text-right font-black tabular-nums text-[var(--iberdrola-forest)]/65">
+                      {item.percentage.toFixed(1)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Sin respuesta (si lo hay) */}
+        {noAnswerItem && noAnswerItem.count > 0 && (
+          <div className="mt-2 flex items-center justify-between rounded-2xl border border-dashed border-gray-200 px-3 py-2 text-[11px]">
+            <span className="font-semibold text-[var(--iberdrola-forest)]/40">
+              {noAnswerLabel}
+            </span>
+            <span className="font-bold text-[var(--iberdrola-forest)]/40">
+              {noAnswerItem.count} ({noAnswerItem.percentage.toFixed(1)}%)
+            </span>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -793,30 +999,33 @@ export default function StatsPageClient() {
 
         {/* ── SCORERS */}
         <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          <ExtraQuestionBarCard
+          <PodiumCard
             icon={EXTRA_QUESTIONS.find((q) => q.key === "first_goal_scorer_world")?.icon}
             title={t.extras.first_goal_scorer_world}
             items={extraMap.get("first_goal_scorer_world")?.items ?? []}
-            othersLabel={t.stats.others}
+            notEnoughDataLabel={t.stats.notEnoughData}
             noAnswerLabel={t.stats.noAnswer}
+            othersLabel={t.stats.others}
             picksUnit={t.stats.picksUnit}
           />
-          <ExtraQuestionBarCard
+          <PodiumCard
             icon={EXTRA_QUESTIONS.find((q) => q.key === "first_goal_scorer_spain")?.icon}
             flagImg={EXTRA_QUESTIONS.find((q) => q.key === "first_goal_scorer_spain")?.flagUrl}
             title={t.extras.first_goal_scorer_spain}
             items={extraMap.get("first_goal_scorer_spain")?.items ?? []}
-            othersLabel={t.stats.others}
+            notEnoughDataLabel={t.stats.notEnoughData}
             noAnswerLabel={t.stats.noAnswer}
+            othersLabel={t.stats.others}
             picksUnit={t.stats.picksUnit}
           />
-          <ExtraQuestionBarCard
+          <PodiumCard
             icon={EXTRA_QUESTIONS.find((q) => q.key === "top_spanish_scorer")?.icon}
             flagImg={EXTRA_QUESTIONS.find((q) => q.key === "top_spanish_scorer")?.flagUrl}
             title={t.extras.top_spanish_scorer}
             items={extraMap.get("top_spanish_scorer")?.items ?? []}
-            othersLabel={t.stats.others}
+            notEnoughDataLabel={t.stats.notEnoughData}
             noAnswerLabel={t.stats.noAnswer}
+            othersLabel={t.stats.others}
             picksUnit={t.stats.picksUnit}
           />
         </section>
