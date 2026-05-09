@@ -986,13 +986,12 @@ export default function StatsPageClient() {
             noAnswerLabel={t.stats.noAnswer}
             picksUnit={t.stats.picksUnit}
           />
-          <ExtraQuestionListCard
+          <ExtraQuestionBarCard
             icon={EXTRA_QUESTIONS.find((q) => q.key === "best_young_player")?.icon}
             title={t.extras.best_young_player}
             items={extraMap.get("best_young_player")?.items ?? []}
-            notEnoughDataLabel={t.stats.notEnoughData}
-            noAnswerLabel={t.stats.noAnswer}
             othersLabel={t.stats.others}
+            noAnswerLabel={t.stats.noAnswer}
             picksUnit={t.stats.picksUnit}
           />
         </section>
