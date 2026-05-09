@@ -496,9 +496,9 @@ function PodiumCard({
           </div>
         </div>
 
-        {/* 2º y 3º en una fila a 50/50 */}
+        {/* 2º y 3º apilados (no en grid 50/50, así no se cortan los nombres) */}
         {(second || third) && (
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <div className="mt-2 space-y-2">
             {second && (
               <div className="rounded-2xl border border-gray-100 bg-white p-3">
                 <div className="flex items-center gap-2">

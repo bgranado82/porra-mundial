@@ -358,7 +358,7 @@ const text = getText(locale);
       });
 
       const topCombo = Array.from(comboCounter.values()).sort((a, b) => b.count - a.count)[0];
-      if (topCombo && topCombo.count >= 2) {
+      if (topCombo) {
         const team = teamMap.get(topCombo.championId);
         const championName = team?.name ?? topCombo.championId;
         insightsBuffer.push(text.comboInsight(championName, prettifyValue(topCombo.ball), topCombo.count));
