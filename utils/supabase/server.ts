@@ -12,8 +12,17 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll() {
-          // no hace falta escribir cookies aquí
+        setAll(cookiesToSet) {
+          // Si se llama desde un Server Component puro (sin contexto de Action o Route Handler),
+          // cookies().set() lanza error. Lo envolvemos en try/catch para no romper esos casos —
+          // el refresh real lo hace el middleware en cada request, así que no perdemos nada.
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch {
+            // Server Component: ignorar.
+          }
         },
       },
     }
