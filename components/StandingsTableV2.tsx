@@ -13,9 +13,112 @@
  * Esta fase aún NO incluye drawer/expansión de detalle. Solo estructura.
  */
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Locale, messages } from "@/lib/i18n";
 import { countryFlagUrl } from "@/lib/countryFlags";
+
+// Traducciones locales del componente (no toco lib/i18n.ts para no contaminar
+// el sistema global con cosas específicas de esta vista).
+const T: Record<Locale, Record<string, string>> = {
+  es: {
+    you: "Tú",
+    yourPosition: "Tu posición",
+    search: "Buscar...",
+    noResults: "Sin resultados",
+    var: "Var.",
+    pos: "#",
+    player: "Jugador",
+    groups: "Grupos",
+    total: "TOTAL",
+    detailByMatchdays: "Detalle por jornadas de fase de grupos",
+    matchday: "Jornada",
+    outcomeHits: "Resultados acertados",
+    exactHits: "Marcadores exactos",
+    company: "Empresa",
+    koHits: "Aciertos en eliminatorias",
+    showDetail: "Ver detalle",
+    hideDetail: "Ocultar detalle",
+    // tooltips iconos extras
+    extraGoalWorld: "Primer goleador del Mundial",
+    extraGoalSpain: "Primer goleador de España",
+    extraBoot: "Bota de Oro",
+    extraBall: "Balón de Oro",
+    extraGlove: "Guante de Oro",
+    extraYoung: "Mejor jugador joven",
+    extraTopSpain: "Máximo goleador español",
+    // tooltips KO
+    r32: "Octavos de final",
+    r16: "Cuartos de final",
+    qf: "Cuartos",
+    sf: "Semifinales",
+    final: "Final",
+    champ: "Campeón",
+  },
+  en: {
+    you: "You",
+    yourPosition: "Your position",
+    search: "Search...",
+    noResults: "No results",
+    var: "Var.",
+    pos: "#",
+    player: "Player",
+    groups: "Groups",
+    total: "TOTAL",
+    detailByMatchdays: "Group stage detail by matchday",
+    matchday: "Matchday",
+    outcomeHits: "Correct outcomes",
+    exactHits: "Exact scores",
+    company: "Company",
+    koHits: "Knockout round hits",
+    showDetail: "Show detail",
+    hideDetail: "Hide detail",
+    extraGoalWorld: "First goal scorer of the World Cup",
+    extraGoalSpain: "First goal scorer for Spain",
+    extraBoot: "Golden Boot",
+    extraBall: "Golden Ball",
+    extraGlove: "Golden Glove",
+    extraYoung: "Best young player",
+    extraTopSpain: "Top Spanish scorer",
+    r32: "Round of 32",
+    r16: "Round of 16",
+    qf: "Quarter-finals",
+    sf: "Semi-finals",
+    final: "Final",
+    champ: "Champion",
+  },
+  pt: {
+    you: "Você",
+    yourPosition: "Sua posição",
+    search: "Buscar...",
+    noResults: "Sem resultados",
+    var: "Var.",
+    pos: "#",
+    player: "Jogador",
+    groups: "Grupos",
+    total: "TOTAL",
+    detailByMatchdays: "Detalhe por rodada da fase de grupos",
+    matchday: "Rodada",
+    outcomeHits: "Resultados acertados",
+    exactHits: "Placares exatos",
+    company: "Empresa",
+    koHits: "Acertos nos mata-mata",
+    showDetail: "Ver detalhe",
+    hideDetail: "Ocultar detalhe",
+    extraGoalWorld: "Primeiro gol da Copa",
+    extraGoalSpain: "Primeiro gol da Espanha",
+    extraBoot: "Chuteira de Ouro",
+    extraBall: "Bola de Ouro",
+    extraGlove: "Luva de Ouro",
+    extraYoung: "Melhor jovem jogador",
+    extraTopSpain: "Artilheiro espanhol",
+    r32: "Oitavas de final",
+    r16: "Quartas de final",
+    qf: "Quartas",
+    sf: "Semifinais",
+    final: "Final",
+    champ: "Campeão",
+  },
+};
 
 type ExtraPointsMap = {
   first_goal_scorer_world: number;
@@ -77,7 +180,8 @@ function fmtPts(value: number, locale: Locale = "es") {
   return value.toLocaleString(locale === "en" ? "en-US" : locale === "pt" ? "pt-BR" : "es-ES");
 }
 
-// Variación con contraste fuerte (verde brillante / rojo brillante / gris)
+// Variación: pastilla coloreada llamativa.
+// Verde brillante para subir, rojo brillante para bajar, gris para igual.
 function MovementChip({ movement, value }: { movement: "up" | "down" | "same"; value: number }) {
   if (movement === "up") {
     return (
@@ -145,34 +249,36 @@ function podiumRowClasses(position: number) {
   return "";
 }
 
-// Heatmap de color: dado un valor y un máximo, devuelve un estilo inline
-// con fondo degradado de rojo (peor) → ámbar (medio) → verde (mejor).
-// Los pesos están pensados para que valores muy bajos no se vean alarmantes.
-function heatStyle(value: number, max: number): React.CSSProperties {
-  if (max <= 0 || value <= 0) {
-    return { backgroundColor: "transparent" };
-  }
-  const ratio = Math.min(1, value / max);
-  // ratio 0..1 → tres tramos: rojo→ámbar (0..0.5) y ámbar→verde (0.5..1)
-  let r: number, g: number, b: number;
-  if (ratio < 0.5) {
-    const t = ratio * 2; // 0..1 dentro del tramo
-    r = 239; g = Math.round(68 + (158 - 68) * t); b = Math.round(68 + (11 - 68) * t);
-  } else {
-    const t = (ratio - 0.5) * 2; // 0..1 dentro del tramo
-    r = Math.round(245 + (16 - 245) * t);
-    g = Math.round(158 + (185 - 158) * t);
-    b = Math.round(11 + (129 - 11) * t);
-  }
-  // Alpha bajo para que el color sea sutil de fondo, no chillón
-  const alpha = 0.10 + ratio * 0.20; // de 0.10 a 0.30
-  return { backgroundColor: `rgba(${r}, ${g}, ${b}, ${alpha})` };
+// Heatmap por posición (idéntico al componente antiguo): tramos discretos
+// según ratio (position-1)/(totalRows-1). Verde = arriba, rojo = abajo.
+function getRankHeatClass(position: number, totalRows: number): string {
+  if (totalRows <= 1) return "bg-green-50 text-green-900";
+  const ratio = (position - 1) / (totalRows - 1);
+  if (ratio <= 0.2) return "bg-green-100 text-green-900";
+  if (ratio <= 0.4) return "bg-lime-100 text-lime-900";
+  if (ratio <= 0.6) return "bg-yellow-100 text-yellow-900";
+  if (ratio <= 0.8) return "bg-orange-100 text-orange-900";
+  return "bg-red-100 text-red-900";
 }
 
 // ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────
-export default function StandingsTableV2({ standings, locale = "es", entryId }: Props) {
+export default function StandingsTableV2({ days, standings, locale = "es", entryId }: Props) {
   const t = messages[locale];
+  const tBase = T[locale];
   const [search, setSearch] = useState("");
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Jornadas ordenadas (las que tengan al menos 1 punto en algún jugador, o todas si días viene)
+  const sortedDays = useMemo(() => [...(days ?? [])].sort((a, b) => a - b), [days]);
 
   // Único orden: por total (lo que ya viene calculado del backend).
   const sortedStandings = useMemo(() => {
@@ -184,20 +290,7 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
     }));
   }, [standings]);
 
-  // Para el heatmap de color: máximos por columna (para escalar el degradado).
-  const maxValues = useMemo(() => {
-    let maxGroups = 0, maxKo = 0, maxExtras = 0, maxTotal = 0;
-    standings.forEach((row) => {
-      const groups = row.group_total + row.extra_group_points;
-      const ko = row.r32_points + row.r16_points + row.qf_points + row.sf_points + row.third_points + row.final_points + row.champion_points;
-      const extras = row.extra_total_points - row.extra_group_points;
-      if (groups > maxGroups) maxGroups = groups;
-      if (ko > maxKo) maxKo = ko;
-      if (extras > maxExtras) maxExtras = extras;
-      if (row.total_points > maxTotal) maxTotal = row.total_points;
-    });
-    return { maxGroups, maxKo, maxExtras, maxTotal };
-  }, [standings]);
+  const totalRows = sortedStandings.length;
 
   // Filtrar por búsqueda
   const filteredStandings = useMemo(() => {
@@ -231,7 +324,7 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar..."
+            placeholder={tBase.search}
             className="w-full rounded-full border border-[var(--iberdrola-green-mid)] bg-white py-2 pl-8 pr-4 text-sm text-[var(--iberdrola-forest)] placeholder:text-[var(--iberdrola-forest)]/40 focus:border-[var(--iberdrola-green)] focus:outline-none focus:ring-1 focus:ring-[var(--iberdrola-green)]"
           />
           {search && (
@@ -251,19 +344,10 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
         <OwnRowBanner row={ownRow} locale={locale} />
       )}
 
-      {/* PODIO TOP 3 (solo si no hay búsqueda activa, para no descolocar) */}
-      {!search && top3.length > 0 && (
-        <div className="space-y-2">
-          {top3.map((row) => (
-            <PodiumRow key={row.entry_id} row={row} locale={locale} isOwn={row.entry_id === entryId} />
-          ))}
-        </div>
-      )}
-
       {/* DESKTOP: tabla / MÓVIL: cards */}
       <div className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm overflow-hidden">
         {/* Desktop */}
-        <div className="hidden md:block">
+        <div className="hidden md:block max-h-[75vh] overflow-auto">
           <table className="w-full text-[12px]" style={{ tableLayout: "fixed" }}>
             <colgroup>
               <col style={{ width: 60 }} />{/* Var */}
@@ -286,35 +370,38 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
               <col />{/* X7 */}
               <col style={{ width: 70 }} />{/* Total */}
             </colgroup>
-            <thead className="bg-gray-50 text-[10px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
+            <thead className="sticky top-0 z-10 bg-gray-50 text-[10px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/60 shadow-sm">
               <tr>
-                <th className="px-1 py-3 text-center">Var.</th>
-                <th className="px-1 py-3 text-center">#</th>
+                <th className="px-1 py-3 text-center">{tBase.var}</th>
+                <th className="px-1 py-3 text-center">{tBase.pos}</th>
                 <th className="px-1 py-3 text-center"></th>
-                <th className="px-2 py-3 text-left">Jugador</th>
-                <th className="px-1 py-3 text-center" title="Fase de grupos">Grupos</th>
-                <th className="px-1 py-3 text-center" title="Octavos de final">R32</th>
-                <th className="px-1 py-3 text-center" title="Cuartos de final">R16</th>
-                <th className="px-1 py-3 text-center" title="Cuartos">QF</th>
-                <th className="px-1 py-3 text-center" title="Semifinales">SF</th>
-                <th className="px-1 py-3 text-center" title="Final">Final</th>
-                <th className="px-1 py-3 text-center" title="Campeón">Camp.</th>
-                <th className="px-1 py-3 text-center" title="Primer goleador del Mundial">⚽🌍</th>
-                <th className="px-1 py-3 text-center" title="Primer goleador de España">⚽🇪🇸</th>
-                <th className="px-1 py-3 text-center" title="Bota de Oro">👟</th>
-                <th className="px-1 py-3 text-center" title="Balón de Oro">🏆</th>
-                <th className="px-1 py-3 text-center" title="Guante de Oro">🧤</th>
-                <th className="px-1 py-3 text-center" title="Mejor jugador joven">🌟</th>
-                <th className="px-1 py-3 text-center" title="Máximo goleador español">🎯</th>
-                <th className="bg-[var(--iberdrola-green)]/10 px-1 py-3 text-center font-black text-[var(--iberdrola-green)]">TOTAL</th>
+                <th className="px-2 py-3 text-left">{tBase.player}</th>
+                <th className="px-1 py-3 text-center" title={tBase.groups}>{tBase.groups}</th>
+                <th className="px-1 py-3 text-center" title={tBase.r32}>R32</th>
+                <th className="px-1 py-3 text-center" title={tBase.r16}>R16</th>
+                <th className="px-1 py-3 text-center" title={tBase.qf}>QF</th>
+                <th className="px-1 py-3 text-center" title={tBase.sf}>SF</th>
+                <th className="px-1 py-3 text-center" title={tBase.final}>F</th>
+                <th className="px-1 py-3 text-center" title={tBase.champ}>C</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraGoalWorld}>⚽🌍</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraGoalSpain}>⚽🇪🇸</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraBoot}>👟</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraBall}>🏆</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraGlove}>🧤</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraYoung}>🌟</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraTopSpain}>🎯</th>
+                <th className="bg-[var(--iberdrola-green)]/10 px-1 py-3 text-center font-black text-[var(--iberdrola-green)]">{tBase.total}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {(search ? filteredStandings : rest).map((row) => (
+              {filteredStandings.map((row) => (
                 <DesktopRow
                   key={row.entry_id}
                   row={row}
-                  maxValues={maxValues}
+                  totalRows={totalRows}
+                  sortedDays={sortedDays}
+                  isExpanded={expandedIds.has(row.entry_id)}
+                  onToggleExpand={() => toggleExpanded(row.entry_id)}
                   locale={locale}
                   isOwn={row.entry_id === entryId}
                 />
@@ -332,11 +419,14 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
 
         {/* Móvil */}
         <div className="md:hidden divide-y divide-gray-100">
-          {(search ? filteredStandings : rest).map((row) => (
+          {filteredStandings.map((row) => (
             <MobileCard
               key={row.entry_id}
               row={row}
-              maxValues={maxValues}
+              totalRows={totalRows}
+              sortedDays={sortedDays}
+              isExpanded={expandedIds.has(row.entry_id)}
+              onToggleExpand={() => toggleExpanded(row.entry_id)}
               locale={locale}
               isOwn={row.entry_id === entryId}
             />
@@ -362,17 +452,18 @@ function OwnRowBanner({
   row: any;
   locale: Locale;
 }) {
+  const tx = T[locale];
   return (
     <div className="rounded-xl border border-[var(--iberdrola-green)]/40 bg-white px-3 py-2">
       <div className="flex items-center gap-3">
         <div className="shrink-0 text-[9px] font-black uppercase tracking-wider text-[var(--iberdrola-green)]">
-          Tú
+          {tx.you}
         </div>
         <div className="flex flex-1 items-center gap-2 min-w-0">
           <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
           <span className="shrink-0 text-sm font-black tabular-nums text-[var(--iberdrola-forest)]/70">#{row._displayPosition}</span>
-          <span className="truncate text-sm font-semibold text-[var(--iberdrola-forest)]">{row.name}</span>
           <CountryFlag country={row.country} />
+          <span className="truncate text-sm font-semibold text-[var(--iberdrola-forest)]">{row.name}</span>
         </div>
         <div className="shrink-0 text-right">
           <span className="text-base font-black tabular-nums text-[var(--iberdrola-green)]">
@@ -427,134 +518,305 @@ function PodiumRow({
   );
 }
 
-// Fila desktop (tabla) con TODAS las columnas: Grupos / R32 / R16 / QF / SF / Final / Camp. / 7 extras / Total
+// Fila desktop: principal + (opcional) fila de detalle expandida con jornadas
 function DesktopRow({
   row,
-  maxValues,
+  totalRows,
+  sortedDays,
+  isExpanded,
+  onToggleExpand,
   locale,
   isOwn,
 }: {
   row: any;
-  maxValues: { maxGroups: number; maxKo: number; maxExtras: number; maxTotal: number };
+  totalRows: number;
+  sortedDays: number[];
+  isExpanded: boolean;
+  onToggleExpand: () => void;
   locale: Locale;
   isOwn: boolean;
 }) {
+  const tx = T[locale];
   const groupsValue = row.group_total + row.extra_group_points;
 
-  // Para que cada extra (1 pregunta) se compare con un máximo razonable usamos
-  // el máximo de cualquier extra individual entre todos los usuarios.
-  // Lo aproximamos con maxExtras (que es la suma de los 7) → está sobredimensionado
-  // pero como solo afecta al color (no al dato) no pasa nada.
-
-  const numCell = (value: number, max: number) => (
-    <td className="px-1 py-2.5 text-center tabular-nums" style={heatStyle(value, max)}>
+  // Celda numérica: blanca, sólo el número (gris claro si 0)
+  const numCell = (value: number) => (
+    <td className="px-1 py-2.5 text-center tabular-nums">
       <span className={value > 0 ? "font-semibold text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/25"}>
         {fmtPts(value, locale)}
       </span>
     </td>
   );
 
+  const totalHeatClass = getRankHeatClass(row._displayPosition, totalRows);
+  // Fondo de medalla en top 3 (oro/plata/bronce) que prevalece sobre el isOwn
+  const podiumBg = podiumRowClasses(row._displayPosition);
+  const rowBgClass = podiumBg
+    ? podiumBg
+    : isOwn
+    ? "bg-[var(--iberdrola-green-light)]/30"
+    : "";
+
   return (
-    <tr className={`transition hover:bg-gray-50 ${isOwn ? "bg-[var(--iberdrola-green-light)]/30" : ""}`}>
-      <td className="px-1 py-2.5 text-center">
-        <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
-      </td>
-      <td className="px-1 py-2.5 text-center font-bold tabular-nums text-[var(--iberdrola-forest)]/70">
-        {row._displayPosition}
-      </td>
-      <td className="px-1 py-2.5 text-center">
-        <CountryFlag country={row.country} />
-      </td>
-      <td className="px-2 py-2.5">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="truncate font-semibold text-[var(--iberdrola-forest)]">{row.name}</span>
-          {isOwn && (
-            <span className="shrink-0 rounded-md bg-[var(--iberdrola-green)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
-              Tú
+    <>
+      <tr className={`transition hover:bg-gray-50 ${rowBgClass}`}>
+        <td className="px-1 py-2.5 text-center">
+          <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
+        </td>
+        <td className="px-1 py-2.5 text-center font-bold tabular-nums text-[var(--iberdrola-forest)]/70">
+          {row._displayPosition <= 3 ? (
+            <span className="inline-flex items-center gap-0.5">
+              <PodiumMedal position={row._displayPosition} />
+              <span className="text-[10px] opacity-70">{row._displayPosition}</span>
             </span>
+          ) : (
+            row._displayPosition
           )}
-        </div>
-      </td>
-      {/* Bloque puntos */}
-      {numCell(groupsValue, maxValues.maxGroups)}
-      {numCell(row.r32_points, maxValues.maxKo)}
-      {numCell(row.r16_points, maxValues.maxKo)}
-      {numCell(row.qf_points, maxValues.maxKo)}
-      {numCell(row.sf_points, maxValues.maxKo)}
-      {numCell(row.final_points, maxValues.maxKo)}
-      {numCell(row.champion_points, maxValues.maxKo)}
-      {/* 7 extras desplegados */}
-      {numCell(row.extra_points?.first_goal_scorer_world ?? 0, maxValues.maxExtras)}
-      {numCell(row.extra_points?.first_goal_scorer_spain ?? 0, maxValues.maxExtras)}
-      {numCell(row.extra_points?.golden_boot ?? 0, maxValues.maxExtras)}
-      {numCell(row.extra_points?.golden_ball ?? 0, maxValues.maxExtras)}
-      {numCell(row.extra_points?.golden_glove ?? 0, maxValues.maxExtras)}
-      {numCell(row.extra_points?.best_young_player ?? 0, maxValues.maxExtras)}
-      {numCell(row.extra_points?.top_spanish_scorer ?? 0, maxValues.maxExtras)}
-      {/* TOTAL: heatmap continuo, número en negrita */}
-      <td
-        className="border-l-2 border-[var(--iberdrola-green)]/20 px-1 py-2.5 text-center tabular-nums"
-        style={heatStyle(row.total_points, maxValues.maxTotal)}
-      >
-        <span className={row.total_points > 0 ? "text-base font-black text-[var(--iberdrola-forest)]" : "text-base font-black text-[var(--iberdrola-forest)]/30"}>
-          {fmtPts(row.total_points, locale)}
-        </span>
-      </td>
-    </tr>
+        </td>
+        <td className="px-1 py-2.5 text-center">
+          <CountryFlag country={row.country} />
+        </td>
+        <td className="px-2 py-2.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="truncate font-semibold text-[var(--iberdrola-forest)]">{row.name}</span>
+            {isOwn && (
+              <span className="shrink-0 rounded-md bg-[var(--iberdrola-green)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
+                Tú
+              </span>
+            )}
+          </div>
+        </td>
+        {/* Grupos con botón + para expandir detalle por jornadas */}
+        <td className="px-1 py-2.5 text-center tabular-nums">
+          <div className="flex items-center justify-center gap-1">
+            <button
+              onClick={onToggleExpand}
+              className={`flex h-5 w-5 items-center justify-center rounded-md text-[11px] font-black transition ${
+                isExpanded
+                  ? "bg-[var(--iberdrola-green)] text-white"
+                  : "border border-[var(--iberdrola-green)]/30 text-[var(--iberdrola-green)] hover:bg-[var(--iberdrola-green-light)]/40"
+              }`}
+              aria-label={isExpanded ? "Ocultar detalle" : "Ver detalle por jornadas"}
+              title={isExpanded ? "Ocultar detalle" : "Ver detalle por jornadas"}
+            >
+              {isExpanded ? "−" : "+"}
+            </button>
+            <span className={groupsValue > 0 ? "font-semibold text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/25"}>
+              {fmtPts(groupsValue, locale)}
+            </span>
+          </div>
+        </td>
+        {numCell(row.r32_points)}
+        {numCell(row.r16_points)}
+        {numCell(row.qf_points)}
+        {numCell(row.sf_points)}
+        {numCell(row.final_points)}
+        {numCell(row.champion_points)}
+        {numCell(row.extra_points?.first_goal_scorer_world ?? 0)}
+        {numCell(row.extra_points?.first_goal_scorer_spain ?? 0)}
+        {numCell(row.extra_points?.golden_boot ?? 0)}
+        {numCell(row.extra_points?.golden_ball ?? 0)}
+        {numCell(row.extra_points?.golden_glove ?? 0)}
+        {numCell(row.extra_points?.best_young_player ?? 0)}
+        {numCell(row.extra_points?.top_spanish_scorer ?? 0)}
+        {/* TOTAL con heatmap por posición */}
+        <td className={`border-l-2 border-[var(--iberdrola-green)]/20 px-1 py-2.5 text-center tabular-nums ${totalHeatClass}`}>
+          <span className="text-base font-black">
+            {fmtPts(row.total_points, locale)}
+          </span>
+        </td>
+      </tr>
+
+      {/* Fila expandida: detalle por jornadas + aciertos KO */}
+      {isExpanded && (
+        <tr className={isOwn ? "bg-[var(--iberdrola-green-light)]/15" : "bg-gray-50/60"}>
+          <td colSpan={19} className="px-4 py-3">
+            <div className="space-y-3">
+              <div>
+                <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[var(--iberdrola-forest)]/50">
+                  {tx.detailByMatchdays}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {sortedDays.map((day) => {
+                    const pts = row.day_points?.[String(day)] ?? 0;
+                    let cellClass = "bg-gray-100 text-gray-400";
+                    if (pts >= 5) cellClass = "bg-green-200 text-green-900 font-bold";
+                    else if (pts >= 3) cellClass = "bg-lime-100 text-lime-900 font-semibold";
+                    else if (pts >= 1) cellClass = "bg-yellow-50 text-yellow-800";
+                    return (
+                      <div
+                        key={day}
+                        className={`flex min-w-[44px] flex-col items-center rounded-md px-2 py-1 text-[10px] tabular-nums ${cellClass}`}
+                        title={`${tx.matchday} ${day}: ${pts} pts`}
+                      >
+                        <span className="text-[9px] uppercase opacity-60">J{day}</span>
+                        <span className="text-sm font-black">{fmtPts(pts, locale)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[var(--iberdrola-forest)]/50">
+                  {tx.koHits}
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--iberdrola-forest)]/75">
+                  <KoStat label={tx.r32} hits={row.ko_r32_hits} total={row.ko_r32_total} />
+                  <KoStat label={tx.r16} hits={row.ko_r16_hits} total={row.ko_r16_total} />
+                  <KoStat label={tx.qf} hits={row.ko_qf_hits} total={row.ko_qf_total} />
+                  <KoStat label={tx.sf} hits={row.ko_sf_hits} total={row.ko_sf_total} />
+                  <KoStat label={tx.final} hits={row.ko_final_hits} total={row.ko_final_total} />
+                  <KoStat label={tx.champ} hits={row.ko_champ_hits} total={row.ko_champ_total} />
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-gray-200 pt-2 text-[11px] text-[var(--iberdrola-forest)]/65">
+                <span>{tx.outcomeHits}: <strong>{row.outcome_hits}</strong> ({row.outcome_percent}%)</span>
+                <span>{tx.exactHits}: <strong>{row.exact_hits}</strong> ({row.exact_percent}%)</span>
+                {row.company && <span>{tx.company}: <strong>{row.company}</strong></span>}
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
-// Card móvil — nombre con todo el ancho disponible, métricas debajo
+// Helper para los stats KO del detalle expandido
+function KoStat({ label, hits, total }: { label: string; hits: number; total: number }) {
+  if (!total || total === 0) {
+    return (
+      <span className="text-[var(--iberdrola-forest)]/30">
+        {label}: —
+      </span>
+    );
+  }
+  return (
+    <span>
+      {label}: <strong>{hits ?? 0}</strong>/{total}
+    </span>
+  );
+}
+
+// Card móvil
 function MobileCard({
   row,
-  maxValues,
+  totalRows,
+  sortedDays,
+  isExpanded,
+  onToggleExpand,
   locale,
   isOwn,
 }: {
   row: any;
-  maxValues: { maxGroups: number; maxKo: number; maxExtras: number; maxTotal: number };
+  totalRows: number;
+  sortedDays: number[];
+  isExpanded: boolean;
+  onToggleExpand: () => void;
   locale: Locale;
   isOwn: boolean;
 }) {
+  const tx = T[locale];
   const groupsValue = row.group_total + row.extra_group_points;
   const extrasValue = row.extra_total_points - row.extra_group_points;
   const koValue =
     row.r32_points + row.r16_points + row.qf_points + row.sf_points +
     row.third_points + row.final_points + row.champion_points;
+  const totalHeatClass = getRankHeatClass(row._displayPosition, totalRows);
+  const podiumBg = podiumRowClasses(row._displayPosition);
+  const cardBgClass = podiumBg
+    ? podiumBg
+    : isOwn
+    ? "bg-[var(--iberdrola-green-light)]/30"
+    : "";
 
   return (
-    <div
-      className={`px-3 py-2.5 ${isOwn ? "bg-[var(--iberdrola-green-light)]/30" : ""}`}
-      style={heatStyle(row.total_points, maxValues.maxTotal)}
-    >
-      {/* Línea 1: posición + nombre + bandera + tú | total destacado */}
+    <div className={`px-3 py-2.5 ${cardBgClass}`}>
+      {/* Línea 1: posición (con medalla en top 3) + bandera + nombre + tú | total con heatmap */}
       <div className="flex items-center gap-2">
         <span className="shrink-0 w-7 text-center text-sm font-black tabular-nums text-[var(--iberdrola-forest)]/60">
-          {row._displayPosition}
+          {row._displayPosition <= 3 ? <PodiumMedal position={row._displayPosition} /> : row._displayPosition}
         </span>
+        <CountryFlag country={row.country} />
         <div className="flex-1 min-w-0 flex items-center gap-1.5">
           <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)]">{row.name}</span>
-          <CountryFlag country={row.country} />
           {isOwn && (
             <span className="shrink-0 rounded-md bg-[var(--iberdrola-green)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
-              Tú
+              {tx.you}
             </span>
           )}
         </div>
-        <div className="shrink-0 text-right">
-          <span className="text-base font-black tabular-nums text-[var(--iberdrola-green)]">
+        <div className={`shrink-0 rounded-md px-2 py-0.5 ${totalHeatClass}`}>
+          <span className="text-base font-black tabular-nums">
             {fmtPts(row.total_points, locale)}
           </span>
-          <span className="ml-0.5 text-[9px] uppercase tracking-wide text-[var(--iberdrola-forest)]/40">pts</span>
+          <span className="ml-0.5 text-[9px] uppercase tracking-wide opacity-60">pts</span>
         </div>
       </div>
-      {/* Línea 2: variación + desglose pequeño */}
+      {/* Línea 2: variación + desglose pequeño + botón expandir */}
       <div className="mt-1 flex items-center gap-2 pl-9">
         <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
         <span className="text-[10px] text-[var(--iberdrola-forest)]/50 tabular-nums">
           G {fmtPts(groupsValue, locale)} · KO {fmtPts(koValue, locale)} · X {fmtPts(extrasValue, locale)}
         </span>
+        <button
+          onClick={onToggleExpand}
+          className={`ml-auto flex h-5 w-5 items-center justify-center rounded-md text-[11px] font-black transition ${
+            isExpanded
+              ? "bg-[var(--iberdrola-green)] text-white"
+              : "border border-[var(--iberdrola-green)]/30 text-[var(--iberdrola-green)]"
+          }`}
+          aria-label={isExpanded ? tx.hideDetail : tx.showDetail}
+        >
+          {isExpanded ? "−" : "+"}
+        </button>
       </div>
+      {/* Detalle expandido */}
+      {isExpanded && (
+        <div className="mt-3 rounded-xl bg-white/70 p-3 space-y-3">
+          <div>
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--iberdrola-forest)]/50 mb-1.5">
+              {tx.detailByMatchdays}
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {sortedDays.map((day) => {
+                const pts = row.day_points?.[String(day)] ?? 0;
+                let cellClass = "bg-gray-100 text-gray-400";
+                if (pts >= 5) cellClass = "bg-green-200 text-green-900 font-bold";
+                else if (pts >= 3) cellClass = "bg-lime-100 text-lime-900 font-semibold";
+                else if (pts >= 1) cellClass = "bg-yellow-50 text-yellow-800";
+                return (
+                  <div
+                    key={day}
+                    className={`flex min-w-[36px] flex-col items-center rounded-md px-1.5 py-1 text-[9px] tabular-nums ${cellClass}`}
+                  >
+                    <span className="text-[8px] uppercase opacity-60">J{day}</span>
+                    <span className="text-xs font-black">{fmtPts(pts, locale)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--iberdrola-forest)]/50 mb-1.5">
+              {tx.koHits}
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-[var(--iberdrola-forest)]/75">
+              <KoStat label={tx.r32} hits={row.ko_r32_hits} total={row.ko_r32_total} />
+              <KoStat label={tx.r16} hits={row.ko_r16_hits} total={row.ko_r16_total} />
+              <KoStat label={tx.qf} hits={row.ko_qf_hits} total={row.ko_qf_total} />
+              <KoStat label={tx.sf} hits={row.ko_sf_hits} total={row.ko_sf_total} />
+              <KoStat label={tx.final} hits={row.ko_final_hits} total={row.ko_final_total} />
+              <KoStat label={tx.champ} hits={row.ko_champ_hits} total={row.ko_champ_total} />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 border-t border-gray-200 pt-2 text-[10px] text-[var(--iberdrola-forest)]/65">
+            <span>{tx.outcomeHits}: <strong>{row.outcome_hits}</strong> ({row.outcome_percent}%)</span>
+            <span>{tx.exactHits}: <strong>{row.exact_hits}</strong> ({row.exact_percent}%)</span>
+            {row.company && <span>{tx.company}: <strong>{row.company}</strong></span>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

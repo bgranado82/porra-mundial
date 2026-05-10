@@ -258,22 +258,22 @@ function MovementMini({
 }) {
   if (movement === "up") {
     return (
-      <span className="inline-flex items-center justify-center rounded-full bg-green-50 px-3 py-1 text-sm font-bold text-green-700">
-        ▲ +{movementValue}
+      <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500 px-1.5 py-0.5 text-[11px] font-bold text-white shadow-sm">
+        <span className="text-[9px]">▲</span>{movementValue}
       </span>
     );
   }
 
   if (movement === "down") {
     return (
-      <span className="inline-flex items-center justify-center rounded-full bg-red-50 px-3 py-1 text-sm font-bold text-red-700">
-        ▼ -{movementValue}
+      <span className="inline-flex items-center gap-0.5 rounded-md bg-red-500 px-1.5 py-0.5 text-[11px] font-bold text-white shadow-sm">
+        <span className="text-[9px]">▼</span>{movementValue}
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center justify-center rounded-full bg-gray-100 px-3 py-1 text-sm font-bold text-gray-600">
+    <span className="inline-flex items-center justify-center rounded-md bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-500">
       =
     </span>
   );
