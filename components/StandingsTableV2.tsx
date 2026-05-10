@@ -13,7 +13,7 @@
  * Esta fase aún NO incluye drawer/expansión de detalle. Solo estructura.
  */
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Locale, messages } from "@/lib/i18n";
 import { countryFlagUrl } from "@/lib/countryFlags";
 
@@ -71,8 +71,6 @@ type Props = {
   locale?: Locale;
   entryId?: string;
 };
-
-type SortKey = "total" | "groups" | "extras";
 
 // ─── Utilidades ───────────────────────────────────────────────────────────
 function fmtPts(value: number, locale: Locale = "es") {
@@ -147,57 +145,59 @@ function podiumRowClasses(position: number) {
   return "";
 }
 
+// Heatmap de color: dado un valor y un máximo, devuelve un estilo inline
+// con fondo degradado de rojo (peor) → ámbar (medio) → verde (mejor).
+// Los pesos están pensados para que valores muy bajos no se vean alarmantes.
+function heatStyle(value: number, max: number): React.CSSProperties {
+  if (max <= 0 || value <= 0) {
+    return { backgroundColor: "transparent" };
+  }
+  const ratio = Math.min(1, value / max);
+  // ratio 0..1 → tres tramos: rojo→ámbar (0..0.5) y ámbar→verde (0.5..1)
+  let r: number, g: number, b: number;
+  if (ratio < 0.5) {
+    const t = ratio * 2; // 0..1 dentro del tramo
+    r = 239; g = Math.round(68 + (158 - 68) * t); b = Math.round(68 + (11 - 68) * t);
+  } else {
+    const t = (ratio - 0.5) * 2; // 0..1 dentro del tramo
+    r = Math.round(245 + (16 - 245) * t);
+    g = Math.round(158 + (185 - 158) * t);
+    b = Math.round(11 + (129 - 11) * t);
+  }
+  // Alpha bajo para que el color sea sutil de fondo, no chillón
+  const alpha = 0.10 + ratio * 0.20; // de 0.10 a 0.30
+  return { backgroundColor: `rgba(${r}, ${g}, ${b}, ${alpha})` };
+}
+
 // ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────
 export default function StandingsTableV2({ standings, locale = "es", entryId }: Props) {
   const t = messages[locale];
-  const [sortKey, setSortKey] = useState<SortKey>("total");
   const [search, setSearch] = useState("");
 
-  // Aplicar orden seleccionado y recalcular movement coherente con ese orden.
-  // Para "groups" usamos prev_group_position (que ya viene del backend).
-  // Para "total" usamos position/movement (ya vienen calculados).
-  // Para "extras" no tenemos previo guardado, así que mostramos "=" en variación.
+  // Único orden: por total (lo que ya viene calculado del backend).
   const sortedStandings = useMemo(() => {
-    if (sortKey === "groups") {
-      const sorted = [...standings].sort((a, b) => {
-        const aVal = a.group_total + a.extra_group_points;
-        const bVal = b.group_total + b.extra_group_points;
-        if (bVal !== aVal) return bVal - aVal;
-        return a.name.localeCompare(b.name);
-      });
-      return sorted.map((row, idx) => {
-        const currentPos = idx + 1;
-        const prev = row.prev_group_position ?? currentPos;
-        let movement: "up" | "down" | "same" = "same";
-        let movement_value = 0;
-        if (currentPos < prev) { movement = "up"; movement_value = prev - currentPos; }
-        else if (currentPos > prev) { movement = "down"; movement_value = currentPos - prev; }
-        return { ...row, _displayPosition: currentPos, _displayMovement: movement, _displayMovementValue: movement_value };
-      });
-    }
-    if (sortKey === "extras") {
-      const sorted = [...standings].sort((a, b) => {
-        // Solo extras "totales" (los 7), excluyendo los de grupo que ya van en "Grupos".
-        const aVal = a.extra_total_points - a.extra_group_points;
-        const bVal = b.extra_total_points - b.extra_group_points;
-        if (bVal !== aVal) return bVal - aVal;
-        return a.name.localeCompare(b.name);
-      });
-      return sorted.map((row, idx) => ({
-        ...row,
-        _displayPosition: idx + 1,
-        _displayMovement: "same" as const,
-        _displayMovementValue: 0,
-      }));
-    }
-    // total — usar lo que viene del backend
     return standings.map((row) => ({
       ...row,
       _displayPosition: row.position,
       _displayMovement: row.movement,
       _displayMovementValue: row.movement_value,
     }));
-  }, [standings, sortKey]);
+  }, [standings]);
+
+  // Para el heatmap de color: máximos por columna (para escalar el degradado).
+  const maxValues = useMemo(() => {
+    let maxGroups = 0, maxKo = 0, maxExtras = 0, maxTotal = 0;
+    standings.forEach((row) => {
+      const groups = row.group_total + row.extra_group_points;
+      const ko = row.r32_points + row.r16_points + row.qf_points + row.sf_points + row.third_points + row.final_points + row.champion_points;
+      const extras = row.extra_total_points - row.extra_group_points;
+      if (groups > maxGroups) maxGroups = groups;
+      if (ko > maxKo) maxKo = ko;
+      if (extras > maxExtras) maxExtras = extras;
+      if (row.total_points > maxTotal) maxTotal = row.total_points;
+    });
+    return { maxGroups, maxKo, maxExtras, maxTotal };
+  }, [standings]);
 
   // Filtrar por búsqueda
   const filteredStandings = useMemo(() => {
@@ -223,20 +223,9 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
 
   return (
     <section className="space-y-4">
-      {/* CONTROLES: orden + búsqueda */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 overflow-x-auto">
-          <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-[var(--iberdrola-forest)]/50">
-            Ordenar por
-          </span>
-          <div className="flex gap-1.5">
-            <SortPill active={sortKey === "total"} onClick={() => setSortKey("total")} label="Total" />
-            <SortPill active={sortKey === "groups"} onClick={() => setSortKey("groups")} label="Grupos" />
-            <SortPill active={sortKey === "extras"} onClick={() => setSortKey("extras")} label="Extras" />
-          </div>
-        </div>
-
-        <div className="relative w-full sm:w-64">
+      {/* CONTROLES: solo búsqueda */}
+      <div className="flex justify-end">
+        <div className="relative w-full sm:w-72">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--iberdrola-forest)]/40">🔍</span>
           <input
             type="text"
@@ -259,14 +248,14 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
 
       {/* TU FILA STICKY */}
       {ownRow && !search && (
-        <OwnRowBanner row={ownRow} sortKey={sortKey} locale={locale} />
+        <OwnRowBanner row={ownRow} locale={locale} />
       )}
 
       {/* PODIO TOP 3 (solo si no hay búsqueda activa, para no descolocar) */}
       {!search && top3.length > 0 && (
         <div className="space-y-2">
           {top3.map((row) => (
-            <PodiumRow key={row.entry_id} row={row} sortKey={sortKey} locale={locale} isOwn={row.entry_id === entryId} />
+            <PodiumRow key={row.entry_id} row={row} locale={locale} isOwn={row.entry_id === entryId} />
           ))}
         </div>
       )}
@@ -278,14 +267,13 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
           <table className="w-full text-sm">
             <thead className="bg-[var(--iberdrola-green-light)]/40 text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/70">
               <tr>
-                <th className="w-[80px] px-3 py-3 text-center">Var.</th>
-                <th className="w-[60px] px-3 py-3 text-center">#</th>
-                <th className="px-3 py-3 text-left">Jugador</th>
-                <th className="w-[60px] px-3 py-3 text-center">País</th>
-                <th className="w-[90px] px-3 py-3 text-right">Grupos</th>
-                <th className="w-[90px] px-3 py-3 text-right">KO</th>
-                <th className="w-[90px] px-3 py-3 text-right">Extras</th>
-                <th className="w-[110px] px-3 py-3 text-right">Total</th>
+                <th className="w-[70px] px-3 py-3 text-center">Var.</th>
+                <th className="w-[50px] px-3 py-3 text-center">#</th>
+                <th className="w-[40%] px-3 py-3 text-left">Jugador</th>
+                <th className="px-3 py-3 text-right">Grupos</th>
+                <th className="px-3 py-3 text-right">KO</th>
+                <th className="px-3 py-3 text-right">Extras</th>
+                <th className="w-[110px] border-l-2 border-[var(--iberdrola-green)]/20 bg-[var(--iberdrola-green)]/10 px-3 py-3 text-right text-[var(--iberdrola-green)]">Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -293,14 +281,14 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
                 <DesktopRow
                   key={row.entry_id}
                   row={row}
-                  sortKey={sortKey}
+                  maxValues={maxValues}
                   locale={locale}
                   isOwn={row.entry_id === entryId}
                 />
               ))}
               {filteredStandings.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-3 py-8 text-center text-sm text-[var(--iberdrola-forest)]/40">
+                  <td colSpan={7} className="px-3 py-8 text-center text-sm text-[var(--iberdrola-forest)]/40">
                     Sin resultados
                   </td>
                 </tr>
@@ -315,7 +303,7 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
             <MobileCard
               key={row.entry_id}
               row={row}
-              sortKey={sortKey}
+              maxValues={maxValues}
               locale={locale}
               isOwn={row.entry_id === entryId}
             />
@@ -333,124 +321,88 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
 
 // ─── SUB-COMPONENTES ───────────────────────────────────────────────────────
 
-function SortPill({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
-        active
-          ? "bg-[var(--iberdrola-green)] text-white shadow-sm"
-          : "border border-[var(--iberdrola-green-mid)] bg-white text-[var(--iberdrola-forest)]/70 hover:bg-gray-50"
-      }`}
-    >
-      {label}
-    </button>
-  );
-}
-
-// Banner "tú estás aquí"
+// Banner "tú estás aquí" — más sobrio, sin verde tan fuerte
 function OwnRowBanner({
   row,
-  sortKey,
   locale,
 }: {
   row: any;
-  sortKey: SortKey;
   locale: Locale;
 }) {
-  const totalShown = sortKey === "groups"
-    ? row.group_total + row.extra_group_points
-    : sortKey === "extras"
-    ? row.extra_total_points - row.extra_group_points
-    : row.total_points;
-
   return (
-    <div className="rounded-2xl border-2 border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]/30 px-4 py-3 shadow-sm">
+    <div className="rounded-xl border border-[var(--iberdrola-green)]/40 bg-white px-3 py-2">
       <div className="flex items-center gap-3">
-        <div className="shrink-0 text-[10px] font-black uppercase tracking-wider text-[var(--iberdrola-green)]">
-          Tu posición
+        <div className="shrink-0 text-[9px] font-black uppercase tracking-wider text-[var(--iberdrola-green)]">
+          Tú
         </div>
-        <div className="flex flex-1 items-center gap-3 min-w-0">
+        <div className="flex flex-1 items-center gap-2 min-w-0">
           <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
-          <span className="text-lg font-black tabular-nums text-[var(--iberdrola-forest)]">#{row._displayPosition}</span>
-          <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)]">{row.name}</span>
+          <span className="shrink-0 text-sm font-black tabular-nums text-[var(--iberdrola-forest)]/70">#{row._displayPosition}</span>
+          <span className="truncate text-sm font-semibold text-[var(--iberdrola-forest)]">{row.name}</span>
           <CountryFlag country={row.country} />
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-xl font-black tabular-nums text-[var(--iberdrola-green)]">
-            {fmtPts(totalShown, locale)}
-          </div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--iberdrola-forest)]/40">pts</div>
+          <span className="text-base font-black tabular-nums text-[var(--iberdrola-green)]">
+            {fmtPts(row.total_points, locale)}
+          </span>
+          <span className="ml-1 text-[9px] uppercase tracking-wide text-[var(--iberdrola-forest)]/40">pts</span>
         </div>
       </div>
     </div>
   );
 }
 
-// Fila destacada del podio (top 3)
+// Fila destacada del podio (top 3) — más compacta
 function PodiumRow({
   row,
-  sortKey,
   locale,
   isOwn,
 }: {
   row: any;
-  sortKey: SortKey;
   locale: Locale;
   isOwn: boolean;
 }) {
-  const groupsValue = row.group_total + row.extra_group_points;
-  const extrasValue = row.extra_total_points - row.extra_group_points;
-  const koValue =
-    row.r32_points + row.r16_points + row.qf_points + row.sf_points +
-    row.third_points + row.final_points + row.champion_points;
-  const totalShown = sortKey === "groups"
-    ? groupsValue
-    : sortKey === "extras"
-    ? extrasValue
-    : row.total_points;
-
   return (
     <div
-      className={`rounded-2xl border-2 px-4 py-3 shadow-sm ${podiumRowClasses(row._displayPosition)} ${
+      className={`rounded-2xl border-2 px-4 py-2 shadow-sm ${podiumRowClasses(row._displayPosition)} ${
         isOwn ? "ring-2 ring-[var(--iberdrola-green)] ring-offset-2" : ""
       }`}
     >
       <div className="flex items-center gap-3">
-        <div className="shrink-0 w-10 text-center">
+        <div className="shrink-0 w-9 text-center">
           <PodiumMedal position={row._displayPosition} />
         </div>
         <div className="shrink-0 w-12 text-center">
           <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-black text-[var(--iberdrola-forest)] sm:text-base">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="truncate text-base font-black text-[var(--iberdrola-forest)]">
               {row.name}
             </span>
             <CountryFlag country={row.country} />
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-xl font-black tabular-nums text-[var(--iberdrola-forest)] sm:text-2xl">
-            {fmtPts(totalShown, locale)}
-          </div>
-          <div className="text-[10px] uppercase tracking-wide text-[var(--iberdrola-forest)]/40">pts</div>
+          <span className="text-2xl font-black tabular-nums text-[var(--iberdrola-forest)]">
+            {fmtPts(row.total_points, locale)}
+          </span>
+          <span className="ml-1 text-[10px] uppercase tracking-wide text-[var(--iberdrola-forest)]/40">pts</span>
         </div>
       </div>
     </div>
   );
 }
 
-// Fila desktop (tabla)
+// Fila desktop (tabla) con heatmap y TOTAL destacado en verde Iberdrola
 function DesktopRow({
   row,
-  sortKey,
+  maxValues,
   locale,
   isOwn,
 }: {
   row: any;
-  sortKey: SortKey;
+  maxValues: { maxGroups: number; maxKo: number; maxExtras: number; maxTotal: number };
   locale: Locale;
   isOwn: boolean;
 }) {
@@ -461,7 +413,7 @@ function DesktopRow({
     row.third_points + row.final_points + row.champion_points;
 
   return (
-    <tr className={`transition hover:bg-gray-50 ${isOwn ? "bg-[var(--iberdrola-green-light)]/40" : ""}`}>
+    <tr className={`transition hover:bg-gray-50 ${isOwn ? "bg-[var(--iberdrola-green-light)]/30" : ""}`}>
       <td className="px-3 py-3 text-center">
         <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
       </td>
@@ -471,6 +423,7 @@ function DesktopRow({
       <td className="px-3 py-3">
         <div className="flex items-center gap-2 min-w-0">
           <span className="truncate font-semibold text-[var(--iberdrola-forest)]">{row.name}</span>
+          <CountryFlag country={row.country} />
           {isOwn && (
             <span className="shrink-0 rounded-md bg-[var(--iberdrola-green)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
               Tú
@@ -478,34 +431,36 @@ function DesktopRow({
           )}
         </div>
       </td>
-      <td className="px-3 py-3 text-center">
-        <CountryFlag country={row.country} />
+      <td className="px-3 py-3 text-right tabular-nums" style={heatStyle(groupsValue, maxValues.maxGroups)}>
+        <span className="font-semibold text-[var(--iberdrola-forest)]">{fmtPts(groupsValue, locale)}</span>
       </td>
-      <td className={`px-3 py-3 text-right tabular-nums ${sortKey === "groups" ? "font-bold" : "text-[var(--iberdrola-forest)]/65"}`}>
-        {fmtPts(groupsValue, locale)}
+      <td className="px-3 py-3 text-right tabular-nums" style={heatStyle(koValue, maxValues.maxKo)}>
+        <span className="font-semibold text-[var(--iberdrola-forest)]">{fmtPts(koValue, locale)}</span>
       </td>
-      <td className="px-3 py-3 text-right tabular-nums text-[var(--iberdrola-forest)]/65">
-        {fmtPts(koValue, locale)}
+      <td className="px-3 py-3 text-right tabular-nums" style={heatStyle(extrasValue, maxValues.maxExtras)}>
+        <span className="font-semibold text-[var(--iberdrola-forest)]">{fmtPts(extrasValue, locale)}</span>
       </td>
-      <td className={`px-3 py-3 text-right tabular-nums ${sortKey === "extras" ? "font-bold" : "text-[var(--iberdrola-forest)]/65"}`}>
-        {fmtPts(extrasValue, locale)}
-      </td>
-      <td className={`px-3 py-3 text-right tabular-nums ${sortKey === "total" ? "text-base font-black text-[var(--iberdrola-forest)]" : "font-bold text-[var(--iberdrola-forest)]"}`}>
-        {fmtPts(row.total_points, locale)}
+      <td
+        className="px-3 py-3 text-right tabular-nums border-l-2 border-[var(--iberdrola-green)]/20"
+        style={heatStyle(row.total_points, maxValues.maxTotal)}
+      >
+        <span className="text-base font-black text-[var(--iberdrola-green)]">
+          {fmtPts(row.total_points, locale)}
+        </span>
       </td>
     </tr>
   );
 }
 
-// Card móvil
+// Card móvil — nombre con todo el ancho disponible, métricas debajo
 function MobileCard({
   row,
-  sortKey,
+  maxValues,
   locale,
   isOwn,
 }: {
   row: any;
-  sortKey: SortKey;
+  maxValues: { maxGroups: number; maxKo: number; maxExtras: number; maxTotal: number };
   locale: Locale;
   isOwn: boolean;
 }) {
@@ -514,45 +469,39 @@ function MobileCard({
   const koValue =
     row.r32_points + row.r16_points + row.qf_points + row.sf_points +
     row.third_points + row.final_points + row.champion_points;
-  const totalShown = sortKey === "groups"
-    ? groupsValue
-    : sortKey === "extras"
-    ? extrasValue
-    : row.total_points;
 
   return (
-    <div className={`px-4 py-3 ${isOwn ? "bg-[var(--iberdrola-green-light)]/40" : ""}`}>
-      <div className="flex items-center gap-3">
-        <div className="shrink-0 w-10 text-center">
-          <span className="text-base font-black tabular-nums text-[var(--iberdrola-forest)]/60">
-            {row._displayPosition}
-          </span>
-        </div>
-        <div className="shrink-0">
-          <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)]">{row.name}</span>
-            <CountryFlag country={row.country} />
-            {isOwn && (
-              <span className="shrink-0 rounded-md bg-[var(--iberdrola-green)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
-                Tú
-              </span>
-            )}
-          </div>
-          <div className="mt-0.5 flex gap-3 text-[11px] text-[var(--iberdrola-forest)]/50 tabular-nums">
-            <span>G {fmtPts(groupsValue, locale)}</span>
-            <span>KO {fmtPts(koValue, locale)}</span>
-            <span>X {fmtPts(extrasValue, locale)}</span>
-          </div>
+    <div
+      className={`px-3 py-2.5 ${isOwn ? "bg-[var(--iberdrola-green-light)]/30" : ""}`}
+      style={heatStyle(row.total_points, maxValues.maxTotal)}
+    >
+      {/* Línea 1: posición + nombre + bandera + tú | total destacado */}
+      <div className="flex items-center gap-2">
+        <span className="shrink-0 w-7 text-center text-sm font-black tabular-nums text-[var(--iberdrola-forest)]/60">
+          {row._displayPosition}
+        </span>
+        <div className="flex-1 min-w-0 flex items-center gap-1.5">
+          <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)]">{row.name}</span>
+          <CountryFlag country={row.country} />
+          {isOwn && (
+            <span className="shrink-0 rounded-md bg-[var(--iberdrola-green)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
+              Tú
+            </span>
+          )}
         </div>
         <div className="shrink-0 text-right">
-          <div className="text-lg font-black tabular-nums text-[var(--iberdrola-forest)]">
-            {fmtPts(totalShown, locale)}
-          </div>
-          <div className="text-[9px] uppercase tracking-wide text-[var(--iberdrola-forest)]/40">pts</div>
+          <span className="text-base font-black tabular-nums text-[var(--iberdrola-green)]">
+            {fmtPts(row.total_points, locale)}
+          </span>
+          <span className="ml-0.5 text-[9px] uppercase tracking-wide text-[var(--iberdrola-forest)]/40">pts</span>
         </div>
+      </div>
+      {/* Línea 2: variación + desglose pequeño */}
+      <div className="mt-1 flex items-center gap-2 pl-9">
+        <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
+        <span className="text-[10px] text-[var(--iberdrola-forest)]/50 tabular-nums">
+          G {fmtPts(groupsValue, locale)} · KO {fmtPts(koValue, locale)} · X {fmtPts(extrasValue, locale)}
+        </span>
       </div>
     </div>
   );
