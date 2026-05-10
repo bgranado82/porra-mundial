@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import StandingsTable from "@/components/StandingsTable";
+import StandingsTable from "@/components/StandingsTableV2";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Locale, messages } from "@/lib/i18n";
 const LOCALE_KEY = "porra-mundial-locale";

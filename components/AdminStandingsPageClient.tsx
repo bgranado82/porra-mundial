@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import AdminNav from "@/components/AdminNav";
 import AdminPoolSelector from "@/components/AdminPoolSelector";
-import StandingsTable from "@/components/StandingsTable";
+import StandingsTable from "@/components/StandingsTableV2";
 
 export default function AdminStandingsPageClient() {
   const [poolId, setPoolId] = useState("");
