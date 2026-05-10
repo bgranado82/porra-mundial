@@ -264,16 +264,23 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
       <div className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm overflow-hidden">
         {/* Desktop */}
         <div className="hidden md:block">
-          <table className="w-full text-sm">
-            <thead className="bg-[var(--iberdrola-green-light)]/40 text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/70">
+          <table className="w-full text-[12px]">
+            <thead className="bg-gray-50 text-[10px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/60">
               <tr>
-                <th className="w-[70px] px-3 py-3 text-center">Var.</th>
-                <th className="w-[50px] px-3 py-3 text-center">#</th>
-                <th className="w-[40%] px-3 py-3 text-left">Jugador</th>
-                <th className="px-3 py-3 text-right">Grupos</th>
-                <th className="px-3 py-3 text-right">KO</th>
-                <th className="px-3 py-3 text-right">Extras</th>
-                <th className="w-[110px] border-l-2 border-[var(--iberdrola-green)]/20 bg-[var(--iberdrola-green)]/10 px-3 py-3 text-right text-[var(--iberdrola-green)]">Total</th>
+                <th className="w-[60px] px-2 py-3 text-center">Var.</th>
+                <th className="w-[40px] px-1 py-3 text-center">#</th>
+                <th className="w-[28px] px-1 py-3 text-center"></th>
+                <th className="px-2 py-3 text-left">Jugador</th>
+                <th className="w-[70px] px-2 py-3 text-center">Grupos</th>
+                <th className="w-[55px] px-2 py-3 text-center">R32</th>
+                <th className="w-[55px] px-2 py-3 text-center">R16</th>
+                <th className="w-[55px] px-2 py-3 text-center">QF</th>
+                <th className="w-[55px] px-2 py-3 text-center">SF</th>
+                <th className="w-[55px] px-2 py-3 text-center">3º</th>
+                <th className="w-[55px] px-2 py-3 text-center">Final</th>
+                <th className="w-[60px] px-2 py-3 text-center">Camp.</th>
+                <th className="w-[70px] px-2 py-3 text-center">Extras</th>
+                <th className="w-[80px] bg-[var(--iberdrola-green)] px-2 py-3 text-center font-black text-white">Total</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -288,7 +295,7 @@ export default function StandingsTableV2({ standings, locale = "es", entryId }: 
               ))}
               {filteredStandings.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-3 py-8 text-center text-sm text-[var(--iberdrola-forest)]/40">
+                  <td colSpan={14} className="px-3 py-8 text-center text-sm text-[var(--iberdrola-forest)]/40">
                     Sin resultados
                   </td>
                 </tr>
@@ -394,7 +401,7 @@ function PodiumRow({
   );
 }
 
-// Fila desktop (tabla) con heatmap y TOTAL destacado en verde Iberdrola
+// Fila desktop (tabla) con TODAS las columnas: Grupos / R32 / R16 / QF / SF / 3º / Final / Camp. / Extras / Total
 function DesktopRow({
   row,
   maxValues,
@@ -408,22 +415,30 @@ function DesktopRow({
 }) {
   const groupsValue = row.group_total + row.extra_group_points;
   const extrasValue = row.extra_total_points - row.extra_group_points;
-  const koValue =
-    row.r32_points + row.r16_points + row.qf_points + row.sf_points +
-    row.third_points + row.final_points + row.champion_points;
+
+  // Para la celda numérica vacía (0) le ponemos un color gris claro para que no llame la atención
+  const numCell = (value: number, max: number) => (
+    <td className="px-2 py-2.5 text-center tabular-nums" style={heatStyle(value, max)}>
+      <span className={value > 0 ? "font-semibold text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/30"}>
+        {fmtPts(value, locale)}
+      </span>
+    </td>
+  );
 
   return (
     <tr className={`transition hover:bg-gray-50 ${isOwn ? "bg-[var(--iberdrola-green-light)]/30" : ""}`}>
-      <td className="px-3 py-3 text-center">
+      <td className="px-2 py-2.5 text-center">
         <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
       </td>
-      <td className="px-3 py-3 text-center font-bold tabular-nums text-[var(--iberdrola-forest)]/70">
+      <td className="px-1 py-2.5 text-center font-bold tabular-nums text-[var(--iberdrola-forest)]/70">
         {row._displayPosition}
       </td>
-      <td className="px-3 py-3">
+      <td className="px-1 py-2.5 text-center">
+        <CountryFlag country={row.country} />
+      </td>
+      <td className="px-2 py-2.5">
         <div className="flex items-center gap-2 min-w-0">
           <span className="truncate font-semibold text-[var(--iberdrola-forest)]">{row.name}</span>
-          <CountryFlag country={row.country} />
           {isOwn && (
             <span className="shrink-0 rounded-md bg-[var(--iberdrola-green)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
               Tú
@@ -431,20 +446,22 @@ function DesktopRow({
           )}
         </div>
       </td>
-      <td className="px-3 py-3 text-right tabular-nums" style={heatStyle(groupsValue, maxValues.maxGroups)}>
-        <span className="font-semibold text-[var(--iberdrola-forest)]">{fmtPts(groupsValue, locale)}</span>
-      </td>
-      <td className="px-3 py-3 text-right tabular-nums" style={heatStyle(koValue, maxValues.maxKo)}>
-        <span className="font-semibold text-[var(--iberdrola-forest)]">{fmtPts(koValue, locale)}</span>
-      </td>
-      <td className="px-3 py-3 text-right tabular-nums" style={heatStyle(extrasValue, maxValues.maxExtras)}>
-        <span className="font-semibold text-[var(--iberdrola-forest)]">{fmtPts(extrasValue, locale)}</span>
-      </td>
+      {numCell(groupsValue, maxValues.maxGroups)}
+      {numCell(row.r32_points, maxValues.maxKo)}
+      {numCell(row.r16_points, maxValues.maxKo)}
+      {numCell(row.qf_points, maxValues.maxKo)}
+      {numCell(row.sf_points, maxValues.maxKo)}
+      {numCell(row.third_points, maxValues.maxKo)}
+      {numCell(row.final_points, maxValues.maxKo)}
+      {numCell(row.champion_points, maxValues.maxKo)}
+      {numCell(extrasValue, maxValues.maxExtras)}
       <td
-        className="px-3 py-3 text-right tabular-nums border-l-2 border-[var(--iberdrola-green)]/20"
-        style={heatStyle(row.total_points, maxValues.maxTotal)}
+        className="px-2 py-2.5 text-center tabular-nums"
+        style={{
+          backgroundColor: row.total_points > 0 ? "var(--iberdrola-green)" : "rgba(0, 100, 50, 0.85)",
+        }}
       >
-        <span className="text-base font-black text-[var(--iberdrola-green)]">
+        <span className="text-base font-black text-white">
           {fmtPts(row.total_points, locale)}
         </span>
       </td>
