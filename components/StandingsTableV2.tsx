@@ -656,7 +656,11 @@ function DesktopRow({
                   })}
                 </div>
               </div>
-              <div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-[var(--iberdrola-forest)]/65">
+                <span>{tx.outcomeHits}: <strong>{row.outcome_hits}</strong> ({row.outcome_percent}%)</span>
+                <span>{tx.exactHits}: <strong>{row.exact_hits}</strong> ({row.exact_percent}%)</span>
+              </div>
+              <div className="border-t border-gray-200 pt-2">
                 <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[var(--iberdrola-forest)]/50">
                   {tx.koHits}
                 </div>
@@ -669,11 +673,11 @@ function DesktopRow({
                   <KoStat label={tx.champ} hits={row.ko_champ_hits} total={row.ko_champ_total} />
                 </div>
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-gray-200 pt-2 text-[11px] text-[var(--iberdrola-forest)]/65">
-                <span>{tx.outcomeHits}: <strong>{row.outcome_hits}</strong> ({row.outcome_percent}%)</span>
-                <span>{tx.exactHits}: <strong>{row.exact_hits}</strong> ({row.exact_percent}%)</span>
-                {row.company && <span>{tx.company}: <strong>{row.company}</strong></span>}
-              </div>
+              {row.company && (
+                <div className="border-t border-gray-200 pt-2 text-[11px] text-[var(--iberdrola-forest)]/50">
+                  {tx.company}: <strong className="text-[var(--iberdrola-forest)]/75">{row.company}</strong>
+                </div>
+              )}
             </div>
           </td>
         </tr>
@@ -797,7 +801,11 @@ function MobileCard({
               })}
             </div>
           </div>
-          <div>
+          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-[var(--iberdrola-forest)]/65">
+            <span>{tx.outcomeHits}: <strong>{row.outcome_hits}</strong> ({row.outcome_percent}%)</span>
+            <span>{tx.exactHits}: <strong>{row.exact_hits}</strong> ({row.exact_percent}%)</span>
+          </div>
+          <div className="border-t border-gray-200 pt-2">
             <div className="text-[9px] font-bold uppercase tracking-wider text-[var(--iberdrola-forest)]/50 mb-1.5">
               {tx.koHits}
             </div>
@@ -810,11 +818,11 @@ function MobileCard({
               <KoStat label={tx.champ} hits={row.ko_champ_hits} total={row.ko_champ_total} />
             </div>
           </div>
-          <div className="flex flex-wrap gap-x-3 gap-y-0.5 border-t border-gray-200 pt-2 text-[10px] text-[var(--iberdrola-forest)]/65">
-            <span>{tx.outcomeHits}: <strong>{row.outcome_hits}</strong> ({row.outcome_percent}%)</span>
-            <span>{tx.exactHits}: <strong>{row.exact_hits}</strong> ({row.exact_percent}%)</span>
-            {row.company && <span>{tx.company}: <strong>{row.company}</strong></span>}
-          </div>
+          {row.company && (
+            <div className="border-t border-gray-200 pt-2 text-[10px] text-[var(--iberdrola-forest)]/50">
+              {tx.company}: <strong className="text-[var(--iberdrola-forest)]/75">{row.company}</strong>
+            </div>
+          )}
         </div>
       )}
     </div>
