@@ -15,7 +15,7 @@
 
 import { useMemo, useState } from "react";
 import { Locale, messages } from "@/lib/i18n";
-import { countryFlagUrl } from "@/lib/countryFlags";
+import { countryFlagEmoji } from "@/lib/countryFlags";
 
 // Traducciones locales del componente (no toco lib/i18n.ts para no contaminar
 // el sistema global con cosas específicas de esta vista).
@@ -38,6 +38,8 @@ const T: Record<Locale, Record<string, string>> = {
     koHits: "Aciertos en eliminatorias",
     showDetail: "Ver detalle",
     hideDetail: "Ocultar detalle",
+    expandAll: "Desplegar todo",
+    collapseAll: "Contraer todo",
     // tooltips iconos extras
     extraGoalWorld: "Primer goleador del Mundial",
     extraGoalSpain: "Primer goleador de España",
@@ -72,6 +74,8 @@ const T: Record<Locale, Record<string, string>> = {
     koHits: "Knockout round hits",
     showDetail: "Show detail",
     hideDetail: "Hide detail",
+    expandAll: "Expand all",
+    collapseAll: "Collapse all",
     extraGoalWorld: "First goal scorer of the World Cup",
     extraGoalSpain: "First goal scorer for Spain",
     extraBoot: "Golden Boot",
@@ -104,6 +108,8 @@ const T: Record<Locale, Record<string, string>> = {
     koHits: "Acertos nos mata-mata",
     showDetail: "Ver detalhe",
     hideDetail: "Ocultar detalhe",
+    expandAll: "Expandir tudo",
+    collapseAll: "Contrair tudo",
     extraGoalWorld: "Primeiro gol da Copa",
     extraGoalSpain: "Primeiro gol da Espanha",
     extraBoot: "Chuteira de Ouro",
@@ -204,26 +210,26 @@ function MovementChip({ movement, value }: { movement: "up" | "down" | "same"; v
   );
 }
 
-// Bandera o placeholder neutro
+// Bandera emoji (renderizado nativo, sin URL externa)
 function CountryFlag({ country }: { country?: string }) {
-  const url = countryFlagUrl(country);
-  if (!url) {
+  const emoji = countryFlagEmoji(country);
+  if (!emoji) {
     return (
       <span
-        className="inline-block h-4 w-6 rounded-sm bg-gray-200 align-middle"
+        className="inline-block h-4 w-5 rounded-sm bg-gray-200 align-middle"
         title={country || "—"}
         aria-label={country || ""}
       />
     );
   }
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={url}
-      alt={country || ""}
+    <span
+      className="text-base leading-none align-middle"
       title={country || ""}
-      className="inline-block h-4 w-6 rounded-sm object-cover align-middle shadow-sm"
-    />
+      aria-label={country || ""}
+    >
+      {emoji}
+    </span>
   );
 }
 
@@ -314,11 +320,30 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
   const top3 = filteredStandings.slice(0, 3);
   const rest = filteredStandings.slice(3);
 
+  // Estado: si todas las filas visibles están expandidas o no
+  const expandableIds = useMemo(() => (search ? filteredStandings : filteredStandings).map((r) => r.entry_id), [filteredStandings, search]);
+  const allExpanded = expandableIds.length > 0 && expandableIds.every((id) => expandedIds.has(id));
+
+  const toggleAll = () => {
+    if (allExpanded) {
+      setExpandedIds(new Set());
+    } else {
+      setExpandedIds(new Set(expandableIds));
+    }
+  };
+
   return (
     <section className="space-y-4">
-      {/* CONTROLES: solo búsqueda */}
-      <div className="flex justify-end">
-        <div className="relative w-full sm:w-72">
+      {/* CONTROLES: botón desplegar/contraer (izquierda) + búsqueda (derecha) */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={toggleAll}
+          className="shrink-0 rounded-full border border-[var(--iberdrola-green-mid)] bg-white px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)]/70 transition hover:border-[var(--iberdrola-green)] hover:text-[var(--iberdrola-green)]"
+          title={allExpanded ? tBase.collapseAll : tBase.expandAll}
+        >
+          {allExpanded ? `− ${tBase.collapseAll}` : `+ ${tBase.expandAll}`}
+        </button>
+        <div className="relative flex-1 sm:max-w-72 sm:ml-auto sm:flex-none">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--iberdrola-forest)]/40">🔍</span>
           <input
             type="text"
@@ -383,12 +408,12 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
                 <th className="px-1 py-3 text-center" title={tBase.sf}>SF</th>
                 <th className="px-1 py-3 text-center" title={tBase.final}>F</th>
                 <th className="px-1 py-3 text-center" title={tBase.champ}>C</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraGoalWorld}>⚽🌍</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraGoalSpain}>⚽🇪🇸</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraBoot}>👟</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraBall}>🏆</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraGlove}>🧤</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraYoung}>🌟</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraGoalWorld}>🥇⚽</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraGoalSpain}>🥇⚽</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraBoot}>👟✨</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraBall}>🏆🌟</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraGlove}>🧤🥇</th>
+                <th className="px-1 py-3 text-center" title={tBase.extraYoung}>🧒🔥</th>
                 <th className="px-1 py-3 text-center" title={tBase.extraTopSpain}>🎯</th>
                 <th className="bg-[var(--iberdrola-green)]/10 px-1 py-3 text-center font-black text-[var(--iberdrola-green)]">{tBase.total}</th>
               </tr>
@@ -565,10 +590,7 @@ function DesktopRow({
         </td>
         <td className="px-1 py-2.5 text-center font-bold tabular-nums text-[var(--iberdrola-forest)]/70">
           {row._displayPosition <= 3 ? (
-            <span className="inline-flex items-center gap-0.5">
-              <PodiumMedal position={row._displayPosition} />
-              <span className="text-[10px] opacity-70">{row._displayPosition}</span>
-            </span>
+            <PodiumMedal position={row._displayPosition} />
           ) : (
             row._displayPosition
           )}

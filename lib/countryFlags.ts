@@ -127,11 +127,19 @@ export function countryToIso(country: string | null | undefined): string | null 
 }
 
 /**
- * Devuelve la URL de la bandera del país (vía flagcdn.com), o null si no se reconoce.
+ * Convierte código ISO de 2 letras (ej. "es") al emoji de bandera correspondiente
+ * usando los Regional Indicator Symbols Unicode. Ej: "es" → "🇪🇸"
+ *
+ * Devuelve null si el código no es válido.
  */
-export function countryFlagUrl(country: string | null | undefined): string | null {
+export function countryFlagEmoji(country: string | null | undefined): string | null {
   const iso = countryToIso(country);
   if (!iso) return null;
-  // gb-sct y gb-wls los maneja flagcdn también
-  return `https://flagcdn.com/${iso}.svg`;
+  // Casos especiales (subdivisiones del Reino Unido, no son ISO alpha-2 estándar)
+  if (iso === "gb-sct") return "🏴󠁧󠁢󠁳󠁣󠁴󠁿";
+  if (iso === "gb-wls") return "🏴󠁧󠁢󠁷󠁬󠁳󠁿";
+  if (iso.length !== 2) return null;
+  // Cada letra ISO se convierte sumando 0x1F1A5 al code point ('a' = 0x61, 'A' regional = 0x1F1E6)
+  const codePoints = iso.toUpperCase().split("").map((c) => 0x1F1A5 + c.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
 }
