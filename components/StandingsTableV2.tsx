@@ -183,7 +183,11 @@ type Props = {
 
 // ─── Utilidades ───────────────────────────────────────────────────────────
 function fmtPts(value: number, locale: Locale = "es") {
-  return value.toLocaleString(locale === "en" ? "en-US" : locale === "pt" ? "pt-BR" : "es-ES");
+  // Nota: el locale es-ES por defecto NO mete separador de miles para números de
+  // 4 dígitos (escribe "1234" en lugar de "1.234"). Forzamos useGrouping: "always"
+  // para que sea consistente con en-US y pt-BR.
+  const tag = locale === "en" ? "en-US" : locale === "pt" ? "pt-BR" : "es-ES";
+  return value.toLocaleString(tag, { useGrouping: "always" as any });
 }
 
 // Variación: pastilla coloreada llamativa.
@@ -783,8 +787,32 @@ function MobileCard({
       <div className="mt-1 flex items-center gap-2 pl-9">
         <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
         <span className="text-[10px] text-[var(--iberdrola-forest)]/50 tabular-nums">
-          G {fmtPts(groupsValue, locale)} · KO {fmtPts(koValue, locale)} · X {fmtPts(extrasValue, locale)}
+          G {fmtPts(groupsValue, locale)} · KO {fmtPts(koValue, locale)}
         </span>
+        {/* Iconos de extras con puntos (solo los que han puntuado) */}
+        {(() => {
+          const ep = row.extra_points ?? {};
+          const items: Array<{ icon: string; pts: number }> = [
+            { icon: "🥇⚽", pts: ep.first_goal_scorer_world ?? 0 },
+            { icon: "🥇⚽🇪🇸", pts: ep.first_goal_scorer_spain ?? 0 },
+            { icon: "👟✨", pts: ep.golden_boot ?? 0 },
+            { icon: "🏆🌟", pts: ep.golden_ball ?? 0 },
+            { icon: "🧤🥇", pts: ep.golden_glove ?? 0 },
+            { icon: "🧒🔥", pts: ep.best_young_player ?? 0 },
+            { icon: "🎯", pts: ep.top_spanish_scorer ?? 0 },
+          ].filter((x) => x.pts > 0);
+          if (items.length === 0) return null;
+          return (
+            <span className="flex items-center gap-1 text-[10px] text-[var(--iberdrola-forest)]/65">
+              {items.map((it, idx) => (
+                <span key={idx} className="inline-flex items-center gap-0.5 rounded bg-[var(--iberdrola-green-light)]/40 px-1 py-0.5 tabular-nums">
+                  <span className="text-[9px] leading-none">{it.icon}</span>
+                  <span className="font-bold">+{fmtPts(it.pts, locale)}</span>
+                </span>
+              ))}
+            </span>
+          );
+        })()}
         <button
           onClick={onToggleExpand}
           className={`ml-auto flex h-5 w-5 items-center justify-center rounded-md text-[11px] font-black transition ${
