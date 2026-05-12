@@ -15,7 +15,8 @@
 
 import { useMemo, useState } from "react";
 import { Locale, messages } from "@/lib/i18n";
-import { countryFlagEmoji } from "@/lib/countryFlags";
+import { countryFlagUrl } from "@/lib/countryFlags";
+import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 
 // Traducciones locales del componente (no toco lib/i18n.ts para no contaminar
 // el sistema global con cosas específicas de esta vista).
@@ -214,10 +215,12 @@ function MovementChip({ movement, value }: { movement: "up" | "down" | "same"; v
   );
 }
 
-// Bandera emoji (renderizado nativo, sin URL externa)
+// Bandera con <img> de flagcdn.com (mismo sistema que data/teams.ts).
+// Usar img y no emoji porque los emojis de bandera no se ven en Windows
+// sin fuente de banderas instalada (común en PCs corporativos).
 function CountryFlag({ country }: { country?: string }) {
-  const emoji = countryFlagEmoji(country);
-  if (!emoji) {
+  const url = countryFlagUrl(country);
+  if (!url) {
     return (
       <span
         className="inline-block h-4 w-5 rounded-sm bg-gray-200 align-middle"
@@ -227,13 +230,13 @@ function CountryFlag({ country }: { country?: string }) {
     );
   }
   return (
-    <span
-      className="text-base leading-none align-middle"
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt={country || ""}
       title={country || ""}
-      aria-label={country || ""}
-    >
-      {emoji}
-    </span>
+      className="inline-block h-4 w-6 rounded-[2px] border border-gray-100 object-cover align-middle shadow-sm"
+    />
   );
 }
 
@@ -412,13 +415,30 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
                 <th className="px-1 py-3 text-center" title={tBase.sf}>SF</th>
                 <th className="px-1 py-3 text-center" title={tBase.final}>F</th>
                 <th className="px-1 py-3 text-center" title={tBase.champ}>C</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraGoalWorld}>🥇⚽</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraGoalSpain}>🥇⚽</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraBoot}>👟✨</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraBall}>🏆🌟</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraGlove}>🧤🥇</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraYoung}>🧒🔥</th>
-                <th className="px-1 py-3 text-center" title={tBase.extraTopSpain}>🎯</th>
+                {EXTRA_QUESTIONS.map((q) => {
+                  const labelKey = `extra${q.key === "first_goal_scorer_world" ? "GoalWorld" :
+                    q.key === "first_goal_scorer_spain" ? "GoalSpain" :
+                    q.key === "golden_boot" ? "Boot" :
+                    q.key === "golden_ball" ? "Ball" :
+                    q.key === "golden_glove" ? "Glove" :
+                    q.key === "best_young_player" ? "Young" :
+                    "TopSpain"}` as keyof typeof tBase;
+                  return (
+                    <th
+                      key={q.key}
+                      className="px-1 py-3 text-center"
+                      title={(tBase as any)[labelKey]}
+                    >
+                      <span className="inline-flex items-center justify-center gap-0.5">
+                        <span>{q.icon}</span>
+                        {q.flagUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={q.flagUrl} alt="" className="h-3 w-4 rounded-[2px] border border-gray-100 object-cover shadow-sm" />
+                        )}
+                      </span>
+                    </th>
+                  );
+                })}
                 <th className="bg-[var(--iberdrola-green)]/10 px-1 py-3 text-center font-black text-[var(--iberdrola-green)]">{tBase.total}</th>
               </tr>
             </thead>

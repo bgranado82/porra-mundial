@@ -127,19 +127,15 @@ export function countryToIso(country: string | null | undefined): string | null 
 }
 
 /**
- * Convierte código ISO de 2 letras (ej. "es") al emoji de bandera correspondiente
- * usando los Regional Indicator Symbols Unicode. Ej: "es" → "🇪🇸"
- *
- * Devuelve null si el código no es válido.
+ * Devuelve la URL de la bandera (flagcdn.com SVG), o null si no se reconoce.
+ * Es el mismo sistema que usan los equipos del Mundial en data/teams.ts,
+ * que sí se ve en todos los ordenadores (los emojis no se ven en Windows
+ * sin fuente de banderas instalada).
  */
-export function countryFlagEmoji(country: string | null | undefined): string | null {
+export function countryFlagUrl(country: string | null | undefined): string | null {
   const iso = countryToIso(country);
   if (!iso) return null;
-  // Casos especiales (subdivisiones del Reino Unido, no son ISO alpha-2 estándar)
-  if (iso === "gb-sct") return "🏴󠁧󠁢󠁳󠁣󠁴󠁿";
-  if (iso === "gb-wls") return "🏴󠁧󠁢󠁷󠁬󠁳󠁿";
-  if (iso.length !== 2) return null;
-  // Cada letra ISO se convierte sumando 0x1F1A5 al code point ('a' = 0x61, 'A' regional = 0x1F1E6)
-  const codePoints = iso.toUpperCase().split("").map((c) => 0x1F1A5 + c.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
+  if (iso === "gb-sct") return "https://flagcdn.com/gb-sct.svg";
+  if (iso === "gb-wls") return "https://flagcdn.com/gb-wls.svg";
+  return `https://flagcdn.com/${iso}.svg`;
 }
