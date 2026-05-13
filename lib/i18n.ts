@@ -261,6 +261,9 @@ stats: {
   others: string;
   noAnswer: string;
   insightsTitle: string;
+  hallOfFame: string;
+  hallOfFameEuro: string;
+  hallOfFameWorldCup: string;
 };
 banquillo: {
   eyebrow: string;
@@ -564,6 +567,9 @@ stats: {
   others: "Otros",
   noAnswer: "Sin respuesta",
   insightsTitle: "Insights del pool",
+  hallOfFame: "Cuadro de Honor",
+  hallOfFameEuro: "Eurocopa",
+  hallOfFameWorldCup: "Mundial",
 },
 banquillo: {
   eyebrow: "Comunidad",
@@ -859,6 +865,9 @@ stats: {
   others: "Others",
   noAnswer: "No answer",
   insightsTitle: "Pool insights",
+  hallOfFame: "Hall of Fame",
+  hallOfFameEuro: "Euros",
+  hallOfFameWorldCup: "World Cups",
 },
 banquillo: {
   eyebrow: "Community",
@@ -1153,6 +1162,9 @@ stats: {
   others: "Outros",
   noAnswer: "Sem resposta",
   insightsTitle: "Insights do bolão",
+  hallOfFame: "Quadro de Honra",
+  hallOfFameEuro: "Euros",
+  hallOfFameWorldCup: "Mundiais",
 },
 banquillo: {
   eyebrow: "Comunidade",

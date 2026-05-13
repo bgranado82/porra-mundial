@@ -20,6 +20,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Locale, messages } from "@/lib/i18n";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import { createClient } from "@/utils/supabase/client";
+import { HALL_OF_FAME, HallOfFameEntry } from "@/data/settings";
 
 type StatsResponse = {
   summary: {
@@ -93,7 +94,50 @@ function KpiCard({
   );
 }
 
-// ─── PRIZES CARD ─────────────────────────────────────────────────────────────
+// ─── HALL OF FAME CARD ───────────────────────────────────────────────────────
+function HallOfFameCard({
+  entries,
+  labels,
+}: {
+  entries: HallOfFameEntry[];
+  labels: { title: string; euro: string; worldCup: string };
+}) {
+  const euroEntries = entries.filter((e) => e.tournament === "Euro").sort((a, b) => b.year - a.year);
+  const wcEntries = entries.filter((e) => e.tournament === "World Cup").sort((a, b) => b.year - a.year);
+
+  const Row = ({ entry, idx }: { entry: HallOfFameEntry; idx: number }) => (
+    <div className={`flex items-center gap-2 py-1.5 ${idx > 0 ? "border-t border-[var(--iberdrola-forest)]/8" : ""}`}>
+      <span className="w-14 shrink-0 text-[10px] font-black text-[var(--iberdrola-forest)]/40 uppercase tracking-wider">{entry.year}</span>
+      <img src="https://flagcdn.com/w20/es.webp" alt="es" className="h-3.5 w-5 rounded-[2px] object-cover shadow-sm shrink-0" />
+      <span className="truncate text-xs font-bold text-[var(--iberdrola-forest)]">{entry.winner}</span>
+      <span className="ml-auto shrink-0 text-sm">🏆</span>
+    </div>
+  );
+
+  return (
+    <div className="relative flex flex-col overflow-hidden rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white p-5 shadow-sm">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="text-xl">🎖️</span>
+        <span className="text-[11px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/50">{labels.title}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 flex-1">
+        <div>
+          <div className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/35 flex items-center gap-1">
+            <span>⭐</span> {labels.euro}
+          </div>
+          {euroEntries.map((e, i) => <Row key={`euro-${e.year}`} entry={e} idx={i} />)}
+        </div>
+        <div>
+          <div className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/35 flex items-center gap-1">
+            <span>⚽</span> {labels.worldCup}
+          </div>
+          {wcEntries.map((e, i) => <Row key={`wc-${e.year}`} entry={e} idx={i} />)}
+        </div>
+      </div>
+      <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-amber-400 to-yellow-300" />
+    </div>
+  );
+}
 function PrizesCard({
   loserRefund,
   firstPrize,
@@ -927,8 +971,33 @@ export default function StatsPageClient() {
 
         {/* ── KPIs + PRIZES */}
         <section className="grid gap-4 md:grid-cols-3">
-          <KpiCard label={t.stats.participants} value={data.summary.participants} icon="👥" />
-          <KpiCard label={t.stats.countries} value={data.summary.countries} icon="🌍" />
+          {/* Card 1: Participantes + Países */}
+          <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white p-6 shadow-sm transition hover:shadow-md text-center gap-4">
+            <div className="flex w-full justify-around">
+              <div className="flex flex-col items-center">
+                <span className="text-2xl leading-none mb-1">👥</span>
+                <div className="text-5xl font-black tracking-tight text-[var(--iberdrola-forest)] leading-none">
+                  {data.summary.participants}
+                </div>
+                <div className="mt-1.5 text-[11px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/50">
+                  {t.stats.participants}
+                </div>
+              </div>
+              <div className="w-px bg-[var(--iberdrola-forest)]/10 self-stretch" />
+              <div className="flex flex-col items-center">
+                <span className="text-2xl leading-none mb-1">🌍</span>
+                <div className="text-5xl font-black tracking-tight text-[var(--iberdrola-forest)] leading-none">
+                  {data.summary.countries}
+                </div>
+                <div className="mt-1.5 text-[11px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/50">
+                  {t.stats.countries}
+                </div>
+              </div>
+            </div>
+            <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-[var(--iberdrola-green)] to-[var(--iberdrola-sky)]" />
+          </div>
+
+          {/* Card 2: Premios */}
           <PrizesCard
             loserRefund={data.summary.loserRefund}
             firstPrize={data.summary.firstPrize}
@@ -944,6 +1013,12 @@ export default function StatsPageClient() {
               potTotal: t.stats.potTotal,
             }}
           />
+
+          {/* Card 3: Cuadro de Honor (solo para pools con historial) */}
+          {(() => {
+            const hof = HALL_OF_FAME.find((h) => h.poolId === poolId);
+            return hof ? <HallOfFameCard entries={hof.entries} labels={{ title: t.stats.hallOfFame, euro: t.stats.hallOfFameEuro, worldCup: t.stats.hallOfFameWorldCup }} /> : <div className="hidden md:block" />;
+          })()}
         </section>
 
         {/* ── CHAMPION + GOLDEN BALL */}
