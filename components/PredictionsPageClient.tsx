@@ -1545,9 +1545,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
                   <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/50">
                     {t.top3}
                   </div>
-                  <div className="mb-1 flex justify-end pr-1">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/40">puntos</span>
-                  </div>
+                  
                   {loadingStandings ? (
                     <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.loadingStandings}</div>
                   ) : top3Standings.length > 0 ? (
