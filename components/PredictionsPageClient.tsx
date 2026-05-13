@@ -1543,8 +1543,8 @@ export default function PredictionsPageClient({ entryId }: Props) {
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
 
                 {/* COL 1 — Pódium + último */}
-                <div className="space-y-2">
-                  <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/50">
+                <div className="space-y-1.5">
+                  <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/50">
                     {t.top3}
                   </div>
                   {loadingStandings ? (
@@ -1554,46 +1554,37 @@ export default function PredictionsPageClient({ entryId }: Props) {
                       const medals = ["🥇", "🥈", "🥉"];
                       const bgColors = ["bg-amber-50 border-amber-200", "bg-gray-50 border-gray-200", "bg-orange-50/50 border-orange-200/60"];
                       return (
-                        <div key={row.entry_id} className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${bgColors[idx] ?? "border-gray-100 bg-white"}`}>
+                        <div key={row.entry_id} className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 ${bgColors[idx] ?? "border-gray-100 bg-white"}`}>
                           <span className="text-base leading-none shrink-0">{medals[idx]}</span>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-xs font-bold text-[var(--iberdrola-forest)]">{row.name || row.email || t.playerFallback}</div>
-                            <div className="text-[11px] font-black text-[var(--iberdrola-green)]">{fmtPts(row.total_points, locale)} <span className="font-normal text-[var(--iberdrola-forest)]/40">{t.points}</span></div>
-                          </div>
+                          <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] flex-1">{row.name || row.email || t.playerFallback}</span>
+                          <span className="shrink-0 text-sm font-black text-[var(--iberdrola-green)]">{fmtPts(row.total_points, locale)}</span>
                         </div>
                       );
                     })
                   ) : (
                     <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.noStandingsYet}</div>
                   )}
-
-                  {/* Último */}
                   {lastStanding && (
-                    <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/70 px-3 py-2">
+                    <div className="flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/70 px-3 py-2.5">
                       <span className="text-base leading-none shrink-0">🔙</span>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-xs font-bold text-[var(--iberdrola-forest)]/70">{lastStanding.name || lastStanding.email || t.playerFallback}</div>
-                        <div className="text-[11px] font-black text-[var(--iberdrola-forest)]/50">{fmtPts(lastStanding.total_points, locale)} <span className="font-normal text-[var(--iberdrola-forest)]/35">{t.points}</span></div>
-                      </div>
+                      <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)]/60 flex-1">{lastStanding.name || lastStanding.email || t.playerFallback}</span>
+                      <span className="shrink-0 text-sm font-black text-[var(--iberdrola-forest)]/40">{fmtPts(lastStanding.total_points, locale)}</span>
                     </div>
                   )}
                 </div>
 
                 {/* COL 2 — Top suben */}
-                <div className="space-y-2">
-                  <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-600/70">
+                <div className="space-y-1.5">
+                  <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-emerald-600/70">
                     ▲ {t.topRisers}
                   </div>
                   {loadingStandings ? (
                     <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.loadingStandings}</div>
                   ) : topRisers.length > 0 ? (
-                    topRisers.map((row, idx) => (
-                      <div key={row.entry_id} className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2">
-                        <span className="text-[11px] font-black text-emerald-400 shrink-0 w-3 text-center">{idx + 1}</span>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-xs font-bold text-[var(--iberdrola-forest)]">{row.name || row.email || t.playerFallback}</div>
-                          <div className="text-[11px] font-black text-emerald-600">▲ {row.movement_value} <span className="font-normal text-[var(--iberdrola-forest)]/40">{t.positionLabel.toLowerCase()}</span></div>
-                        </div>
+                    topRisers.map((row) => (
+                      <div key={row.entry_id} className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
+                        <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] flex-1">{row.name || row.email || t.playerFallback}</span>
+                        <span className="shrink-0 text-sm font-black text-emerald-600">▲{row.movement_value}</span>
                       </div>
                     ))
                   ) : (
@@ -1602,20 +1593,17 @@ export default function PredictionsPageClient({ entryId }: Props) {
                 </div>
 
                 {/* COL 3 — Top bajan */}
-                <div className="space-y-2">
-                  <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-red-500/70">
+                <div className="space-y-1.5">
+                  <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-red-500/70">
                     ▼ {t.topFallers}
                   </div>
                   {loadingStandings ? (
                     <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.loadingStandings}</div>
                   ) : topFallers.length > 0 ? (
-                    topFallers.map((row, idx) => (
-                      <div key={row.entry_id} className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50/60 px-3 py-2">
-                        <span className="text-[11px] font-black text-red-300 shrink-0 w-3 text-center">{idx + 1}</span>
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-xs font-bold text-[var(--iberdrola-forest)]">{row.name || row.email || t.playerFallback}</div>
-                          <div className="text-[11px] font-black text-red-500">▼ {row.movement_value} <span className="font-normal text-[var(--iberdrola-forest)]/40">{t.positionLabel.toLowerCase()}</span></div>
-                        </div>
+                    topFallers.map((row) => (
+                      <div key={row.entry_id} className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50/60 px-3 py-2.5">
+                        <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] flex-1">{row.name || row.email || t.playerFallback}</span>
+                        <span className="shrink-0 text-sm font-black text-red-500">▼{row.movement_value}</span>
                       </div>
                     ))
                   ) : (
