@@ -17,6 +17,7 @@ import { buildRealKnockoutBracket } from "@/lib/realKnockout";
 import { calculateKnockoutScore } from "@/lib/knockoutScoring";
 import { getBestThirdPlacedTeams, getThirdPlacedTeamsNeedingTiebreak } from "@/lib/thirdPlace";
 import { Locale, messages } from "@/lib/i18n";
+import { countryFlagUrl } from "@/lib/countryFlags";
 
 const LOCALE_MAP: Record<string, string> = {
   es: "es-ES",
@@ -1277,7 +1278,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
       standings
         .filter((r) => r.movement === "up" && r.movement_value > 0)
         .sort((a, b) => b.movement_value - a.movement_value)
-        .slice(0, 3),
+        .slice(0, 4),
     [standings]
   );
 
@@ -1286,7 +1287,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
       standings
         .filter((r) => r.movement === "down" && r.movement_value > 0)
         .sort((a, b) => b.movement_value - a.movement_value)
-        .slice(0, 3),
+        .slice(0, 4),
     [standings]
   );
 
@@ -1475,11 +1476,8 @@ export default function PredictionsPageClient({ entryId }: Props) {
             <div className="p-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
-                    {t.classificationSummary}
-                  </div>
                   <div className="mt-1 text-lg font-black tracking-tight text-[var(--iberdrola-forest)]">
-                    {t.top3AndLast}
+                    {t.classificationSummary}
                   </div>
                   <div className="mt-0.5 text-sm text-[var(--iberdrola-forest)]/55">
                     {t.classificationQuickView}
@@ -1547,30 +1545,43 @@ export default function PredictionsPageClient({ entryId }: Props) {
                   <div className="mb-2 text-[10px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/50">
                     {t.top3}
                   </div>
+                  <div className="mb-1 flex justify-end pr-1">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/40">puntos</span>
+                  </div>
                   {loadingStandings ? (
                     <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.loadingStandings}</div>
                   ) : top3Standings.length > 0 ? (
                     top3Standings.map((row, idx) => {
                       const medals = ["🥇", "🥈", "🥉"];
                       const bgColors = ["bg-amber-50 border-amber-200", "bg-gray-50 border-gray-200", "bg-orange-50/50 border-orange-200/60"];
+                      const flagUrl = countryFlagUrl(row.country);
                       return (
                         <div key={row.entry_id} className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 ${bgColors[idx] ?? "border-gray-100 bg-white"}`}>
                           <span className="text-base leading-none shrink-0">{medals[idx]}</span>
+                          {flagUrl && (
+                            <img src={flagUrl} alt="" className="h-4 w-6 rounded-[3px] border border-gray-100 object-cover shadow-sm shrink-0" />
+                          )}
                           <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] flex-1">{row.name || row.email || t.playerFallback}</span>
-                          <span className="shrink-0 text-sm font-black text-[var(--iberdrola-green)]">{fmtPts(row.total_points, locale)}</span>
+                          <span className="shrink-0 text-sm font-black text-[var(--iberdrola-forest)]/75">{fmtPts(row.total_points, locale)}</span>
                         </div>
                       );
                     })
                   ) : (
                     <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.noStandingsYet}</div>
                   )}
-                  {lastStanding && (
-                    <div className="flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/70 px-3 py-2.5">
-                      <span className="text-base leading-none shrink-0">🔙</span>
-                      <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)]/60 flex-1">{lastStanding.name || lastStanding.email || t.playerFallback}</span>
-                      <span className="shrink-0 text-sm font-black text-[var(--iberdrola-forest)]/40">{fmtPts(lastStanding.total_points, locale)}</span>
-                    </div>
-                  )}
+                  {lastStanding && (() => {
+                    const flagUrl = countryFlagUrl(lastStanding.country);
+                    return (
+                      <div className="flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/70 px-3 py-2.5">
+                        <span className="text-base leading-none shrink-0">🔙</span>
+                        {flagUrl && (
+                          <img src={flagUrl} alt="" className="h-4 w-6 rounded-[3px] border border-gray-100 object-cover shadow-sm shrink-0" />
+                        )}
+                        <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)]/60 flex-1">{lastStanding.name || lastStanding.email || t.playerFallback}</span>
+                        <span className="shrink-0 text-sm font-black text-[var(--iberdrola-forest)]/40">{fmtPts(lastStanding.total_points, locale)}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* COL 2 — Top suben */}
@@ -1581,12 +1592,18 @@ export default function PredictionsPageClient({ entryId }: Props) {
                   {loadingStandings ? (
                     <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.loadingStandings}</div>
                   ) : topRisers.length > 0 ? (
-                    topRisers.map((row) => (
-                      <div key={row.entry_id} className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
-                        <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] flex-1">{row.name || row.email || t.playerFallback}</span>
-                        <span className="shrink-0 text-sm font-black text-emerald-600">▲{row.movement_value}</span>
-                      </div>
-                    ))
+                    topRisers.map((row) => {
+                      const flagUrl = countryFlagUrl(row.country);
+                      return (
+                        <div key={row.entry_id} className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5">
+                          {flagUrl && (
+                            <img src={flagUrl} alt="" className="h-4 w-6 rounded-[3px] border border-gray-100 object-cover shadow-sm shrink-0" />
+                          )}
+                          <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] flex-1">{row.name || row.email || t.playerFallback}</span>
+                          <span className="shrink-0 text-sm font-black text-emerald-600">▲ {row.movement_value}</span>
+                        </div>
+                      );
+                    })
                   ) : (
                     <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/50">—</div>
                   )}
@@ -1600,12 +1617,18 @@ export default function PredictionsPageClient({ entryId }: Props) {
                   {loadingStandings ? (
                     <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.loadingStandings}</div>
                   ) : topFallers.length > 0 ? (
-                    topFallers.map((row) => (
-                      <div key={row.entry_id} className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50/60 px-3 py-2.5">
-                        <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] flex-1">{row.name || row.email || t.playerFallback}</span>
-                        <span className="shrink-0 text-sm font-black text-red-500">▼{row.movement_value}</span>
-                      </div>
-                    ))
+                    topFallers.map((row) => {
+                      const flagUrl = countryFlagUrl(row.country);
+                      return (
+                        <div key={row.entry_id} className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50/60 px-3 py-2.5">
+                          {flagUrl && (
+                            <img src={flagUrl} alt="" className="h-4 w-6 rounded-[3px] border border-gray-100 object-cover shadow-sm shrink-0" />
+                          )}
+                          <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] flex-1">{row.name || row.email || t.playerFallback}</span>
+                          <span className="shrink-0 text-sm font-black text-red-500">▼ {row.movement_value}</span>
+                        </div>
+                      );
+                    })
                   ) : (
                     <div className="rounded-xl border border-red-100 bg-red-50/40 px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/50">—</div>
                   )}
