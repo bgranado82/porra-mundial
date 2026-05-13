@@ -165,16 +165,16 @@ function PrizesCard({
   ];
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] p-5 shadow-md">
+    <div className="relative flex flex-col justify-center overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] p-6 shadow-md">
       <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[var(--iberdrola-green)] opacity-15 blur-2xl" />
-      <div className="relative">
+      <div className="relative flex flex-col items-center text-center">
         <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-white/40">
           {labels.potTotal}
         </div>
-        <div className="text-3xl font-black tracking-tight text-white">
+        <div className="text-5xl font-black tracking-tight text-white leading-none">
           {formatEuro(potTotal)}
         </div>
-        <div className="mt-4 space-y-2">
+        <div className="mt-5 w-full space-y-2.5">
           {prizes.map((p) => (
             <div key={p.label} className="flex items-center justify-between">
               <span className={`text-sm font-semibold ${p.highlight ? "text-white" : "text-white/60"}`}>
