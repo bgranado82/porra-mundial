@@ -32,7 +32,7 @@ export async function GET(req: Request) {
 
     const { data: entries, error: entriesError } = await adminSupabase
       .from("entries")
-      .select("id, name, email")
+      .select("id, name, email, company, country")
       .eq("pool_id", poolId)
       .eq("status", "submitted");
 
@@ -40,11 +40,11 @@ export async function GET(req: Request) {
     if (!entries || entries.length === 0) return NextResponse.json({ results: [], total: 0 });
 
     const entryIds = entries.map((e: any) => e.id);
-    const entryMap = new Map<string, { name: string; email: string }>(
-      entries.map((e: any) => [String(e.id), { name: e.name as string, email: e.email as string }])
+    const entryMap = new Map<string, { name: string; email: string; company: string | null; country: string | null }>(
+      entries.map((e: any) => [String(e.id), { name: e.name as string, email: e.email as string, company: e.company ?? null, country: e.country ?? null }])
     );
 
-    let rows: { entry_id: string; name: string; email: string; normalizedValue: string; displayValue: string; flagUrl: string | null }[] = [];
+    let rows: { entry_id: string; name: string; email: string; company: string | null; country: string | null; normalizedValue: string; displayValue: string; flagUrl: string | null }[] = [];
 
     if (filterKey === "champion") {
       const { data: preds, error } = await adminSupabase
@@ -65,6 +65,8 @@ export async function GET(req: Request) {
             entry_id: String(p.entry_id),
             name: entry?.name || entry?.email || "–",
             email: entry?.email || "",
+            company: entry?.company ?? null,
+            country: entry?.country ?? null,
             normalizedValue: normalizeValue(display),
             displayValue: display,
             flagUrl: team?.flagUrl ?? null,
@@ -88,6 +90,8 @@ export async function GET(req: Request) {
             entry_id: String(p.entry_id),
             name: entry?.name || entry?.email || "–",
             email: entry?.email || "",
+            company: entry?.company ?? null,
+            country: entry?.country ?? null,
             normalizedValue: normalized,
             displayValue: titleCase(normalized),
             flagUrl: null,
@@ -108,7 +112,13 @@ export async function GET(req: Request) {
       .sort(([, a], [, b]) => b.entries.length - a.entries.length)
       .map(([, group]) => ({
         value: group.displayValue,
-        entries: group.entries,
+        entries: group.entries.map((e) => ({
+          entry_id: e.entry_id,
+          name: e.name,
+          email: e.email,
+          company: e.company,
+          country: e.country,
+        })),
         flagUrl: group.flagUrl,
       }));
 

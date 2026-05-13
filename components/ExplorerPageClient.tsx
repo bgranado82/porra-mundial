@@ -5,10 +5,17 @@ import Link from "next/link";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Locale, messages } from "@/lib/i18n";
+import { countryFlagUrl } from "@/lib/countryFlags";
 
 const LOCALE_KEY = "porra-mundial-locale";
 
-type EntryResult = { entry_id: string; name: string; email: string; value: string };
+type EntryResult = {
+  entry_id: string;
+  name: string;
+  email: string;
+  company: string | null;
+  country: string | null;
+};
 type GroupedResult = { value: string; entries: EntryResult[]; flagUrl: string | null };
 
 const QUESTION_KEYS = ["champion", ...EXTRA_QUESTIONS.map((q) => q.key)];
@@ -83,7 +90,7 @@ export default function ExplorerPageClient({ poolId, poolSlug, entryId, backHref
 
   return (
     <main className="page-bg">
-      <div className="mx-auto max-w-[1600px] space-y-4 px-4 py-6">
+      <div className="mx-auto max-w-4xl space-y-4 px-4 py-6">
 
         {/* HEADER */}
         <section className="rounded-3xl card-glass p-5 shadow-md">
@@ -184,32 +191,70 @@ export default function ExplorerPageClient({ poolId, poolSlug, entryId, backHref
               const pct = Math.round((group.entries.length / total) * 100);
               return (
                 <div key={group.value} className="overflow-hidden rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
-                  <div className="flex items-center justify-between border-b border-[var(--iberdrola-green-mid)]/30 bg-[var(--iberdrola-green-light)] px-5 py-3">
+
+                  {/* Cabecera: bandera resultado + nombre + barra % + contador */}
+                  <div className="flex items-center gap-3 border-b border-[var(--iberdrola-green-mid)]/30 bg-[var(--iberdrola-green-light)] px-4 py-3">
+                    {group.flagUrl && (
+                      <img src={group.flagUrl} alt="" className="h-5 w-7 flex-shrink-0 rounded-sm object-cover shadow-sm" />
+                    )}
+                    <span className="flex-1 font-bold text-[var(--iberdrola-forest)]">{group.value}</span>
                     <div className="flex items-center gap-2">
-                      {group.flagUrl && <img src={group.flagUrl} alt="" className="h-5 w-7 rounded-sm object-cover shadow-sm" />}
-                      <span className="font-bold text-[var(--iberdrola-forest)]">{group.value}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-[var(--iberdrola-forest)]/50">{pct}%</span>
+                      <div className="hidden sm:flex items-center gap-2">
+                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-[var(--iberdrola-green-mid)]/30">
+                          <div
+                            className="h-full rounded-full bg-[var(--iberdrola-green)] transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-7 text-right text-xs font-semibold text-[var(--iberdrola-forest)]/50">{pct}%</span>
+                      </div>
                       <span className="rounded-full bg-[var(--iberdrola-green)] px-3 py-0.5 text-xs font-bold text-white">
                         {group.entries.length} {group.entries.length === 1 ? "participante" : "participantes"}
                       </span>
                     </div>
                   </div>
+
+                  {/* Lista de participantes */}
                   <div className="divide-y divide-gray-50">
-                    {group.entries.map((e) => (
-                      <div key={e.entry_id} className="px-5 py-2.5">
-                        <span className="text-sm font-medium text-[var(--iberdrola-forest)]">{e.name}</span>
-                      </div>
-                    ))}
+                    {group.entries.map((e) => {
+                      const personFlagUrl = countryFlagUrl(e.country);
+                      return (
+                        <div key={e.entry_id} className="flex items-center gap-3 px-4 py-2.5">
+                          {/* Bandera del país del participante */}
+                          <div className="flex h-5 w-7 flex-shrink-0 items-center">
+                            {personFlagUrl ? (
+                              <img
+                                src={personFlagUrl}
+                                alt={e.country ?? ""}
+                                title={e.country ?? ""}
+                                className="h-4 w-6 rounded-[3px] object-cover shadow-sm"
+                              />
+                            ) : (
+                              <div className="h-4 w-6 rounded-[3px] bg-gray-100" />
+                            )}
+                          </div>
+                          {/* Nombre */}
+                          <span className="flex-1 text-sm font-semibold text-[var(--iberdrola-forest)]">
+                            {e.name}
+                          </span>
+                          {/* Empresa — solo desktop */}
+                          {e.company && (
+                            <span className="hidden rounded-md bg-gray-50 px-2 py-0.5 text-xs text-gray-400 sm:inline-block">
+                              {e.company}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
+
                 </div>
               );
             })}
 
             {filteredResults.length === 0 && (
               <div className="rounded-xl bg-white p-8 text-center text-sm text-[var(--iberdrola-forest)]/50">
-                Sin resultados para "{searchValue}"
+                Sin resultados para &ldquo;{searchValue}&rdquo;
               </div>
             )}
           </div>
