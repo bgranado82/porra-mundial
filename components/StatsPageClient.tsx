@@ -102,36 +102,33 @@ function HallOfFameCard({
   entries: HallOfFameEntry[];
   labels: { title: string; euro: string; worldCup: string };
 }) {
-  const euroEntries = entries.filter((e) => e.tournament === "Euro").sort((a, b) => b.year - a.year);
-  const wcEntries = entries.filter((e) => e.tournament === "World Cup").sort((a, b) => b.year - a.year);
-
-  const Row = ({ entry, idx }: { entry: HallOfFameEntry; idx: number }) => (
-    <div className={`flex items-center gap-2 py-1.5 ${idx > 0 ? "border-t border-[var(--iberdrola-forest)]/8" : ""}`}>
-      <span className="w-14 shrink-0 text-[10px] font-black text-[var(--iberdrola-forest)]/40 uppercase tracking-wider">{entry.year}</span>
-      <img src="https://flagcdn.com/w20/es.webp" alt="es" className="h-3.5 w-5 rounded-[2px] object-cover shadow-sm shrink-0" />
-      <span className="truncate text-xs font-bold text-[var(--iberdrola-forest)]">{entry.winner}</span>
-      <span className="ml-auto shrink-0 text-sm">🏆</span>
-    </div>
-  );
+  // Interleave: sort all entries by year desc, alternating Euro/WC feel naturally
+  const sorted = [...entries].sort((a, b) => b.year - a.year);
 
   return (
-    <div className="relative flex flex-col overflow-hidden rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white p-5 shadow-sm">
-      <div className="mb-3 flex items-center gap-2">
-        <span className="text-xl">🎖️</span>
-        <span className="text-[11px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/50">{labels.title}</span>
-      </div>
-      <div className="grid grid-cols-2 gap-x-4 flex-1">
-        <div>
-          <div className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/35 flex items-center gap-1">
-            <span>⭐</span> {labels.euro}
-          </div>
-          {euroEntries.map((e, i) => <Row key={`euro-${e.year}`} entry={e} idx={i} />)}
+    <div className="relative flex flex-col overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] p-5 shadow-md">
+      <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-amber-400 opacity-15 blur-2xl" />
+      <div className="relative flex-1">
+        <div className="mb-3 text-[11px] font-black uppercase tracking-widest text-white/40">
+          🎖️ {labels.title}
         </div>
-        <div>
-          <div className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/35 flex items-center gap-1">
-            <span>⚽</span> {labels.worldCup}
-          </div>
-          {wcEntries.map((e, i) => <Row key={`wc-${e.year}`} entry={e} idx={i} />)}
+        <div className="space-y-0">
+          {sorted.map((entry, i) => {
+            const tournamentLabel = entry.tournament === "Euro" ? labels.euro : labels.worldCup;
+            const tournamentIcon = entry.tournament === "Euro" ? "⭐" : "⚽";
+            return (
+              <div
+                key={`${entry.tournament}-${entry.year}`}
+                className={`flex items-center gap-2.5 py-2 ${i > 0 ? "border-t border-white/10" : ""}`}
+              >
+                <span className="w-10 shrink-0 text-[11px] font-black text-white/40 tabular-nums">{entry.year}</span>
+                <span className="shrink-0 text-[10px]">{tournamentIcon}</span>
+                <span className="w-16 shrink-0 text-[9px] font-black uppercase tracking-wider text-white/40">{tournamentLabel}</span>
+                <img src="https://flagcdn.com/w20/es.webp" alt="es" className="h-3.5 w-5 shrink-0 rounded-[2px] object-cover shadow-sm" />
+                <span className="truncate text-xs font-bold text-white">{entry.winner}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
       <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-amber-400 to-yellow-300" />
