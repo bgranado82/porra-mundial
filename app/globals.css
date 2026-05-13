@@ -25,7 +25,8 @@
 }
 
 body {
-  background: var(--iberdrola-sand);
+  background: linear-gradient(135deg, var(--iberdrola-green-light) 0%, #ffffff 50%, var(--iberdrola-sky-light) 100%);
+  background-attachment: fixed;
   color: var(--iberdrola-forest);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
