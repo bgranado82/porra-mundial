@@ -866,8 +866,8 @@ stats: {
   noAnswer: "No answer",
   insightsTitle: "Pool insights",
   hallOfFame: "Hall of Fame",
-  hallOfFameEuro: "Euros",
-  hallOfFameWorldCup: "World Cups",
+  hallOfFameEuro: "Euro",
+  hallOfFameWorldCup: "World Cup",
 },
 banquillo: {
   eyebrow: "Community",
@@ -1163,8 +1163,8 @@ stats: {
   noAnswer: "Sem resposta",
   insightsTitle: "Insights do bolão",
   hallOfFame: "Quadro de Honra",
-  hallOfFameEuro: "Euros",
-  hallOfFameWorldCup: "Mundiais",
+  hallOfFameEuro: "Euro",
+  hallOfFameWorldCup: "Copa do Mundo",
 },
 banquillo: {
   eyebrow: "Comunidade",
