@@ -17,6 +17,7 @@ import AdminNav from "@/components/AdminNav";
 import AdminPoolSelector from "@/components/AdminPoolSelector";
 import { teams } from "@/data/teams";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
+import { HALL_OF_FAME, HallOfFameEntry } from "@/data/settings";
 
 type StatsResponse = {
   summary: {
@@ -71,6 +72,39 @@ function KpiCard({ label, value, icon }: { label: string; value: string | number
       <div className="text-5xl font-black tracking-tight text-[var(--iberdrola-forest)] leading-none">{value}</div>
       <div className="mt-2 text-[11px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/50">{label}</div>
       <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-[var(--iberdrola-green)] to-[var(--iberdrola-sky)]" />
+    </div>
+  );
+}
+
+// ─── HALL OF FAME CARD (Admin) ────────────────────────────────────────────────
+function HallOfFameCard({ entries }: { entries: HallOfFameEntry[] }) {
+  const euroEntries = entries.filter((e) => e.tournament === "Euro").sort((a, b) => b.year - a.year);
+  const wcEntries = entries.filter((e) => e.tournament === "World Cup").sort((a, b) => b.year - a.year);
+  const Row = ({ entry, idx }: { entry: HallOfFameEntry; idx: number }) => (
+    <div className={`flex items-center gap-2 py-1.5 ${idx > 0 ? "border-t border-white/10" : ""}`}>
+      <span className="w-14 shrink-0 text-[10px] font-black text-white/40 uppercase tracking-wider">{entry.year}</span>
+      <img src="https://flagcdn.com/w20/es.webp" alt="es" className="h-3.5 w-5 rounded-[2px] object-cover shadow-sm shrink-0" />
+      <span className="truncate text-xs font-bold text-white">{entry.winner}</span>
+      <span className="ml-auto shrink-0 text-sm">🏆</span>
+    </div>
+  );
+  return (
+    <div className="relative overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] p-5 shadow-md">
+      <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-amber-400 opacity-15 blur-2xl" />
+      <div className="relative">
+        <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-white/40">🎖️ Cuadro de Honor</div>
+        <div className="mt-3 grid grid-cols-2 gap-x-4">
+          <div>
+            <div className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1"><span>⭐</span> Eurocopa</div>
+            {euroEntries.map((e, i) => <Row key={`euro-${e.year}`} entry={e} idx={i} />)}
+          </div>
+          <div>
+            <div className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-1"><span>⚽</span> Mundial</div>
+            {wcEntries.map((e, i) => <Row key={`wc-${e.year}`} entry={e} idx={i} />)}
+          </div>
+        </div>
+      </div>
+      <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-amber-400 to-yellow-300" />
     </div>
   );
 }
@@ -339,8 +373,29 @@ export default function AdminStatsPageClient() {
           <>
             {/* KPIs + Premios */}
             <section className="grid gap-4 md:grid-cols-3">
-              <KpiCard label="Participantes" value={data.summary.participants} icon="👥" />
-              <KpiCard label="Países" value={data.summary.countries} icon="🌍" />
+              {/* Card 1: Cuadro de Honor */}
+              {(() => {
+                const hof = HALL_OF_FAME.find((h) => h.poolId === poolId);
+                return hof ? <HallOfFameCard entries={hof.entries} /> : <div className="hidden md:block" />;
+              })()}
+              {/* Card 2: Participantes + Países */}
+              <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white p-6 shadow-sm text-center gap-4">
+                <div className="flex w-full justify-around">
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl leading-none mb-1">👥</span>
+                    <div className="text-5xl font-black tracking-tight text-[var(--iberdrola-forest)] leading-none">{data.summary.participants}</div>
+                    <div className="mt-1.5 text-[11px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/50">Participantes</div>
+                  </div>
+                  <div className="w-px bg-[var(--iberdrola-forest)]/10 self-stretch" />
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl leading-none mb-1">🌍</span>
+                    <div className="text-5xl font-black tracking-tight text-[var(--iberdrola-forest)] leading-none">{data.summary.countries}</div>
+                    <div className="mt-1.5 text-[11px] font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/50">Países</div>
+                  </div>
+                </div>
+                <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-[var(--iberdrola-green)] to-[var(--iberdrola-sky)]" />
+              </div>
+              {/* Card 3: Premios */}
               <PrizesCard
                 loserRefund={data.summary.loserRefund}
                 firstPrize={data.summary.firstPrize}

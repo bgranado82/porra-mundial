@@ -971,7 +971,15 @@ export default function StatsPageClient() {
 
         {/* ── KPIs + PRIZES */}
         <section className="grid gap-4 md:grid-cols-3">
-          {/* Card 1: Participantes + Países */}
+          {/* Card 1: Cuadro de Honor (solo para pools con historial) */}
+          {(() => {
+            const hof = HALL_OF_FAME.find((h) => h.poolId === poolId);
+            return hof
+              ? <HallOfFameCard entries={hof.entries} labels={{ title: t.stats.hallOfFame, euro: t.stats.hallOfFameEuro, worldCup: t.stats.hallOfFameWorldCup }} />
+              : <div className="hidden md:block" />;
+          })()}
+
+          {/* Card 2: Participantes + Países */}
           <div className="relative flex flex-col items-center justify-center overflow-hidden rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white p-6 shadow-sm transition hover:shadow-md text-center gap-4">
             <div className="flex w-full justify-around">
               <div className="flex flex-col items-center">
@@ -997,7 +1005,7 @@ export default function StatsPageClient() {
             <div className="absolute bottom-0 left-0 h-1 w-full rounded-b-3xl bg-gradient-to-r from-[var(--iberdrola-green)] to-[var(--iberdrola-sky)]" />
           </div>
 
-          {/* Card 2: Premios */}
+          {/* Card 3: Premios */}
           <PrizesCard
             loserRefund={data.summary.loserRefund}
             firstPrize={data.summary.firstPrize}
@@ -1013,12 +1021,6 @@ export default function StatsPageClient() {
               potTotal: t.stats.potTotal,
             }}
           />
-
-          {/* Card 3: Cuadro de Honor (solo para pools con historial) */}
-          {(() => {
-            const hof = HALL_OF_FAME.find((h) => h.poolId === poolId);
-            return hof ? <HallOfFameCard entries={hof.entries} labels={{ title: t.stats.hallOfFame, euro: t.stats.hallOfFameEuro, worldCup: t.stats.hallOfFameWorldCup }} /> : <div className="hidden md:block" />;
-          })()}
         </section>
 
         {/* ── CHAMPION + GOLDEN BALL */}
