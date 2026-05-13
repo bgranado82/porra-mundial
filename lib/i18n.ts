@@ -141,6 +141,8 @@ editingDisabled: string;
 
 classificationSummary: string;
 top3AndLast: string;
+  topRisers: string;
+  topFallers: string;
 classificationQuickView: string;
 lastUpdate: string;
 viewStats: string;
@@ -442,6 +444,8 @@ editingDisabled: "La edición de la porra está desactivada.",
 
 classificationSummary: "Resumen clasificación",
 top3AndLast: "Top 3 y último puesto",
+  topRisers: "Más suben",
+  topFallers: "Más bajan",
 classificationQuickView: "Consulta rápida de la clasificación general actual.",
 lastUpdate: "Última actualización",
 viewStats: "Ver estadísticas",
@@ -735,6 +739,8 @@ editingDisabled: "Entry editing is disabled.",
 
 classificationSummary: "Standings summary",
 top3AndLast: "Top 3 and last place",
+  topRisers: "Rising",
+  topFallers: "Falling",
 classificationQuickView: "Quick view of the current overall standings.",
 lastUpdate: "Last update",
 viewStats: "View stats",
@@ -1027,6 +1033,8 @@ editingDisabled: "A edição do bolão está desativada.",
 
 classificationSummary: "Resumo da classificação",
 top3AndLast: "Top 3 e último lugar",
+  topRisers: "Mais sobem",
+  topFallers: "Mais descem",
 classificationQuickView: "Visão rápida da classificação geral atual.",
 lastUpdate: "Última atualização",
 viewStats: "Ver estatísticas",

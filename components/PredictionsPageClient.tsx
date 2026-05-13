@@ -1272,6 +1272,24 @@ export default function PredictionsPageClient({ entryId }: Props) {
     [standings]
   );
 
+  const topRisers = useMemo(
+    () =>
+      standings
+        .filter((r) => r.movement === "up" && r.movement_value > 0)
+        .sort((a, b) => b.movement_value - a.movement_value)
+        .slice(0, 3),
+    [standings]
+  );
+
+  const topFallers = useMemo(
+    () =>
+      standings
+        .filter((r) => r.movement === "down" && r.movement_value > 0)
+        .sort((a, b) => b.movement_value - a.movement_value)
+        .slice(0, 3),
+    [standings]
+  );
+
   if (loadingEntry) {
     return (
       <main className="page-bg">
@@ -1522,90 +1540,89 @@ export default function PredictionsPageClient({ entryId }: Props) {
 ) : null}
               </div>
 
-              <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-                <div>
-                  <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+
+                {/* COL 1 — Pódium + último */}
+                <div className="space-y-2">
+                  <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--iberdrola-forest)]/50">
                     {t.top3}
                   </div>
-
-                  <div className="space-y-2">
-                    {loadingStandings ? (
-                      <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
-                        {t.loadingStandings}
-                      </div>
-                    ) : top3Standings.length > 0 ? (
-                      top3Standings.map((row, idx) => {
-                        const medals = ["🥇", "🥈", "🥉"];
-                        const bgColors = [
-                          "bg-amber-50 border-amber-200",
-                          "bg-gray-50 border-gray-200",
-                          "bg-orange-50/50 border-orange-200/60",
-                        ];
-                        return (
-                        <div
-                          key={row.entry_id}
-                          className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${bgColors[idx] ?? "border-gray-100 bg-white"}`}
-                        >
-                          <div className="min-w-0 pr-3 flex items-center gap-2">
-                            <span className="text-lg leading-none shrink-0">{medals[idx]}</span>
-                            <span className="truncate text-sm font-bold text-[var(--iberdrola-forest)] sm:text-base">
-                              {row.name || row.email || t.playerFallback}
-                            </span>
-                          </div>
-                          <div className="shrink-0 text-right">
-                            <div className="text-lg font-black text-[var(--iberdrola-forest)]">
-                              {fmtPts(row.total_points, locale)}
-                            </div>
-                            <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/45">
-                              {t.points}
-                            </div>
+                  {loadingStandings ? (
+                    <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.loadingStandings}</div>
+                  ) : top3Standings.length > 0 ? (
+                    top3Standings.map((row, idx) => {
+                      const medals = ["🥇", "🥈", "🥉"];
+                      const bgColors = ["bg-amber-50 border-amber-200", "bg-gray-50 border-gray-200", "bg-orange-50/50 border-orange-200/60"];
+                      return (
+                        <div key={row.entry_id} className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${bgColors[idx] ?? "border-gray-100 bg-white"}`}>
+                          <span className="text-base leading-none shrink-0">{medals[idx]}</span>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-bold text-[var(--iberdrola-forest)]">{row.name || row.email || t.playerFallback}</div>
+                            <div className="text-[11px] font-black text-[var(--iberdrola-green)]">{fmtPts(row.total_points, locale)} <span className="font-normal text-[var(--iberdrola-forest)]/40">{t.points}</span></div>
                           </div>
                         </div>
-                        );
-                      })
-                    ) : (
-                      <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
-                        {t.noStandingsYet}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/65">
-                    {t.lastPlace}
-                  </div>
-
-                  {lastStanding ? (
-                    <div className="rounded-2xl border border-gray-100 bg-gray-50/50 px-4 py-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="min-w-0 flex items-center gap-2">
-                          <span className="text-lg leading-none shrink-0">🔙</span>
-                          <div className="min-w-0">
-                            <div className="truncate text-sm font-black text-[var(--iberdrola-forest)]">
-                              {lastStanding.name || lastStanding.email || t.playerFallback}
-                            </div>
-                            <div className="text-xs text-[var(--iberdrola-forest)]/50">
-                              {t.positionLabel} {lastStanding.position}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="shrink-0 text-right">
-                          <div className="text-xl font-black text-[var(--iberdrola-forest)]/60">
-                            {fmtPts(lastStanding.total_points, locale)}
-                          </div>
-                          <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/40">
-                            {t.points}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                      );
+                    })
                   ) : (
-                    <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-3 text-sm text-[var(--iberdrola-forest)]/70">
-                      {t.noStandingsYet}
+                    <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.noStandingsYet}</div>
+                  )}
+
+                  {/* Último */}
+                  {lastStanding && (
+                    <div className="mt-1 flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50/70 px-3 py-2">
+                      <span className="text-base leading-none shrink-0">🔙</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-xs font-bold text-[var(--iberdrola-forest)]/70">{lastStanding.name || lastStanding.email || t.playerFallback}</div>
+                        <div className="text-[11px] font-black text-[var(--iberdrola-forest)]/50">{fmtPts(lastStanding.total_points, locale)} <span className="font-normal text-[var(--iberdrola-forest)]/35">{t.points}</span></div>
+                      </div>
                     </div>
                   )}
                 </div>
+
+                {/* COL 2 — Top suben */}
+                <div className="space-y-2">
+                  <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-600/70">
+                    ▲ {t.topRisers}
+                  </div>
+                  {loadingStandings ? (
+                    <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.loadingStandings}</div>
+                  ) : topRisers.length > 0 ? (
+                    topRisers.map((row, idx) => (
+                      <div key={row.entry_id} className="flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50/60 px-3 py-2">
+                        <span className="text-[11px] font-black text-emerald-400 shrink-0 w-3 text-center">{idx + 1}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-xs font-bold text-[var(--iberdrola-forest)]">{row.name || row.email || t.playerFallback}</div>
+                          <div className="text-[11px] font-black text-emerald-600">▲ {row.movement_value} <span className="font-normal text-[var(--iberdrola-forest)]/40">{t.positionLabel.toLowerCase()}</span></div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/50">—</div>
+                  )}
+                </div>
+
+                {/* COL 3 — Top bajan */}
+                <div className="space-y-2">
+                  <div className="mb-1.5 text-[10px] font-black uppercase tracking-widest text-red-500/70">
+                    ▼ {t.topFallers}
+                  </div>
+                  {loadingStandings ? (
+                    <div className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/70">{t.loadingStandings}</div>
+                  ) : topFallers.length > 0 ? (
+                    topFallers.map((row, idx) => (
+                      <div key={row.entry_id} className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50/60 px-3 py-2">
+                        <span className="text-[11px] font-black text-red-300 shrink-0 w-3 text-center">{idx + 1}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-xs font-bold text-[var(--iberdrola-forest)]">{row.name || row.email || t.playerFallback}</div>
+                          <div className="text-[11px] font-black text-red-500">▼ {row.movement_value} <span className="font-normal text-[var(--iberdrola-forest)]/40">{t.positionLabel.toLowerCase()}</span></div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-xl border border-red-100 bg-red-50/40 px-3 py-2.5 text-xs text-[var(--iberdrola-forest)]/50">—</div>
+                  )}
+                </div>
+
               </div>
             </div>
           </section>
