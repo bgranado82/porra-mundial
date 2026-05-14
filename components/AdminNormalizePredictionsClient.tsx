@@ -2,561 +2,338 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AdminNav from "@/components/AdminNav";
+import { createClient } from "@/utils/supabase/client";
 import { EXTRA_QUESTIONS, ExtraQuestionKey } from "@/lib/extraQuestions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type EntryInfo = {
+type Row = {
   entry_id: string;
+  predicted_value: string;   // lo que escribió el usuario — solo lectura
+  normalized_value: string | null; // lo que usa el scoring — editable
   name: string;
-  email: string;
   entry_number: number | null;
+  status: string;
 };
 
-type Variant = {
-  value: string;
-  count: number;
-  entries: EntryInfo[];
-};
-
-// ─── Labels ───────────────────────────────────────────────────────────────────
+type Pool = { id: string; name: string };
+type StatusFilter = "submitted" | "draft" | "all";
 
 const EXTRA_LABELS: Record<ExtraQuestionKey, string> = {
   first_goal_scorer_world: "🥇 Primer goleador del Mundial",
   first_goal_scorer_spain: "🇪🇸 Primer goleador de España",
-  golden_boot: "👟 Bota de Oro",
-  golden_ball: "🏆 Balón de Oro",
-  best_young_player: "🌟 Mejor jugador joven",
-  golden_glove: "🧤 Guante de Oro",
-  top_spanish_scorer: "🇪🇸 Máximo goleador de España",
+  golden_boot:             "👟 Bota de Oro",
+  golden_ball:             "🏆 Balón de Oro",
+  best_young_player:       "🌟 Mejor jugador joven",
+  golden_glove:            "🧤 Guante de Oro",
+  top_spanish_scorer:      "🇪🇸 Máximo goleador de España",
 };
 
-// ─── Small helpers ─────────────────────────────────────────────────────────────
+// ─── Inline cell ──────────────────────────────────────────────────────────────
 
-function normalize(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
-}
-
-/** Returns true when two variant values would be considered equal by the scoring engine. */
-function wouldMatch(a: string, b: string) {
-  return normalize(a) === normalize(b);
-}
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function VariantRow({
-  variant,
-  selected,
-  onToggle,
-  onRenameAll,
-  officialValue,
+function NormalizedCell({
+  row,
   questionKey,
+  onSaved,
 }: {
-  variant: Variant;
-  selected: boolean;
-  onToggle: () => void;
-  onRenameAll: (entryIds: string[], newValue: string) => void;
-  officialValue: string;
+  row: Row;
   questionKey: ExtraQuestionKey;
+  onSaved: (entryId: string, newValue: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [editValue, setEditValue] = useState(variant.value);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const current = row.normalized_value ?? "";
+  const [editing, setEditing] = useState(false);
+  const [value, setValue]     = useState(current);
+  const [saving, setSaving]   = useState(false);
+  const [error, setError]     = useState("");
 
-  const isHit = officialValue ? wouldMatch(variant.value, officialValue) : false;
-  const entryIds = variant.entries.map((e) => e.entry_id);
-
-  async function handleSaveEdit() {
-    if (!editValue.trim() || editValue.trim() === variant.value) {
-      setEditMode(false);
-      return;
-    }
+  async function save() {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed === current) { setEditing(false); return; }
     setSaving(true);
     setError("");
     try {
       const res = await fetch("/api/admin/normalize-extra", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionKey, entryIds, newValue: editValue.trim() }),
+        body: JSON.stringify({ questionKey, entryIds: [row.entry_id], normalizedValue: trimmed }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error desconocido");
-      onRenameAll(entryIds, editValue.trim());
-      setEditMode(false);
-    } catch (err: any) {
-      setError(err.message);
+      if (!res.ok) throw new Error(data.error ?? "Error");
+      onSaved(row.entry_id, trimmed);
+      setEditing(false);
+    } catch (e: any) {
+      setError(e.message);
     } finally {
       setSaving(false);
     }
   }
 
-  return (
-    <div
-      className={`rounded-2xl border transition-all ${
-        isHit
-          ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)]"
-          : selected
-          ? "border-[var(--iberdrola-sky)] bg-blue-50"
-          : "border-[var(--iberdrola-sky)] bg-white"
-      }`}
-    >
-      {/* Header row */}
-      <div className="flex items-center gap-3 px-4 py-3">
-        {/* Checkbox for bulk selection */}
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1.5">
         <input
-          type="checkbox"
-          checked={selected}
-          onChange={onToggle}
-          className="h-4 w-4 rounded border-gray-300 accent-[var(--iberdrola-green)]"
-          title="Seleccionar para renombrar en bloque"
+          autoFocus
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setEditing(false); setValue(current); } }}
+          className="w-40 rounded-lg border border-[var(--iberdrola-green)] px-2 py-1 text-xs font-mono text-[var(--iberdrola-forest)] focus:outline-none"
         />
-
-        {/* Value display / edit */}
-        <div className="min-w-0 flex-1">
-          {editMode ? (
-            <div className="flex items-center gap-2">
-              <input
-                autoFocus
-                value={editValue}
-                onChange={(e) => setEditValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSaveEdit();
-                  if (e.key === "Escape") setEditMode(false);
-                }}
-                className="min-w-0 flex-1 rounded-xl border border-[var(--iberdrola-green)] px-3 py-1.5 text-sm font-semibold text-[var(--iberdrola-forest)] focus:outline-none focus:ring-2 focus:ring-[var(--iberdrola-green)]"
-              />
-              <button
-                onClick={handleSaveEdit}
-                disabled={saving}
-                className="shrink-0 rounded-xl bg-[var(--iberdrola-green)] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50"
-              >
-                {saving ? "..." : "Guardar"}
-              </button>
-              <button
-                onClick={() => { setEditMode(false); setEditValue(variant.value); }}
-                className="shrink-0 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-500"
-              >
-                Cancelar
-              </button>
-            </div>
-          ) : (
-            <span className="text-sm font-bold text-[var(--iberdrola-forest)]">
-              {variant.value}
-            </span>
-          )}
-          {error ? (
-            <div className="mt-1 text-xs font-semibold text-red-600">{error}</div>
-          ) : null}
-        </div>
-
-        {/* Badge: hit indicator */}
-        {isHit && (
-          <span className="shrink-0 rounded-full bg-[var(--iberdrola-green)] px-2.5 py-0.5 text-xs font-black text-white">
-            ✓ Match
-          </span>
-        )}
-
-        {/* Count badge */}
-        <span className="shrink-0 rounded-full border border-[var(--iberdrola-sky)] bg-white px-2.5 py-0.5 text-xs font-black text-[var(--iberdrola-forest)]">
-          {variant.count} {variant.count === 1 ? "persona" : "personas"}
-        </span>
-
-        {/* Edit this value button */}
-        {!editMode && (
-          <button
-            onClick={() => { setEditMode(true); setEditValue(variant.value); }}
-            className="shrink-0 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-1.5 text-xs font-bold text-[var(--iberdrola-forest)] hover:border-[var(--iberdrola-green)] hover:bg-[var(--iberdrola-green-light)] transition"
-            title="Editar este valor para todos los que lo han puesto"
-          >
-            ✏️ Renombrar
-          </button>
-        )}
-
-        {/* Expand/collapse participants */}
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="shrink-0 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-1.5 text-xs font-bold text-[var(--iberdrola-forest)] hover:bg-[var(--iberdrola-sand)]/50 transition"
-        >
-          {expanded ? "▲ Ocultar" : "▼ Ver quién"}
+        <button onClick={save} disabled={saving}
+          className="rounded-lg bg-[var(--iberdrola-green)] px-2 py-1 text-xs font-bold text-white disabled:opacity-50">
+          {saving ? "…" : "✓"}
         </button>
+        <button onClick={() => { setEditing(false); setValue(current); }}
+          className="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-400">✕</button>
+        {error && <span className="text-xs text-red-600">{error}</span>}
       </div>
+    );
+  }
 
-      {/* Participants list */}
-      {expanded && (
-        <div className="border-t border-[var(--iberdrola-sky)] px-4 py-3">
-          <div className="flex flex-wrap gap-2">
-            {variant.entries.map((entry) => (
-              <div
-                key={entry.entry_id}
-                className="rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-1.5"
-              >
-                <span className="text-xs font-bold text-[var(--iberdrola-forest)]">
-                  {entry.entry_number != null ? `#${entry.entry_number} ` : ""}
-                  {entry.name}
-                </span>
-                {entry.email && (
-                  <span className="ml-1 text-xs text-[var(--iberdrola-forest)]/50">
-                    ({entry.email})
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+  return (
+    <button
+      onClick={() => { setValue(current); setEditing(true); }}
+      className="group flex items-center gap-1.5 rounded-lg px-2 py-1 hover:bg-[var(--iberdrola-green-light)] transition"
+      title="Haz clic para editar el valor normalizado"
+    >
+      <code className="text-xs font-mono text-[var(--iberdrola-forest)]">{current || <span className="text-gray-400 italic">vacío</span>}</code>
+      <span className="text-[10px] text-[var(--iberdrola-forest)]/30 group-hover:text-[var(--iberdrola-green)]">✏️</span>
+    </button>
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Main ─────────────────────────────────────────────────────────────────────
 
 export default function AdminNormalizePredictionsClient() {
-  const [selectedQuestion, setSelectedQuestion] = useState<ExtraQuestionKey>(
-    EXTRA_QUESTIONS[0].key
-  );
-  const [variants, setVariants] = useState<Variant[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadError, setLoadError] = useState("");
+  const supabase = createClient();
 
-  // For bulk rename
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkNewValue, setBulkNewValue] = useState("");
-  const [bulkSaving, setBulkSaving] = useState(false);
-  const [bulkError, setBulkError] = useState("");
+  const [pools, setPools]                   = useState<Pool[]>([]);
+  const [selectedPoolId, setSelectedPoolId] = useState("");
+  const [selectedQuestion, setSelectedQuestion] = useState<ExtraQuestionKey>(EXTRA_QUESTIONS[0].key);
+  const [statusFilter, setStatusFilter]     = useState<StatusFilter>("submitted");
+
+  const [rows, setRows]       = useState<Row[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+
+  // Selección para edición en bloque
+  const [selected, setSelected]       = useState<Set<string>>(new Set());
+  const [bulkValue, setBulkValue]     = useState("");
+  const [bulkSaving, setBulkSaving]   = useState(false);
+  const [bulkError, setBulkError]     = useState("");
   const [bulkSuccess, setBulkSuccess] = useState("");
 
-  // ── Load variants ─────────────────────────────────────────────────────────
+  // Cargar pools
+  useEffect(() => {
+    supabase.from("pools").select("id, name").order("name").then(({ data }) => {
+      if (data) { setPools(data as Pool[]); if (data.length) setSelectedPoolId(data[0].id); }
+    });
+  }, [supabase]);
 
-  const loadVariants = useCallback(async (key: ExtraQuestionKey) => {
-    setLoading(true);
-    setLoadError("");
-    setVariants([]);
-    setSelectedIds(new Set());
-    setBulkNewValue("");
-    setBulkError("");
-    setBulkSuccess("");
-
+  // Cargar filas
+  const load = useCallback(async (q: ExtraQuestionKey, pool: string, status: StatusFilter) => {
+    if (!pool) return;
+    setLoading(true); setError(""); setRows([]); setSelected(new Set());
+    setBulkValue(""); setBulkError(""); setBulkSuccess("");
     try {
-      const res = await fetch(
-        `/api/admin/normalize-extra?questionKey=${encodeURIComponent(key)}`
-      );
+      const res = await fetch(`/api/admin/normalize-extra?questionKey=${q}&poolId=${pool}&statusFilter=${status}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error desconocido");
-      setVariants(data.variants ?? []);
-    } catch (err: any) {
-      setLoadError(err.message);
-    } finally {
-      setLoading(false);
-    }
+      if (!res.ok) throw new Error(data.error);
+      setRows(data.rows ?? []);
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    loadVariants(selectedQuestion);
-  }, [selectedQuestion, loadVariants]);
+  useEffect(() => { if (selectedPoolId) load(selectedQuestion, selectedPoolId, statusFilter); },
+    [selectedQuestion, selectedPoolId, statusFilter, load]);
 
-  // ── Toggle / select logic ─────────────────────────────────────────────────
-
-  function toggleVariant(variant: Variant) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      const allIds = variant.entries.map((e) => e.entry_id);
-      const allSelected = allIds.every((id) => prev.has(id));
-      if (allSelected) {
-        allIds.forEach((id) => next.delete(id));
-      } else {
-        allIds.forEach((id) => next.add(id));
-      }
-      return next;
-    });
+  function handleSaved(entryId: string, newValue: string) {
+    setRows(prev => prev.map(r => r.entry_id === entryId ? { ...r, normalized_value: newValue } : r));
   }
 
-  function isVariantSelected(variant: Variant) {
-    return variant.entries.every((e) => selectedIds.has(e.entry_id));
+  function toggleRow(entryId: string) {
+    setSelected(prev => { const n = new Set(prev); n.has(entryId) ? n.delete(entryId) : n.add(entryId); return n; });
+  }
+  function toggleAll() {
+    setSelected(prev => prev.size === rows.length ? new Set() : new Set(rows.map(r => r.entry_id)));
   }
 
-  // ── Inline rename callback (updates local state without reload) ───────────
-
-  function handleInlineRename(entryIds: string[], newValue: string) {
-    setVariants((prev) => {
-      const merged: Record<string, Variant> = {};
-
-      for (const v of prev) {
-        const remainingEntries = v.entries.filter(
-          (e) => !entryIds.includes(e.entry_id)
-        );
-        const movedEntries = v.entries.filter((e) => entryIds.includes(e.entry_id));
-
-        if (remainingEntries.length > 0) {
-          merged[v.value] = { ...v, entries: remainingEntries, count: remainingEntries.length };
-        }
-
-        if (movedEntries.length > 0) {
-          if (!merged[newValue]) {
-            merged[newValue] = { value: newValue, count: 0, entries: [] };
-          }
-          merged[newValue].entries.push(...movedEntries);
-          merged[newValue].count += movedEntries.length;
-        }
-      }
-
-      return Object.values(merged).sort((a, b) => b.count - a.count);
-    });
-    setBulkSuccess("✅ Renombrado correctamente y puntuaciones recalculadas.");
-  }
-
-  // ── Bulk rename ───────────────────────────────────────────────────────────
-
-  async function handleBulkRename() {
-    if (!bulkNewValue.trim()) {
-      setBulkError("Escribe el nuevo valor primero.");
-      return;
-    }
-    if (selectedIds.size === 0) {
-      setBulkError("Selecciona al menos una variante.");
-      return;
-    }
-
-    setBulkSaving(true);
-    setBulkError("");
-    setBulkSuccess("");
-
-    const entryIds = Array.from(selectedIds);
-
+  async function handleBulkSave() {
+    if (!bulkValue.trim()) { setBulkError("Escribe el valor primero."); return; }
+    if (selected.size === 0) { setBulkError("Selecciona al menos una fila."); return; }
+    setBulkSaving(true); setBulkError(""); setBulkSuccess("");
     try {
       const res = await fetch("/api/admin/normalize-extra", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionKey: selectedQuestion, entryIds, newValue: bulkNewValue.trim() }),
+        body: JSON.stringify({ questionKey: selectedQuestion, entryIds: Array.from(selected), normalizedValue: bulkValue.trim().toLowerCase() }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Error desconocido");
-
-      handleInlineRename(entryIds, bulkNewValue.trim());
-      setSelectedIds(new Set());
-      setBulkNewValue("");
-    } catch (err: any) {
-      setBulkError(err.message);
-    } finally {
-      setBulkSaving(false);
-    }
+      if (!res.ok) throw new Error(data.error);
+      const v = bulkValue.trim().toLowerCase();
+      setRows(prev => prev.map(r => selected.has(r.entry_id) ? { ...r, normalized_value: v } : r));
+      setSelected(new Set()); setBulkValue("");
+      setBulkSuccess(`✅ ${selected.size} filas actualizadas y puntuaciones recalculadas.`);
+    } catch (e: any) { setBulkError(e.message); }
+    finally { setBulkSaving(false); }
   }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Render
-  // ─────────────────────────────────────────────────────────────────────────
-
-  // Compute official value hint (the admin sets it in Results page)
-  // We don't have it here, but we can highlight variants that have warnings.
-  const totalPredictions = variants.reduce((acc, v) => acc + v.count, 0);
-  const uniqueValues = variants.length;
 
   return (
     <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
-      <main className="mx-auto max-w-[1200px] space-y-6 px-4 py-6 sm:px-6">
+      <main className="mx-auto max-w-[1100px] space-y-6 px-4 py-6 sm:px-6">
 
-        {/* ── Header ── */}
-        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
-          <div className="p-4 sm:p-6">
-            <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
-              Administración · Ibe World Cup 2026
-            </div>
-            <h1 className="mt-1.5 text-2xl font-black text-[var(--iberdrola-forest)]">
-              Normalización de predicciones extra
-            </h1>
-            <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/65">
-              Unifica variantes de texto para que el motor de puntuación las reconozca como el mismo jugador.
-              Ej: <span className="font-bold">«Mbappe»</span>, <span className="font-bold">«Kylian»</span> y <span className="font-bold">«Kylian Mbappe»</span> → todos a <span className="font-bold">«Kylian Mbappé»</span>.
-            </p>
-            <div className="mt-4">
-              <AdminNav />
-            </div>
-          </div>
+        {/* Header */}
+        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm p-4 sm:p-6">
+          <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">Administración</div>
+          <h1 className="mt-1 text-2xl font-black text-[var(--iberdrola-forest)]">Normalización de preguntas extra</h1>
+          <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/60">
+            Edita el <span className="font-bold">valor normalizado</span> que usa el motor de puntuación sin tocar lo que escribió cada participante.
+          </p>
+          <div className="mt-4"><AdminNav /></div>
         </section>
 
-        {/* ── Question selector ── */}
-        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
-          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-            <h2 className="text-base font-black text-[var(--iberdrola-forest)]">
-              Pregunta a normalizar
-            </h2>
+        {/* Filtros */}
+        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm p-4 space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            {/* Pool */}
+            <div className="flex-1">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Pool</label>
+              <select value={selectedPoolId} onChange={e => setSelectedPoolId(e.target.value)}
+                className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2.5 text-sm font-semibold text-[var(--iberdrola-forest)]">
+                {pools.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            {/* Status */}
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Entradas</label>
+              <div className="flex overflow-hidden rounded-xl border border-[var(--iberdrola-green)]">
+                {(["submitted","draft","all"] as StatusFilter[]).map(s => (
+                  <button key={s} onClick={() => setStatusFilter(s)}
+                    className={`px-3 py-2.5 text-xs font-bold transition ${statusFilter === s ? "bg-[var(--iberdrola-green)] text-white" : "bg-white text-[var(--iberdrola-forest)] hover:bg-[var(--iberdrola-green-light)]"}`}>
+                    {s === "submitted" ? "Enviadas" : s === "draft" ? "Borradores" : "Todas"}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {EXTRA_QUESTIONS.map((q) => (
-              <button
-                key={q.key}
-                onClick={() => setSelectedQuestion(q.key)}
-                className={`rounded-2xl border px-4 py-3 text-left text-sm font-bold transition-all ${
-                  selectedQuestion === q.key
-                    ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green)] text-white"
-                    : "border-[var(--iberdrola-sky)] bg-white text-[var(--iberdrola-forest)] hover:border-[var(--iberdrola-green)] hover:bg-[var(--iberdrola-green-light)]"
-                }`}
-              >
+
+          {/* Pregunta */}
+          <div className="flex flex-wrap gap-2">
+            {EXTRA_QUESTIONS.map(q => (
+              <button key={q.key} onClick={() => setSelectedQuestion(q.key)}
+                className={`rounded-2xl border px-4 py-2 text-sm font-bold transition ${selectedQuestion === q.key ? "border-[var(--iberdrola-green)] bg-[var(--iberdrola-green)] text-white" : "border-[var(--iberdrola-sky)] bg-white text-[var(--iberdrola-forest)] hover:border-[var(--iberdrola-green)] hover:bg-[var(--iberdrola-green-light)]"}`}>
                 {EXTRA_LABELS[q.key]}
               </button>
             ))}
           </div>
         </section>
 
-        {/* ── Stats bar ── */}
-        {!loading && variants.length > 0 && (
-          <div className="flex flex-wrap gap-3">
-            <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-2.5">
-              <span className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                Predicciones totales
-              </span>
-              <span className="ml-2 text-lg font-black text-[var(--iberdrola-forest)]">
-                {totalPredictions}
-              </span>
-            </div>
-            <div className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-2.5">
-              <span className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                Variantes distintas
-              </span>
-              <span className="ml-2 text-lg font-black text-[var(--iberdrola-forest)]">
-                {uniqueValues}
-              </span>
-            </div>
-            {selectedIds.size > 0 && (
-              <div className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)] px-4 py-2.5">
-                <span className="text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                  Seleccionadas para renombrar
-                </span>
-                <span className="ml-2 text-lg font-black text-[var(--iberdrola-forest)]">
-                  {selectedIds.size} filas
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Bulk rename toolbar ── */}
-        {selectedIds.size > 0 && (
-          <section className="rounded-2xl border-2 border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)] shadow-sm">
-            <div className="border-b border-[var(--iberdrola-green-mid)] px-4 py-3">
-              <h2 className="text-base font-black text-[var(--iberdrola-forest)]">
-                Renombrar en bloque — {selectedIds.size} predicciones seleccionadas
-              </h2>
-              <p className="mt-0.5 text-sm text-[var(--iberdrola-forest)]/65">
-                Introduce el valor canónico y pulsa «Aplicar». Se recalculan los puntos automáticamente.
-              </p>
-            </div>
-            <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                  Nuevo valor
-                </label>
-                <input
-                  type="text"
-                  value={bulkNewValue}
-                  onChange={(e) => setBulkNewValue(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleBulkRename(); }}
-                  placeholder="p. ej. Kylian Mbappé"
-                  className="w-full rounded-xl border border-[var(--iberdrola-green)] px-3 py-2.5 text-sm font-semibold text-[var(--iberdrola-forest)] focus:outline-none focus:ring-2 focus:ring-[var(--iberdrola-green)]"
-                />
-              </div>
-              <button
-                onClick={handleBulkRename}
-                disabled={bulkSaving || !bulkNewValue.trim()}
-                className="shrink-0 rounded-2xl bg-[var(--iberdrola-green)] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
-              >
-                {bulkSaving ? "Aplicando..." : "✅ Aplicar y recalcular"}
+        {/* Barra de edición en bloque */}
+        {selected.size > 0 && (
+          <section className="rounded-2xl border-2 border-[var(--iberdrola-green)] bg-[var(--iberdrola-green-light)] p-4 space-y-3">
+            <p className="text-sm font-black text-[var(--iberdrola-forest)]">Editar {selected.size} filas seleccionadas</p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <input type="text" value={bulkValue} onChange={e => setBulkValue(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") handleBulkSave(); }}
+                placeholder="Nuevo valor normalizado (ej: kylian mbappe)"
+                className="flex-1 rounded-xl border border-[var(--iberdrola-green)] px-3 py-2.5 text-sm font-mono text-[var(--iberdrola-forest)] focus:outline-none focus:ring-2 focus:ring-[var(--iberdrola-green)]" />
+              <button onClick={handleBulkSave} disabled={bulkSaving || !bulkValue.trim()}
+                className="shrink-0 rounded-2xl bg-[var(--iberdrola-green)] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+                {bulkSaving ? "Guardando..." : "✅ Aplicar y recalcular"}
               </button>
-              <button
-                onClick={() => setSelectedIds(new Set())}
-                className="shrink-0 rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--iberdrola-forest)] hover:bg-[var(--iberdrola-sand)]/50 transition"
-              >
-                Deseleccionar todo
+              <button onClick={() => setSelected(new Set())}
+                className="shrink-0 rounded-2xl border border-[var(--iberdrola-sky)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--iberdrola-forest)]">
+                Cancelar
               </button>
             </div>
-            {bulkError && (
-              <div className="mx-4 mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700">
-                {bulkError}
-              </div>
-            )}
+            {bulkError && <p className="text-sm font-semibold text-red-600">{bulkError}</p>}
           </section>
         )}
 
-        {/* ── Success banner ── */}
         {bulkSuccess && (
           <div className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-[var(--iberdrola-green-light)] px-4 py-3 text-sm font-semibold text-[var(--iberdrola-forest)]">
             {bulkSuccess}
           </div>
         )}
 
-        {/* ── Variants list ── */}
-        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
-          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3 flex items-center justify-between gap-4">
+        {/* Tabla */}
+        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between gap-4 border-b border-[var(--iberdrola-sky)] px-4 py-3">
             <div>
               <h2 className="text-base font-black text-[var(--iberdrola-forest)]">
-                Variantes encontradas
+                Predicciones — {rows.length} participantes
               </h2>
-              <p className="mt-0.5 text-sm text-[var(--iberdrola-forest)]/65">
-                Marca las variantes incorrectas y usa el renombrado en bloque, o edita cada una individualmente con ✏️.
+              <p className="text-xs text-[var(--iberdrola-forest)]/50">
+                Haz clic en el valor normalizado para editarlo. Selecciona varias filas para editar en bloque.
               </p>
             </div>
-            <button
-              onClick={() => loadVariants(selectedQuestion)}
-              className="shrink-0 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] hover:bg-[var(--iberdrola-sand)]/50 transition"
-            >
+            <button onClick={() => load(selectedQuestion, selectedPoolId, statusFilter)}
+              className="shrink-0 rounded-xl border border-[var(--iberdrola-sky)] bg-white px-3 py-2 text-xs font-bold text-[var(--iberdrola-forest)] hover:bg-[var(--iberdrola-sand)]/50">
               🔄 Recargar
             </button>
           </div>
 
-          <div className="space-y-3 p-4">
-            {loading && (
-              <div className="rounded-2xl border border-[var(--iberdrola-sky)] p-6 text-center text-sm text-[var(--iberdrola-forest)]/50">
-                Cargando variantes...
-              </div>
-            )}
+          {loading && (
+            <div className="p-8 text-center text-sm text-[var(--iberdrola-forest)]/50">Cargando...</div>
+          )}
+          {!loading && error && (
+            <div className="p-4 text-sm font-semibold text-red-600">{error}</div>
+          )}
+          {!loading && !error && rows.length === 0 && (
+            <div className="p-8 text-center text-sm text-[var(--iberdrola-forest)]/50">No hay predicciones para esta combinación.</div>
+          )}
 
-            {!loading && loadError && (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
-                {loadError}
-              </div>
-            )}
-
-            {!loading && !loadError && variants.length === 0 && (
-              <div className="rounded-2xl border border-[var(--iberdrola-sky)] p-6 text-center text-sm text-[var(--iberdrola-forest)]/50">
-                No hay predicciones para esta pregunta todavía.
-              </div>
-            )}
-
-            {!loading &&
-              variants.map((variant) => (
-                <VariantRow
-                  key={variant.value}
-                  variant={variant}
-                  selected={isVariantSelected(variant)}
-                  onToggle={() => toggleVariant(variant)}
-                  onRenameAll={handleInlineRename}
-                  officialValue={""}
-                  questionKey={selectedQuestion}
-                />
-              ))}
-          </div>
+          {!loading && rows.length > 0 && (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--iberdrola-sky)] bg-[var(--iberdrola-sand)]/30 text-xs font-black uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
+                  <th className="px-4 py-2.5 text-left w-8">
+                    <input type="checkbox"
+                      checked={selected.size === rows.length && rows.length > 0}
+                      onChange={toggleAll}
+                      className="h-4 w-4 rounded accent-[var(--iberdrola-green)]" />
+                  </th>
+                  <th className="px-4 py-2.5 text-left">#</th>
+                  <th className="px-4 py-2.5 text-left">Participante</th>
+                  <th className="px-4 py-2.5 text-left">Lo que escribió</th>
+                  <th className="px-4 py-2.5 text-left">Valor normalizado (editable)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--iberdrola-sky)]">
+                {rows.map(row => (
+                  <tr key={row.entry_id}
+                    className={`transition ${selected.has(row.entry_id) ? "bg-[var(--iberdrola-green-light)]" : "hover:bg-[var(--iberdrola-sand)]/20"}`}>
+                    <td className="px-4 py-2.5">
+                      <input type="checkbox" checked={selected.has(row.entry_id)} onChange={() => toggleRow(row.entry_id)}
+                        className="h-4 w-4 rounded accent-[var(--iberdrola-green)]" />
+                    </td>
+                    <td className="px-4 py-2.5 text-[var(--iberdrola-forest)]/50 font-mono">
+                      {row.entry_number != null ? `#${row.entry_number}` : "—"}
+                    </td>
+                    <td className="px-4 py-2.5 font-semibold text-[var(--iberdrola-forest)]">
+                      {row.name}
+                      {row.status === "draft" && (
+                        <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">borrador</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5 text-[var(--iberdrola-forest)]/70">
+                      {row.predicted_value}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <NormalizedCell row={row} questionKey={selectedQuestion} onSaved={handleSaved} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </section>
 
-        {/* ── Info box ── */}
-        <section className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4 text-sm text-[var(--iberdrola-forest)]/70 space-y-2">
-          <p className="font-bold text-[var(--iberdrola-forest)]">ℹ️ Cómo funciona la normalización automática</p>
-          <p>
-            El motor de puntuación ya aplica una normalización básica al comparar (elimina acentos, convierte a minúsculas y colapsa espacios),
-            así que <span className="font-semibold">«Mbappé»</span> y <span className="font-semibold">«mbappe»</span> se consideran iguales.
-          </p>
-          <p>
-            Pero <span className="font-semibold">«Kylian»</span> no matchea con <span className="font-semibold">«Mbappé»</span> porque son cadenas distintas.
-            Esta herramienta te permite unificar esas variantes antes de que se cierre el torneo.
-          </p>
-          <p>
-            Cada renombrado recalcula las puntuaciones automáticamente. No hace falta ir a la página de Resultados.
-          </p>
+        {/* Nota */}
+        <section className="rounded-2xl border border-[var(--iberdrola-sky)] bg-white p-4 text-sm text-[var(--iberdrola-forest)]/60 space-y-1.5">
+          <p className="font-bold text-[var(--iberdrola-forest)]">ℹ️ Cómo funciona</p>
+          <p>La columna <span className="font-semibold">«Lo que escribió»</span> es solo lectura — nunca se modifica.</p>
+          <p>La columna <span className="font-semibold">«Valor normalizado»</span> es la que compara el motor. Si la dejas vacía, el motor usa la normalización automática del valor original.</p>
+          <p>Al guardar se recalculan las puntuaciones de inmediato.</p>
         </section>
 
       </main>

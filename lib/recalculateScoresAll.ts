@@ -138,7 +138,7 @@ export async function recalculateScoresAll() {
   const { data: extraPredictions, error: extraPredictionsError } =
     await supabase
       .from("entry_extra_predictions")
-      .select("entry_id, question_key, predicted_value")
+      .select("entry_id, question_key, predicted_value, normalized_value")
       .range(0, 99999);
 
   if (extraPredictionsError) {
@@ -359,7 +359,8 @@ export async function recalculateScoresAll() {
       continue;
     }
 
-    const predictedValue = normalizeExtraValue(pred.predicted_value);
+    // Usa normalized_value si el admin lo ha editado; si no, lo recalcula.
+    const predictedValue = (pred as any).normalized_value?.trim() || normalizeExtraValue(pred.predicted_value);
     const officialValue = normalizeExtraValue(official.official_value);
     const isExact = predictedValue === officialValue;
     const points = isExact ? getExtraQuestionPoints(pred.question_key) : 0;
