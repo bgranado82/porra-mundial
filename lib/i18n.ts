@@ -547,10 +547,10 @@ stats: {
   potTotal: "Bote total",
   prizes: "Premios",
 
-  firstPlace: "1º",
-  secondPlace: "2º",
-  thirdPlace: "3º",
-  lastPlace: "Último",
+  firstPlace: "1er Premio",
+  secondPlace: "2º Premio",
+  thirdPlace: "3er Premio",
+  lastPlace: "Último (devolución)",
 
   championFavorites: "Favoritos al campeón",
   poolInsights: "Insights del pool",
@@ -845,10 +845,10 @@ stats: {
   potTotal: "Prize pot",
   prizes: "Prizes",
 
-  firstPlace: "1st",
-  secondPlace: "2nd",
-  thirdPlace: "3rd",
-  lastPlace: "Last place",
+  firstPlace: "1st Prize",
+  secondPlace: "2nd Prize",
+  thirdPlace: "3rd Prize",
+  lastPlace: "Last place (refund)",
 
   championFavorites: "Champion favorites",
   poolInsights: "Pool insights",
@@ -866,8 +866,8 @@ stats: {
   noAnswer: "No answer",
   insightsTitle: "Pool insights",
   hallOfFame: "Hall of Fame",
-  hallOfFameEuro: "Euro",
-  hallOfFameWorldCup: "World Cup",
+  hallOfFameEuro: "Euros",
+  hallOfFameWorldCup: "World Cups",
 },
 banquillo: {
   eyebrow: "Community",
@@ -1142,10 +1142,10 @@ stats: {
   potTotal: "Bolo total",
   prizes: "Prêmios",
 
-  firstPlace: "1º",
-  secondPlace: "2º",
-  thirdPlace: "3º",
-  lastPlace: "Último",
+  firstPlace: "1º Prêmio",
+  secondPlace: "2º Prêmio",
+  thirdPlace: "3º Prêmio",
+  lastPlace: "Último (devolução)",
 
   championFavorites: "Favoritos ao título",
   poolInsights: "Insights do bolão",
@@ -1163,8 +1163,8 @@ stats: {
   noAnswer: "Sem resposta",
   insightsTitle: "Insights do bolão",
   hallOfFame: "Quadro de Honra",
-  hallOfFameEuro: "Euro",
-  hallOfFameWorldCup: "Copa do Mundo",
+  hallOfFameEuro: "Euros",
+  hallOfFameWorldCup: "Mundiais",
 },
 banquillo: {
   eyebrow: "Comunidade",
