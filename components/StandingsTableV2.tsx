@@ -662,8 +662,8 @@ function DesktopRow({
         {numCell(row.extra_points?.first_goal_scorer_spain ?? 0)}
         {numCell(row.extra_points?.golden_boot ?? 0)}
         {numCell(row.extra_points?.golden_ball ?? 0)}
-        {numCell(row.extra_points?.golden_glove ?? 0)}
         {numCell(row.extra_points?.best_young_player ?? 0)}
+        {numCell(row.extra_points?.golden_glove ?? 0)}
         {numCell(row.extra_points?.top_spanish_scorer ?? 0)}
         {/* TOTAL con heatmap por posición */}
         <td className={`border-l-2 border-[var(--iberdrola-green)]/20 px-1 py-2.5 text-center tabular-nums ${totalHeatClass}`}>
@@ -817,8 +817,8 @@ function MobileCard({
             { icon: "🥇⚽🇪🇸", pts: ep.first_goal_scorer_spain ?? 0 },
             { icon: "👟✨", pts: ep.golden_boot ?? 0 },
             { icon: "🏆🌟", pts: ep.golden_ball ?? 0 },
-            { icon: "🧤🥇", pts: ep.golden_glove ?? 0 },
             { icon: "🧒🔥", pts: ep.best_young_player ?? 0 },
+            { icon: "🧤🥇", pts: ep.golden_glove ?? 0 },
             { icon: "🎯", pts: ep.top_spanish_scorer ?? 0 },
           ].filter((x) => x.pts > 0);
           if (items.length === 0) return null;
