@@ -57,7 +57,7 @@ export async function GET(req: Request) {
       supabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").in("entry_id", entryIds).range(0, 99999),
       supabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").in("entry_id", entryIds).range(0, 99999),
       supabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").in("entry_id", entryIds).range(0, 99999),
-      supabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value").in("entry_id", entryIds).range(0, 99999),
+      supabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value, normalized_value").in("entry_id", entryIds).range(0, 99999),
     ]);
 
     if (groupPredictionsError) return NextResponse.json({ error: groupPredictionsError.message }, { status: 500 });

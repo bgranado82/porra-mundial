@@ -123,7 +123,7 @@ export type CalculateStandingsInput = {
   officialKnockoutRows: OfficialKnockoutRow[];
   tiebreakRows: EntryTiebreakRow[];
   adminTiebreakRows: AdminTiebreakRow[];
-  allExtraPredictions: { entry_id: string; question_key: string; predicted_value: string | null }[];
+  allExtraPredictions: { entry_id: string; question_key: string; predicted_value: string | null; normalized_value?: string | null }[];
   officialExtraRows: { question_key: string; official_value: string }[];
 };
 
@@ -208,11 +208,16 @@ export function calculateStandings(input: CalculateStandingsInput): StandingRow[
   });
 
   // Extra predictions by entry
-  const extraPredByEntry = new Map<string, Record<string, string>>();
+  // Guardamos { predicted, normalized } para que la comparación use
+  // normalized_value si el admin lo ha editado, igual que recalculateScoresAll.
+  const extraPredByEntry = new Map<string, Record<string, { predicted: string; normalized: string | null }>>();
   allExtraPredictions.forEach((row) => {
     const entryId = String(row.entry_id);
     if (!extraPredByEntry.has(entryId)) extraPredByEntry.set(entryId, {});
-    extraPredByEntry.get(entryId)![row.question_key] = row.predicted_value ?? "";
+    extraPredByEntry.get(entryId)![row.question_key] = {
+      predicted: row.predicted_value ?? "",
+      normalized: row.normalized_value?.trim() || null,
+    };
   });
 
   // Initialize grouped map
@@ -300,10 +305,13 @@ export function calculateStandings(input: CalculateStandingsInput): StandingRow[
   grouped.forEach((current) => {
     const entryPreds = extraPredByEntry.get(current.entry_id) ?? {};
     EXTRA_QUESTIONS.forEach((question) => {
-      const predicted = entryPreds[question.key] ?? "";
+      const pred = entryPreds[question.key];
+      const predicted = pred?.predicted ?? "";
       const official = officialExtraMap[question.key] ?? "";
       if (!official || !predicted) return;
-      const isHit = normalizeExtraValue(predicted) === normalizeExtraValue(official);
+      // Usa normalized_value si el admin lo editó; si no, normaliza el predicted_value.
+      const normalizedPredicted = pred?.normalized ?? normalizeExtraValue(predicted);
+      const isHit = normalizedPredicted === normalizeExtraValue(official);
       if (!isHit) return;
       const pts = (scoreSettings[question.pointsKey as keyof typeof scoreSettings] as number) ?? 0;
       current.extra_points[question.key as keyof ExtraPointsMap] += pts;
