@@ -48,6 +48,7 @@ type OfficialGroupRow = {
 type ExtraPredictionRow = {
   question_key: string;
   predicted_value: string | null;
+  normalized_value: string | null;
 };
 
 type EntryTiebreakRow = {
@@ -353,6 +354,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
   const [loadingStandings, setLoadingStandings] = useState(false);
   const [lastStandingsUpdate, setLastStandingsUpdate] = useState<string | null>(null);
   const [extraPredictions, setExtraPredictions] = useState<Record<string, string>>({});
+  const [extraNormalized, setExtraNormalized] = useState<Record<string, string | null>>({});
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "paid">("pending");
   const [officialExtraResults, setOfficialExtraResults] = useState<Record<string, string>>({});
   const [userTiebreaks, setUserTiebreaks] = useState<UserTiebreakMap>({});
@@ -506,7 +508,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
         const { data: extraRows, error: extraError } = await supabase
           .from("entry_extra_predictions")
-          .select("question_key, predicted_value")
+          .select("question_key, predicted_value, normalized_value")
           .eq("entry_id", entry.id);
 
         if (extraError) console.error(extraError);
@@ -524,10 +526,13 @@ export default function PredictionsPageClient({ entryId }: Props) {
         setOfficialExtraResults(officialExtraMap);
 
         const nextExtraPredictions: Record<string, string> = {};
+        const nextExtraNormalized: Record<string, string | null> = {};
         (extraRows as ExtraPredictionRow[] | null)?.forEach((row) => {
           nextExtraPredictions[row.question_key] = row.predicted_value ?? "";
+          nextExtraNormalized[row.question_key] = row.normalized_value?.trim() || null;
         });
         setExtraPredictions(nextExtraPredictions);
+        setExtraNormalized(nextExtraNormalized);
 
         const { data: tiebreakRows, error: tiebreakError } = await supabase
           .from("entry_tiebreaks")
@@ -1075,9 +1080,12 @@ export default function PredictionsPageClient({ entryId }: Props) {
       const currentValue = extraPredictions[question.key] ?? "";
       const officialValue = officialExtraResults[question.key] ?? "";
 
+      // Usa normalized_value si el admin lo ha editado; si no, normaliza el predicted_value.
+      const normalizedPredicted = extraNormalized[question.key] ?? normalizeExtraValue(currentValue);
+
       const isCorrect =
         !!officialValue &&
-        normalizeExtraValue(currentValue) === normalizeExtraValue(officialValue);
+        normalizedPredicted === normalizeExtraValue(officialValue);
 
       const points =
         (scoreSettings[
@@ -1086,7 +1094,7 @@ export default function PredictionsPageClient({ entryId }: Props) {
 
       return sum + (isCorrect ? points : 0);
     }, 0);
-  }, [extraPredictions, officialExtraResults]);
+  }, [extraPredictions, extraNormalized, officialExtraResults]);
 
   async function handleSaveEntry() {
     if (!activeEntryId) {
@@ -1977,9 +1985,10 @@ export default function PredictionsPageClient({ entryId }: Props) {
                     question.pointsKey as keyof typeof scoreSettings
                   ] as number) ?? 0;
 
+                const normalizedPredicted = extraNormalized[question.key] ?? normalizeExtraValue(currentValue);
                 const isCorrect =
                   !!officialValue &&
-                  normalizeExtraValue(currentValue) === normalizeExtraValue(officialValue);
+                  normalizedPredicted === normalizeExtraValue(officialValue);
 
                 return (
                   <div
