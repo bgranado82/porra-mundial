@@ -58,6 +58,12 @@ const items = [
     icon: "💬",
     aliases: ["/admin/quote"],
   },
+  {
+    href: "/admin/normalize",
+    label: "Normalizar extras",
+    icon: "🔤",
+    aliases: ["/admin/normalize"],
+  },
 ];
 
 export default function AdminNav() {
