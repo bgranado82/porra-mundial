@@ -132,6 +132,9 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient();
   const poolId = request.nextUrl.searchParams.get("poolId");
 const locale = request.nextUrl.searchParams.get("locale") ?? "es";
+// full=1 → devuelve TODOS los picks de cada extra (vista admin para normalizar).
+// Sin el parámetro, se mantiene el comportamiento de la vista pública (top 8).
+const full = request.nextUrl.searchParams.get("full") === "1";
 const text = getText(locale);
 
   if (!poolId) {
@@ -314,14 +317,17 @@ const text = getText(locale);
             percentage: participants > 0 ? (noAnswerCount / participants) * 100 : 0,
           }] : []),
         ]
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 8);
+          .sort((a, b) => b.count - a.count);
+
+        // Vista pública: top 8. Vista admin (full): todos los picks distintos,
+        // para poder detectar qué variantes hay que normalizar.
+        const trimmedItems = full ? items : items.slice(0, 8);
 
         return {
           questionKey: question.key,
           title: EXTRA_LABELS[question.key]?.[locale as "es" | "en" | "pt"] ?? question.key,
           total: participants,
-          items,
+          items: trimmedItems,
         };
       });
 

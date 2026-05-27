@@ -231,7 +231,9 @@ function ExtraBarCard({ title, icon, flagImg, items }: {
   title: string; icon?: string; flagImg?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
 }) {
-  const visible = items.filter((i) => i.key !== NO_ANSWER_KEY).slice(0, 6);
+  const real = items.filter((i) => i.key !== NO_ANSWER_KEY);
+  // El gráfico muestra el top 6 (legibilidad). La lista de abajo muestra TODOS.
+  const visible = real.slice(0, 6);
   return (
     <div className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <SectionHeader title={title} icon={icon} flagImg={flagImg} />
@@ -239,21 +241,24 @@ function ExtraBarCard({ title, icon, flagImg, items }: {
         {visible.length === 0 ? (
           <div className="py-6 text-center text-sm text-[var(--iberdrola-forest)]/45">Sin datos</div>
         ) : (
-          <div className="h-44">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={visible} layout="vertical" margin={{ left: 0, right: 24, top: 4, bottom: 4 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
-                <XAxis type="number" hide />
-                <YAxis type="category" dataKey="label" width={90} tick={{ fontSize: 11, fill: "#1a3a2a" }} tickLine={false} axisLine={false} />
-                <Tooltip formatter={(v) => [`${v} votos`]} />
-                <Bar dataKey="count" radius={[0, 6, 6, 0]}>
-                  {visible.map((_, idx) => (
-                    <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <>
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={visible} layout="vertical" margin={{ left: 0, right: 24, top: 4, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
+                  <XAxis type="number" hide />
+                  <YAxis type="category" dataKey="label" width={90} tick={{ fontSize: 11, fill: "#1a3a2a" }} tickLine={false} axisLine={false} />
+                  <Tooltip formatter={(v) => [`${v} votos`]} />
+                  <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+                    {visible.map((_, idx) => (
+                      <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            <FullPickList items={real} />
+          </>
         )}
       </div>
     </div>
@@ -265,7 +270,9 @@ function ExtraListCard({ title, icon, items }: {
   title: string; icon?: string;
   items: Array<{ key: string; label: string; count: number; percentage: number }>;
 }) {
-  const visible = items.filter((i) => i.key !== NO_ANSWER_KEY).slice(0, 8);
+  const real = items.filter((i) => i.key !== NO_ANSWER_KEY);
+  // Admin: top 8 con barra de % + lista completa scrollable debajo para normalizar.
+  const visible = real.slice(0, 8);
   return (
     <div className="rounded-3xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
       <SectionHeader title={title} icon={icon} />
@@ -287,6 +294,53 @@ function ExtraListCard({ title, icon, items }: {
           ))
         )}
       </div>
+      {real.length > 0 && <div className="px-2 pb-2"><FullPickList items={real} /></div>}
+    </div>
+  );
+}
+
+// ─── FULL PICK LIST (solo admin) ──────────────────────────────────────────────
+// Lista de TODAS las variantes escritas para un extra, ordenadas por nº de votos.
+// Resalta los picks con 1 voto: son los candidatos típicos a normalizar.
+function FullPickList({ items }: {
+  items: Array<{ key: string; label: string; count: number; percentage: number }>;
+}) {
+  const [open, setOpen] = useState(false);
+  const distinct = items.length;
+  const toNormalize = items.filter((i) => i.count === 1).length;
+
+  if (distinct <= 6) return null; // si caben en el gráfico, no hace falta la lista
+
+  return (
+    <div className="mt-3 border-t border-gray-100 pt-3">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between rounded-xl bg-[var(--iberdrola-green-light)] px-3 py-2 text-left"
+      >
+        <span className="text-xs font-bold text-[var(--iberdrola-forest)]">
+          Ver las {distinct} variantes
+          {toNormalize > 0 && (
+            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-700">
+              {toNormalize} con 1 voto
+            </span>
+          )}
+        </span>
+        <span className="text-xs font-black text-[var(--iberdrola-forest)]/50">{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div className="mt-2 max-h-64 space-y-0.5 overflow-y-auto rounded-xl border border-gray-100 p-1">
+          {items.map((item) => (
+            <div
+              key={item.key}
+              className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 ${item.count === 1 ? "bg-amber-50" : ""}`}
+            >
+              <span className="flex-1 truncate text-xs font-medium text-[var(--iberdrola-forest)]">{item.label}</span>
+              <span className="shrink-0 text-[10px] text-[var(--iberdrola-forest)]/45">{item.percentage.toFixed(1)}%</span>
+              <span className="w-7 shrink-0 text-right text-xs font-black text-[var(--iberdrola-forest)] tabular-nums">{item.count}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -321,7 +375,7 @@ export default function AdminStatsPageClient() {
     if (!poolId) { setData(null); return; }
     setLoading(true);
     setError(null);
-    fetch(`/api/pool-stats?poolId=${poolId}&locale=es`, { cache: "no-store" })
+    fetch(`/api/pool-stats?poolId=${poolId}&locale=es&full=1`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => { setError("Error cargando estadísticas"); setLoading(false); });
