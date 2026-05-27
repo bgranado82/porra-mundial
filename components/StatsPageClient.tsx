@@ -66,8 +66,15 @@ const NO_ANSWER_KEY = "__no_answer__";
 const NO_ANSWER_COLOR = "#D1D5DB";
 
 
-function formatEuro(value: number) {
-  return `${value.toLocaleString("es-ES")}€`;
+// Mapea el locale interno (es/en/pt) al BCP-47 que entiende toLocaleString.
+const EURO_LOCALE_MAP: Record<Locale, string> = {
+  es: "es-ES",
+  en: "en-US",
+  pt: "pt-PT",
+};
+
+function formatEuro(value: number, locale: Locale = "es") {
+  return `${value.toLocaleString(EURO_LOCALE_MAP[locale])}€`;
 }
 
 // ─── KPI CARD ────────────────────────────────────────────────────────────────
@@ -142,6 +149,7 @@ function PrizesCard({
   thirdPrize,
   potTotal,
   labels,
+  locale,
 }: {
   loserRefund: number;
   firstPrize: number;
@@ -156,6 +164,7 @@ function PrizesCard({
     lastPlace: string;
     potTotal: string;
   };
+  locale: Locale;
 }) {
   const prizes = [
     { emoji: "🥇", label: labels.firstPlace, amount: firstPrize, highlight: true },
@@ -171,8 +180,8 @@ function PrizesCard({
         <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-white/40">
           {labels.potTotal}
         </div>
-        <div className="text-5xl font-black tracking-tight text-white leading-none">
-          {formatEuro(potTotal)}
+        <div className="text-5xl font-black text-white leading-none">
+          {formatEuro(potTotal, locale)}
         </div>
         <div className="mt-5 w-full space-y-2.5">
           {prizes.map((p) => (
@@ -181,7 +190,7 @@ function PrizesCard({
                 {p.emoji} {p.label}
               </span>
               <span className={`text-sm font-black ${p.highlight ? "text-[var(--iberdrola-green)]" : "text-white/70"}`}>
-                {formatEuro(p.amount)}
+                {formatEuro(p.amount, locale)}
               </span>
             </div>
           ))}
@@ -1017,6 +1026,7 @@ export default function StatsPageClient() {
               lastPlace: t.stats.lastPlace,
               potTotal: t.stats.potTotal,
             }}
+            locale={locale}
           />
         </section>
 

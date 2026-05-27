@@ -120,7 +120,7 @@ function PrizesCard({ loserRefund, firstPrize, secondPrize, thirdPrize, potTotal
       <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[var(--iberdrola-green)] opacity-15 blur-2xl" />
       <div className="relative flex flex-col items-center text-center">
         <div className="mb-1 text-[11px] font-bold uppercase tracking-widest text-white/40">Bote total</div>
-        <div className="text-5xl font-black tracking-tight text-white leading-none">{formatEuro(potTotal)}</div>
+        <div className="text-5xl font-black text-white leading-none">{formatEuro(potTotal)}</div>
         <div className="mt-5 w-full space-y-2.5">
           {prizes.map((p) => (
             <div key={p.label} className="flex items-center justify-between">
