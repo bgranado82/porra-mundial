@@ -5,16 +5,10 @@ import { usePathname } from "next/navigation";
 
 const items = [
   {
-    href: "/admin",
-    label: "Inicio",
-    icon: "🏠",
-    aliases: ["/admin"],
-  },
-  {
     href: "/admin/results",
     label: "Resultados",
     icon: "⚽",
-    aliases: ["/admin/results"],
+    aliases: ["/admin/results", "/admin"],
   },
   {
     href: "/admin/standings",

@@ -1,8 +1,8 @@
-
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import AdminHomePageClient from "@/components/AdminHomePageClient";
 
+// /admin no tiene página propia: al entrar, el admin va directo a resultados
+// (que es donde se trabaja a diario). Si no es admin, vuelve a la home pública.
 export default async function AdminPage() {
   const supabase = await createClient();
 
@@ -20,13 +20,9 @@ export default async function AdminPage() {
     .eq("id", user.id)
     .single();
 
-  if (error || !profile) {
+  if (error || !profile || profile.role !== "admin") {
     redirect("/");
   }
 
-  if (profile.role !== "admin") {
-    redirect("/");
-  }
-
-  return <AdminHomePageClient />;
+  redirect("/admin/results");
 }
