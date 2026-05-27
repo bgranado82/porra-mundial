@@ -66,15 +66,21 @@ const NO_ANSWER_KEY = "__no_answer__";
 const NO_ANSWER_COLOR = "#D1D5DB";
 
 
-// Mapea el locale interno (es/en/pt) al BCP-47 que entiende toLocaleString.
-const EURO_LOCALE_MAP: Record<Locale, string> = {
-  es: "es-ES",
-  en: "en-US",
-  pt: "pt-PT",
+// Separadores de millares por idioma. No usamos toLocaleString directamente
+// porque navegadores modernos devuelven NBSP (U+00A0) como separador en es-ES
+// y pt-PT, que con font-black grande se ve como si no hubiera separador.
+// Aquí forzamos un carácter visible: "." en ES/PT y "," en EN.
+const THOUSANDS_SEPARATOR: Record<Locale, string> = {
+  es: ".",
+  en: ",",
+  pt: ".",
 };
 
 function formatEuro(value: number, locale: Locale = "es") {
-  return `${value.toLocaleString(EURO_LOCALE_MAP[locale])}€`;
+  const formatted = Math.round(value)
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, THOUSANDS_SEPARATOR[locale]);
+  return `${formatted}€`;
 }
 
 // ─── KPI CARD ────────────────────────────────────────────────────────────────

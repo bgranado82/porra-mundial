@@ -60,8 +60,11 @@ const CHART_COLORS = ["#00A443", "#6CC24A", "#009CDE", "#78BE20", "#A7D46F", "#B
 const NO_ANSWER_KEY = "__no_answer__";
 const NO_ANSWER_COLOR = "#D1D5DB";
 
+// Admin solo va en español. Separador "." explícito para evitar el NBSP que
+// toLocaleString("es-ES") inserta y que con font-black grande se ve invisible.
 function formatEuro(value: number) {
-  return `${value.toLocaleString("es-ES")}€`;
+  const formatted = Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `${formatted}€`;
 }
 
 // ─── KPI CARD ────────────────────────────────────────────────────────────────
