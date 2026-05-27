@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { teams } from "@/data/teams";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
+import { getPoolPrizeConfig } from "@/data/settings";
 
 type ExtraPredictionRow = {
   question_key: string;
@@ -152,6 +153,8 @@ const text = getText(locale);
       return NextResponse.json({ error: "Pool not found" }, { status: 404 });
     }
 
+    const prizeConfig = getPoolPrizeConfig(pool.id);
+
     const { data: entries, error: entriesError } = await supabase
       .from("entries")
       .select("id, pool_id, status, country")
@@ -176,13 +179,28 @@ const text = getText(locale);
         .filter((value): value is string => !!value)
     ).size;
 
-    const buyIn = 10;
+    const buyIn = prizeConfig.buyIn;
     const potTotal = participants * buyIn;
-    const loserRefund = participants > 0 ? buyIn : 0;
+
+    // Devolución al último según la config del pool.
+    let loserRefund = 0;
+    if (participants > 0) {
+      if (prizeConfig.loserRefund.kind === "fixed") {
+        loserRefund = prizeConfig.loserRefund.amount;
+      } else if (prizeConfig.loserRefund.kind === "percent") {
+        loserRefund = Math.round((buyIn * prizeConfig.loserRefund.percent) / 100);
+      }
+      // No puede devolverse más de lo que hay en el bote.
+      loserRefund = Math.min(loserRefund, potTotal);
+    }
+
     const remainingPot = Math.max(potTotal - loserRefund, 0);
-    const firstPrize = Math.round(remainingPot * 0.6);
-    const secondPrize = Math.round(remainingPot * 0.3);
-    const thirdPrize = remainingPot - firstPrize - secondPrize;
+    const firstPrize = Math.round((remainingPot * prizeConfig.firstPct) / 100);
+    const secondPrize = Math.round((remainingPot * prizeConfig.secondPct) / 100);
+    // El 3º absorbe el redondeo solo si su % > 0; si es 0, queda en 0.
+    const thirdPrize = prizeConfig.thirdPct > 0
+      ? Math.max(remainingPot - firstPrize - secondPrize, 0)
+      : 0;
 
     let championItems: Array<{
       key: string;
