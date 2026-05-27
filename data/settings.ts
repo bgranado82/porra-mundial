@@ -95,7 +95,7 @@ export const POOL_PRIZE_CONFIG: PoolPrizeConfig[] = [
   },
   {
     poolId: "eb10020a-f258-49c7-be10-b0350b35d54a",
-    buyIn: 100,
+    buyIn: 1000,
     loserRefund: { kind: "percent", percent: 100 },
     firstPct: 50,
     secondPct: 20,
