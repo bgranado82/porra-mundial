@@ -162,7 +162,7 @@ function PrizesCard({
     { emoji: "🥈", label: labels.secondPlace, amount: secondPrize, highlight: false },
     { emoji: "🥉", label: labels.thirdPlace, amount: thirdPrize, highlight: false },
     { emoji: "🔙", label: labels.lastPlace, amount: loserRefund, highlight: false },
-  ];
+  ].filter((p) => p.amount > 0);
 
   return (
     <div className="relative flex flex-col justify-center overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] p-6 shadow-md">

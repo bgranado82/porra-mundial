@@ -114,7 +114,7 @@ function PrizesCard({ loserRefund, firstPrize, secondPrize, thirdPrize, potTotal
     { emoji: "🥈", label: "2º Premio", amount: secondPrize, highlight: false },
     { emoji: "🥉", label: "3er Premio", amount: thirdPrize, highlight: false },
     { emoji: "🔙", label: "Último (devolución)", amount: loserRefund, highlight: false },
-  ];
+  ].filter((p) => p.amount > 0);
   return (
     <div className="relative flex flex-col justify-center overflow-hidden rounded-3xl bg-[var(--iberdrola-forest)] p-6 shadow-md">
       <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[var(--iberdrola-green)] opacity-15 blur-2xl" />

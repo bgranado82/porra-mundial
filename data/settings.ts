@@ -36,7 +36,87 @@ export const HALL_OF_FAME: PoolHallOfFame[] = [
       { tournament: "World Cup", year: 2014, winner: "Gaizka Agirre",          country: "es" },
     ],
   },
+   {
+    poolId: "83e5cadf-a48a-462f-843a-c64e4de80d90",
+    entries: [
+      { tournament: "World Cup", year: 2026, winner: " ",          country: "es" },
+    ],
+  },
 ];
+
+// ─── CONFIGURACIÓN DE PREMIOS POR POOL ────────────────────────────────────────
+// Cada pool puede tener su propio buy-in, devolución al último y reparto entre
+// los premios. Mismo patrón que HALL_OF_FAME: si un pool no aparece aquí,
+// se usa POOL_PRIZE_CONFIG_FALLBACK.
+//
+// Reparto: primero se le devuelve al último (loserRefund), y de lo que queda
+// (potTotal − loserRefund) se reparten los porcentajes a 1º/2º/3º.
+// Los % NO tienen que sumar 100: lo que sobre simplemente no se reparte; lo
+// que falte para llegar a 100 también queda fuera. Pon a 0 los puestos que
+// no quieras premiar (ej. thirdPct: 0 → no hay 3er premio).
+//
+// loserRefund admite dos formas:
+//   { kind: "fixed",   amount: 5  }  → 5€ fijos al último
+//   { kind: "percent", percent: 100 } → 100% del buy-in (comportamiento histórico)
+//   { kind: "none" }                 → no hay devolución al último
+
+export type LoserRefundConfig =
+  | { kind: "fixed";   amount: number }
+  | { kind: "percent"; percent: number }
+  | { kind: "none" };
+
+export type PoolPrizeConfig = {
+  poolId: string;
+  buyIn: number;
+  loserRefund: LoserRefundConfig;
+  firstPct: number;   // % del bote restante (tras devolución) para el 1º
+  secondPct: number;  // % para el 2º (0 si no hay)
+  thirdPct: number;   // % para el 3º (0 si no hay)
+};
+
+export const POOL_PRIZE_CONFIG_FALLBACK: Omit<PoolPrizeConfig, "poolId"> = {
+  buyIn: 10,
+  loserRefund: { kind: "percent", percent: 100 },
+  firstPct: 60,
+  secondPct: 30,
+  thirdPct: 10,
+};
+
+export const POOL_PRIZE_CONFIG: PoolPrizeConfig[] = [
+  // EJEMPLO: rellena con la config real de cada pool. Si dejas un pool
+  // fuera, se aplica POOL_PRIZE_CONFIG_FALLBACK automáticamente.
+  {
+    poolId: "04b85239-6f0e-436d-8afe-1395bca0f8f0",
+    buyIn: 10,
+    loserRefund: { kind: "percent", percent: 100 },
+    firstPct: 60,
+    secondPct: 30,
+    thirdPct: 10,
+  },
+  {
+    poolId: "eb10020a-f258-49c7-be10-b0350b35d54a",
+    buyIn: 100,
+    loserRefund: { kind: "percent", percent: 100 },
+    firstPct: 50,
+    secondPct: 20,
+    thirdPct: 30,
+  },
+  {
+    poolId: "83e5cadf-a48a-462f-843a-c64e4de80d90",
+    buyIn: 5,
+    loserRefund: { kind: "percent", percent: 100 },
+    firstPct: 60,
+    secondPct: 30,
+    thirdPct: 10,
+  },
+];
+
+export function getPoolPrizeConfig(poolId: string): Omit<PoolPrizeConfig, "poolId"> {
+  const found = POOL_PRIZE_CONFIG.find((c) => c.poolId === poolId);
+  if (!found) return POOL_PRIZE_CONFIG_FALLBACK;
+  const { poolId: _omit, ...rest } = found;
+  return rest;
+}
 
 export const scoreSettings: ScoreSettings = {
   exactScore: 34,
