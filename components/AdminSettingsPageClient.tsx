@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import AdminNav from "@/components/AdminNav";
+import AdminPageHeader from "@/components/AdminPageHeader";
+import AdminSectionHeader from "@/components/AdminSectionHeader";
 
 type VisibilityMode = "hidden" | "after_submit" | "always";
 
@@ -128,36 +129,28 @@ export default function AdminSettingsPageClient() {
 
   return (
     <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
-      <main className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6">
+      <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
 
-      {/* Header */}
-      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
-        <div className="p-4 sm:p-6">
-          <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
-            Administración · Ibe World Cup 2026
-          </div>
-          <h1 className="mt-1.5 text-2xl font-black text-[var(--iberdrola-forest)]">Configuración</h1>
-          <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/65">
-            Controla el acceso, registro, deadlines y visibilidad de cada pool
-          </p>
-          <div className="mt-4"><AdminNav /></div>
-        </div>
-      </section>
+        <AdminPageHeader
+          title="Configuración"
+          icon="⚙️"
+          description="Controla el acceso, registro, deadlines y visibilidad de cada pool."
+        />
 
-      {/* Selector de pool */}
-      {pools.length > 1 ? (
-        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
-          <div className="p-4">
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Pool a configurar</label>
-            <select
-              value={selectedPoolId}
-              onChange={(e) => setSelectedPoolId(e.target.value)}
-              className="w-full max-w-sm rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--iberdrola-forest)]"
-            >
-              {pools.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </div>
-        </section>
+        {/* Selector de pool */}
+        {pools.length > 1 ? (
+          <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+            <AdminSectionHeader title="Pool a configurar" />
+            <div className="p-4 sm:p-6">
+              <select
+                value={selectedPoolId}
+                onChange={(e) => setSelectedPoolId(e.target.value)}
+                className="w-full sm:w-80 rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--iberdrola-forest)]"
+              >
+                {pools.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+          </section>
       ) : null}
 
       {/* Acceso y registro */}

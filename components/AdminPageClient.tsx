@@ -20,7 +20,7 @@ import {
   KnockoutBracketMatch,
 } from "@/types";
 import AdminKnockoutBracket from "@/components/AdminKnockoutBracket";
-import AdminNav from "@/components/AdminNav";
+import AdminPageHeader from "@/components/AdminPageHeader";
 
 
 type GroupResultMap = Record<
@@ -578,47 +578,39 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
   }
 
   return (
-    <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-4 sm:px-6">
-      <section className="rounded-3xl border border-[var(--iberdrola-sky)] bg-white shadow-sm">
-        <div className="p-4 sm:p-5">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-            <div>
-              <div className="text-sm font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">
-                Administración
-              </div>
-              <h1 className="text-2xl font-black text-[var(--iberdrola-forest)]">
-                Resultados oficiales
-              </h1>
-              <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/70">
-                Fase de grupos · Knockout · Desempates · Preguntas extra
-              </p>
-              <div className="mt-4"><AdminNav /></div>
-            </div>
+    <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
+    <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <div className="flex flex-wrap gap-2">
-                {selectedPoolId ? (
-                  <Link
-                    href={
-                      selectedPoolSlug
-                        ? `/standings?poolId=${selectedPoolId}&poolSlug=${selectedPoolSlug}`
-                        : `/standings?poolId=${selectedPoolId}`
-                    }
-                    className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-3 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
-                  >
-                    Ver clasificación del pool
-                  </Link>
-                ) : null}
-              </div>
+      <AdminPageHeader
+        title="Resultados oficiales"
+        icon="⚽"
+        description="Fase de grupos · Knockout · Desempates · Preguntas extra."
+      />
 
-              <button
-                onClick={handleSaveAllResults}
-                disabled={savingAll}
-                className="rounded-2xl bg-[var(--iberdrola-green)] px-5 py-3 text-sm font-bold text-white shadow-sm disabled:opacity-50"
+      {/* Acciones del pool */}
+      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+        <div className="p-4 sm:p-6">
+          <div className="flex flex-wrap items-center gap-2">
+            {selectedPoolId ? (
+              <Link
+                href={
+                  selectedPoolSlug
+                    ? `/standings?poolId=${selectedPoolId}&poolSlug=${selectedPoolSlug}`
+                    : `/standings?poolId=${selectedPoolId}`
+                }
+                className="inline-flex items-center justify-center rounded-2xl border border-[var(--iberdrola-green)] bg-white px-4 py-2.5 text-sm font-bold text-[var(--iberdrola-forest)] shadow-sm transition hover:bg-[var(--iberdrola-sand)]"
               >
-                {savingAll ? "Guardando..." : "Guardar y recalcular todo"}
-              </button>
-            </div>
+                Ver clasificación del pool
+              </Link>
+            ) : null}
+
+            <button
+              onClick={handleSaveAllResults}
+              disabled={savingAll}
+              className="ml-auto rounded-2xl bg-[var(--iberdrola-green)] px-5 py-2.5 text-sm font-bold text-white shadow-sm disabled:opacity-50"
+            >
+              {savingAll ? "Guardando..." : "💾 Guardar y recalcular todo"}
+            </button>
           </div>
 
           {message ? (
@@ -848,5 +840,6 @@ const tiebreakRows: AdminTiebreakRow[] = Object.entries(adminTiebreaks).map(
         </div>
       </section>
     </main>
+    </div>
   );
 }

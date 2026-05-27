@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import AdminNav from "@/components/AdminNav";
+import AdminPageHeader from "@/components/AdminPageHeader";
 
 type PoolRow = {
   id: string;
@@ -307,22 +307,11 @@ export default function AdminParticipantsPageClient() {
       <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
 
       {/* ── Header ── */}
-      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
-        <div className="p-4 sm:p-6">
-          <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
-            Administración · Ibe World Cup 2026
-          </div>
-          <h1 className="mt-1.5 text-2xl font-black text-[var(--iberdrola-forest)]">
-            Participantes y pagos
-          </h1>
-          <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/65">
-            Gestiona pagos, estados de envío y reapertura de porras
-          </p>
-          <div className="mt-4">
-            <AdminNav />
-          </div>
-        </div>
-      </section>
+      <AdminPageHeader
+        title="Participantes y pagos"
+        icon="👥"
+        description="Gestiona pagos, estados de envío y reapertura de porras."
+      />
 
       {/* ── Filtros y stats ── */}
       <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
-import AdminNav from "@/components/AdminNav";
+import AdminPageHeader from "@/components/AdminPageHeader";
+import AdminSectionHeader from "@/components/AdminSectionHeader";
 
 type Quote = { es: string; en: string; pt: string };
 
@@ -61,34 +62,20 @@ export default function AdminQuotePageClient() {
 
   return (
     <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
-      <main className="mx-auto max-w-2xl space-y-6 px-4 py-6 sm:px-6">
+      <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
 
-      {/* Header */}
-      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
-        <div className="p-4 sm:p-6">
-          <div className="text-xs font-bold uppercase tracking-widest text-[var(--iberdrola-forest)]/45">
-            Administración · Ibe World Cup 2026
-          </div>
-          <h1 className="mt-1.5 text-2xl font-black text-[var(--iberdrola-forest)]">
-            💬 Quote of the day
-          </h1>
-          <p className="mt-1 text-sm text-[var(--iberdrola-forest)]/65">
-            La frase aparece en la página de clasificación para todos los usuarios
-          </p>
-          <div className="mt-4">
-            <AdminNav />
-          </div>
-        </div>
-      </section>
+        <AdminPageHeader
+          title="Frase del día"
+          icon="💬"
+          description="La frase aparece en la página de clasificación para todos los usuarios."
+        />
 
-      {/* Formulario */}
-      <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
-        <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-          <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Frase actual</h2>
-          <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">
-            Escríbela en los tres idiomas. Si dejas los campos vacíos no se mostrará ninguna frase.
-          </p>
-        </div>
+        {/* Formulario */}
+        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+          <AdminSectionHeader
+            title="Frase actual"
+            subtitle="Escríbela en los tres idiomas. Si dejas los campos vacíos no se mostrará ninguna frase."
+          />
 
         {loading ? (
           <div className="space-y-3 p-4">
@@ -118,13 +105,10 @@ export default function AdminQuotePageClient() {
       {/* Preview */}
       {(quote.es || quote.en || quote.pt) ? (
         <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
-          <div className="border-b border-[var(--iberdrola-sky)] px-4 py-3">
-            <h2 className="text-base font-black text-[var(--iberdrola-forest)]">Vista previa</h2>
-            <p className="mt-0.5 text-xs text-[var(--iberdrola-forest)]/55">Así se verá en la clasificación</p>
-          </div>
+          <AdminSectionHeader title="Vista previa" subtitle="Así se verá en la clasificación" />
           <div className="px-5 py-4">
             <div className="text-[11px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55 mb-2">
-              Quote of the day
+              Frase del día
             </div>
             <div className="text-center text-[var(--iberdrola-forest)] space-y-1">
               {quote.es ? (

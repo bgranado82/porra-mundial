@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import AdminNav from "@/components/AdminNav";
+import AdminPageHeader from "@/components/AdminPageHeader";
+import AdminSectionHeader from "@/components/AdminSectionHeader";
 import AdminPoolSelector from "@/components/AdminPoolSelector";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 
@@ -60,55 +61,62 @@ export default function AdminExplorerPageClient() {
 
   return (
     <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6">
-        <AdminNav />
+      <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
 
-        <div className="mt-6 rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white p-5 shadow-sm">
-          <h1 className="mb-4 text-lg font-bold text-[var(--iberdrola-forest)]">🔎 Explorador de predicciones</h1>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Pool</label>
-              <AdminPoolSelector selectedPoolId={poolId} onChange={(id) => { setPoolId(id); setSearchValue(""); }} className="w-full" />
+        <AdminPageHeader
+          title="Explorador"
+          icon="🔎"
+          description="Filtra por campeón o extra y mira quién ha puesto cada respuesta."
+        />
+
+        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+          <AdminSectionHeader title="Filtros" />
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Pool</label>
+                <AdminPoolSelector selectedPoolId={poolId} onChange={(id) => { setPoolId(id); setSearchValue(""); }} className="w-full" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Categoría</label>
+                <select
+                  value={filterKey}
+                  onChange={(e: { target: { value: string } }) => { setFilterKey(e.target.value); setSearchValue(""); }}
+                  className="w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--iberdrola-forest)] focus:outline-none focus:ring-2 focus:ring-[var(--iberdrola-green)]"
+                >
+                  {FILTER_KEYS.map((key) => (
+                    <option key={key} value={key}>{QUESTION_LABELS[key] ?? key}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Categoría</label>
-              <select
-                value={filterKey}
-                onChange={(e: { target: { value: string } }) => { setFilterKey(e.target.value); setSearchValue(""); }}
-                className="w-full rounded-2xl border border-[var(--iberdrola-green)] bg-white px-3 py-2.5 text-sm font-semibold text-[var(--iberdrola-forest)] focus:outline-none focus:ring-2 focus:ring-[var(--iberdrola-green)]"
-              >
-                {FILTER_KEYS.map((key) => (
-                  <option key={key} value={key}>{QUESTION_LABELS[key] ?? key}</option>
-                ))}
-              </select>
-            </div>
+            {poolId && total > 0 && !loading && (
+              <p className="mt-3 text-sm text-[var(--iberdrola-forest)]/60">
+                <span className="font-semibold text-[var(--iberdrola-forest)]">{total}</span> respuestas ·{" "}
+                <span className="font-semibold text-[var(--iberdrola-forest)]">{results.length}</span> valores distintos
+              </p>
+            )}
           </div>
-          {poolId && total > 0 && !loading && (
-            <p className="mt-3 text-sm text-[var(--iberdrola-forest)]/60">
-              <span className="font-semibold text-[var(--iberdrola-forest)]">{total}</span> respuestas ·{" "}
-              <span className="font-semibold text-[var(--iberdrola-forest)]">{results.length}</span> valores distintos
-            </p>
-          )}
-        </div>
+        </section>
 
         {!poolId && (
-          <div className="mt-8 rounded-2xl border border-dashed border-[var(--iberdrola-green-mid)] bg-white p-12 text-center text-sm text-[var(--iberdrola-forest)]/50">
+          <div className="rounded-2xl border border-dashed border-[var(--iberdrola-green-mid)] bg-white p-12 text-center text-sm text-[var(--iberdrola-forest)]/50">
             Selecciona un pool para explorar predicciones
           </div>
         )}
 
         {loading && (
-          <div className="mt-8 flex justify-center">
+          <div className="flex justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--iberdrola-green)] border-t-transparent" />
           </div>
         )}
 
         {error && (
-          <div className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</div>
+          <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</div>
         )}
 
         {!loading && poolId && results.length > 0 && (
-          <div className="mt-6 space-y-3">
+          <div className="space-y-3">
             <input
               type="text"
               value={searchValue}
@@ -154,11 +162,12 @@ export default function AdminExplorerPageClient() {
         )}
 
         {!loading && poolId && results.length === 0 && !error && (
-          <div className="mt-8 rounded-2xl border border-dashed border-[var(--iberdrola-green-mid)] bg-white p-12 text-center text-sm text-[var(--iberdrola-forest)]/50">
+          <div className="rounded-2xl border border-dashed border-[var(--iberdrola-green-mid)] bg-white p-12 text-center text-sm text-[var(--iberdrola-forest)]/50">
             Nadie ha respondido esta pregunta en este pool todavía
           </div>
         )}
-      </div>
+
+      </main>
     </div>
   );
 }

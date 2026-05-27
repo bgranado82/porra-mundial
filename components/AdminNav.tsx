@@ -54,13 +54,13 @@ const items = [
   },
   {
     href: "/admin/quote",
-    label: "Quote of the day",
+    label: "Frase del día",
     icon: "💬",
     aliases: ["/admin/quote"],
   },
   {
     href: "/admin/normalize",
-    label: "Normalizar extras",
+    label: "Normalizar",
     icon: "🔤",
     aliases: ["/admin/normalize"],
   },

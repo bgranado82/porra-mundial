@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import AdminNav from "@/components/AdminNav";
+import AdminPageHeader from "@/components/AdminPageHeader";
+import AdminSectionHeader from "@/components/AdminSectionHeader";
 import AdminPoolSelector, { useAdminPools } from "@/components/AdminPoolSelector";
 
 export default function AdminTransparencyPageClient() {
@@ -18,30 +19,39 @@ export default function AdminTransparencyPageClient() {
 
   return (
     <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <AdminNav />
+      <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
 
-        <div className="mt-6 rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white p-5 shadow-sm">
-          <h1 className="mb-4 text-lg font-bold text-[var(--iberdrola-forest)]">🔍 Predicciones</h1>
-          <div className="flex items-end gap-3">
-            <div className="flex-1 sm:max-w-xs">
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Pool</label>
-              <AdminPoolSelector selectedPoolId={poolId} onChange={setPoolId} className="w-full" />
+        <AdminPageHeader
+          title="Predicciones por participante"
+          icon="🔍"
+          description="Abre la página pública de transparencia de cualquier pool."
+        />
+
+        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+          <AdminSectionHeader title="Pool" />
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <div className="flex-1 sm:max-w-sm">
+                <AdminPoolSelector selectedPoolId={poolId} onChange={setPoolId} className="w-full" />
+              </div>
+              <button
+                onClick={handleGo}
+                disabled={!poolId}
+                className="rounded-2xl bg-[var(--iberdrola-green)] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-40"
+              >
+                Abrir →
+              </button>
             </div>
-            <button
-              onClick={handleGo}
-              disabled={!poolId}
-              className="rounded-2xl bg-[var(--iberdrola-green)] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-40"
-            >
-              Ver →
-            </button>
           </div>
-        </div>
+        </section>
 
-        <div className="mt-8 rounded-2xl border border-dashed border-[var(--iberdrola-green-mid)] bg-white p-12 text-center text-[var(--iberdrola-forest)]/50">
-          Selecciona un pool y pulsa "Ver" para abrir la página de predicciones
-        </div>
-      </div>
+        {!poolId && (
+          <div className="rounded-2xl border border-dashed border-[var(--iberdrola-green-mid)] bg-white p-12 text-center text-[var(--iberdrola-forest)]/50">
+            Selecciona un pool para continuar
+          </div>
+        )}
+
+      </main>
     </div>
   );
 }

@@ -13,7 +13,8 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import AdminNav from "@/components/AdminNav";
+import AdminPageHeader from "@/components/AdminPageHeader";
+import AdminSectionHeader from "@/components/AdminSectionHeader";
 import AdminPoolSelector from "@/components/AdminPoolSelector";
 import { teams } from "@/data/teams";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
@@ -392,17 +393,21 @@ export default function AdminStatsPageClient() {
 
   return (
     <div className="min-h-screen bg-[var(--iberdrola-green-light)]">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 space-y-6">
-        <AdminNav />
+      <main className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
 
-        {/* Pool selector */}
-        <div className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white p-5 shadow-sm">
-          <h1 className="mb-4 text-lg font-bold text-[var(--iberdrola-forest)]">📈 Estadísticas</h1>
-          <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/55">Pool</label>
-            <AdminPoolSelector selectedPoolId={poolId} onChange={setPoolId} className="w-full sm:w-72" />
+        <AdminPageHeader
+          title="Estadísticas"
+          icon="📈"
+          description="Bote, premios, favoritos al campeón y popularidad de los extras de un pool."
+        />
+
+        {/* Selector de pool */}
+        <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
+          <AdminSectionHeader title="Pool" />
+          <div className="p-4 sm:p-6">
+            <AdminPoolSelector selectedPoolId={poolId} onChange={setPoolId} className="w-full sm:w-80" />
           </div>
-        </div>
+        </section>
 
         {/* Empty state */}
         {!poolId && (
@@ -512,7 +517,7 @@ export default function AdminStatsPageClient() {
             <InsightsCard items={data.insights} />
           </>
         )}
-      </div>
+      </main>
     </div>
   );
 }
