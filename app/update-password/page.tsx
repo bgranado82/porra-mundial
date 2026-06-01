@@ -73,7 +73,7 @@ export default function UpdatePasswordPage() {
       // El listener todavía no ha establecido la sesión. Esto es muy raro
       // (el usuario ha pulsado el botón antes de que React procese el hash)
       // pero protegemos al usuario de ver el "Auth session missing" críptico.
-      setMessage(t.updatePasswordInvalidLink ?? "Enlace no válido o caducado. Solicita uno nuevo.");
+      setMessage(t.updatePasswordInvalidLink);
       return;
     }
 
@@ -148,7 +148,7 @@ export default function UpdatePasswordPage() {
               {loading
                 ? t.loading
                 : !ready
-                  ? (t.updatePasswordVerifying ?? "Verificando enlace…")
+                  ? t.updatePasswordVerifying
                   : t.updatePasswordButton}
             </button>
 

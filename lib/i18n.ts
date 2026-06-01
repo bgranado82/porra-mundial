@@ -226,6 +226,8 @@ updatePasswordTitle: string;
 newPassword: string;
 updatePasswordButton: string;
 updatePasswordSuccess: string;
+updatePasswordVerifying: string;
+updatePasswordInvalidLink: string;
 stats: {
   sectionEyebrow: string;
   title: string;
@@ -532,6 +534,8 @@ updatePasswordTitle: "Nueva contraseña",
 newPassword: "Nueva contraseña",
 updatePasswordButton: "Cambiar contraseña",
 updatePasswordSuccess: "Contraseña actualizada correctamente.",
+updatePasswordVerifying: "Verificando enlace…",
+updatePasswordInvalidLink: "Enlace no válido o caducado. Solicita uno nuevo.",
 stats: {
   sectionEyebrow: "Estadísticas del pool",
   title: "Porra Mundial 2026",
@@ -830,6 +834,8 @@ updatePasswordTitle: "New password",
 newPassword: "New password",
 updatePasswordButton: "Change password",
 updatePasswordSuccess: "Password updated successfully.",
+updatePasswordVerifying: "Verifying link…",
+updatePasswordInvalidLink: "Invalid or expired link. Please request a new one.",
 stats: {
   sectionEyebrow: "Pool stats",
   title: "World Cup Pool 2026",
@@ -1127,6 +1133,8 @@ updatePasswordTitle: "Nova senha",
 newPassword: "Nova senha",
 updatePasswordButton: "Alterar senha",
 updatePasswordSuccess: "Senha atualizada com sucesso.",
+updatePasswordVerifying: "A verificar ligação…",
+updatePasswordInvalidLink: "Ligação inválida ou expirada. Solicite uma nova.",
 stats: {
   sectionEyebrow: "Estatísticas do bolão",
   title: "Bolão Mundial 2026",
