@@ -224,6 +224,7 @@ function ChampionDonutCard({ items }: { items: StatsResponse["champion"]["items"
               <span className="w-12 text-right text-xs text-[var(--iberdrola-forest)]/30">{noAnswer.percentage.toFixed(1)}%</span>
             </div>
           )}
+          <FullPickList items={items.filter((i) => i.key !== NO_ANSWER_KEY)} />
         </div>
       </div>
     </div>
@@ -289,6 +290,7 @@ function ExtraListCard({ title, icon, items }: {
               <span className="w-5 shrink-0 text-center text-xs font-black text-[var(--iberdrola-forest)]/30">{idx + 1}</span>
               <span className="flex-1 text-sm font-semibold text-[var(--iberdrola-forest)] truncate">{item.label}</span>
               <div className="flex items-center gap-2">
+                <span className="shrink-0 text-xs font-black tabular-nums text-[var(--iberdrola-forest)]/70">{item.count}</span>
                 <div className="h-1.5 w-16 overflow-hidden rounded-full bg-gray-100">
                   <div className="h-full rounded-full bg-[var(--iberdrola-green)]" style={{ width: `${Math.min(item.percentage, 100)}%` }} />
                 </div>
