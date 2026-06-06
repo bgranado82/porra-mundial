@@ -9,6 +9,30 @@ import { buildRealKnockoutBracket } from "@/lib/realKnockout";
 import { calculateKnockoutScore } from "@/lib/knockoutScoring";
 import { KnockoutPredictionMap, Match } from "@/types";
 
+const PAGE = 1000;
+
+async function fetchAll(
+  supabase: any,
+  table: string,
+  selectFields: string
+): Promise<any[]> {
+  const results: any[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(selectFields)
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    results.push(...data);
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
+  return results;
+}
+
+
 function normalize(value: string | null | undefined) {
   return String(value ?? "").trim().toLowerCase();
 }
@@ -109,14 +133,7 @@ export async function recalculateScoresAll() {
     throw deleteError;
   }
 
-  const { data: entries, error: entriesError } = await supabase
-    .from("entries")
-    .select("id, pool_id")
-    .range(0, 99999);
-
-  if (entriesError) {
-    throw entriesError;
-  }
+  const entries = await fetchAll(supabase, "entries", "id, pool_id");
 
   const { data: officialResults, error: officialError } = await supabase
     .from("official_group_results")
@@ -126,24 +143,9 @@ export async function recalculateScoresAll() {
     throw officialError;
   }
 
-  const { data: predictions, error: predictionsError } = await supabase
-    .from("entry_group_predictions")
-    .select("entry_id, match_id, home_goals, away_goals")
-    .range(0, 99999);
+  const predictions = await fetchAll(supabase, "entry_group_predictions", "entry_id, match_id, home_goals, away_goals");
 
-  if (predictionsError) {
-    throw predictionsError;
-  }
-
-  const { data: extraPredictions, error: extraPredictionsError } =
-    await supabase
-      .from("entry_extra_predictions")
-      .select("entry_id, question_key, predicted_value, normalized_value")
-      .range(0, 99999);
-
-  if (extraPredictionsError) {
-    throw extraPredictionsError;
-  }
+  const extraPredictions = await fetchAll(supabase, "entry_extra_predictions", "entry_id, question_key, predicted_value, normalized_value");
 
   const { data: officialExtraResults, error: officialExtraResultsError } =
     await supabase
@@ -154,15 +156,7 @@ export async function recalculateScoresAll() {
     throw officialExtraResultsError;
   }
 
-  const { data: knockoutPredictions, error: knockoutPredictionsError } =
-    await supabase
-      .from("entry_knockout_predictions")
-      .select("entry_id, match_id, picked_team_id")
-      .range(0, 99999);
-
-  if (knockoutPredictionsError) {
-    throw knockoutPredictionsError;
-  }
+  const knockoutPredictions = await fetchAll(supabase, "entry_knockout_predictions", "entry_id, match_id, picked_team_id");
 
   const { data: officialKnockoutResults, error: officialKnockoutResultsError } =
     await supabase
@@ -193,14 +187,7 @@ export async function recalculateScoresAll() {
     }
   });
 
-  const { data: entryTiebreakRows, error: entryTiebreaksError } = await supabase
-    .from("entry_tiebreaks")
-    .select("entry_id, scope, scope_value, team_id, priority")
-    .range(0, 99999);
-
-  if (entryTiebreaksError) {
-    throw entryTiebreaksError;
-  }
+  const entryTiebreakRows = await fetchAll(supabase, "entry_tiebreaks", "entry_id, scope, scope_value, team_id, priority");
 
   // Build per-entry tiebreak maps
   const entryTiebreaksByEntryId = new Map<string, { group: Record<string, Record<string, number>>; thirdPlace: Record<string, number> }>();
