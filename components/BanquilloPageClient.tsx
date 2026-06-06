@@ -109,8 +109,6 @@ function ReactionPills({
         const count = reactions.counts[reactionKey] ?? 0;
         const isMine = reactions.mine.includes(reactionKey);
         const isLoading = reactingKey === `${commentId}-${reactionKey}`;
-        // Ocultar reacciones con 0 que no son mías
-        if (count === 0 && !isMine) return null;
         return (
           <button
             key={reactionKey}
@@ -132,20 +130,6 @@ function ReactionPills({
           </button>
         );
       })}
-      {/* Botón + para añadir reacciones nuevas */}
-      <button
-        type="button"
-        className="inline-flex items-center gap-1 rounded-full border border-dashed border-gray-300 px-2.5 py-1 text-xs text-[var(--iberdrola-forest)]/40 transition hover:border-[var(--iberdrola-green)]/50 hover:text-[var(--iberdrola-forest)]/70"
-        onClick={() => {
-          // Cicla por las reacciones que aún no tiene el usuario
-          const missing = (Object.keys(REACTION_META) as ReactionKey[]).find(
-            (k) => !reactions.mine.includes(k)
-          );
-          if (missing) onReact(commentId, missing);
-        }}
-      >
-        + 😊
-      </button>
     </div>
   );
 }
