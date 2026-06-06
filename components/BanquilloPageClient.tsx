@@ -394,8 +394,12 @@ export default function BanquilloPageClient() {
     try {
       reset ? setLoading(true) : setLoadingMore(true);
       setError("");
-      const currentOffset = reset ? 0 : offset;
-      const res = await fetch(`/api/banquillo?poolId=${poolId}&offset=${currentOffset}`, { cache: "no-store" });
+      // En reset cargamos los 30 más recientes (offset=0).
+      // En "cargar más" pasamos el offset actual para traer los anteriores.
+      const url = reset
+        ? `/api/banquillo?poolId=${poolId}&offset=0`
+        : `/api/banquillo?poolId=${poolId}&offset=${offset}`;
+      const res = await fetch(url, { cache: "no-store" });
       const json = (await res.json()) as Partial<BanquilloResponse> & { error?: string };
       if (!res.ok) throw new Error(json.error || t.banquillo.errorLoading);
       setTotal(json.total ?? 0);
@@ -404,7 +408,6 @@ export default function BanquilloPageClient() {
         setComments(json.comments ?? []);
         setOffset(PAGE_SIZE);
       } else {
-        // Cargar más: añadir al final (son más antiguos)
         setComments((prev) => [...prev, ...(json.comments ?? [])]);
         setOffset((prev) => prev + PAGE_SIZE);
       }
