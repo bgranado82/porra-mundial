@@ -39,8 +39,6 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const poolId = request.nextUrl.searchParams.get("poolId");
-    const offsetParam = request.nextUrl.searchParams.get("offset");
-    const offset = Math.max(0, parseInt(offsetParam ?? "0", 10));
 
     if (!poolId) {
       return NextResponse.json({ error: "Missing poolId" }, { status: 400 });
@@ -74,7 +72,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Total de comentarios padre (sin borrados) para controlar paginación en cliente
+    // Si se pasa offset, modo paginado (solo lo usa BanquilloPageClient).
+    // Sin offset, comportamiento original: devuelve todos los comentarios.
+    // Así PredictionsPageClient y StatsPageClient siguen funcionando sin cambios.
+    const offsetParam = request.nextUrl.searchParams.get("offset");
+    const paginated = offsetParam !== null;
+    const offset = paginated ? Math.max(0, parseInt(offsetParam, 10)) : 0;
+
+    // Total de comentarios padre para paginación y para el contador de no leídos
     const { count: totalCount } = await supabase
       .from("pool_comments")
       .select("*", { count: "exact", head: true })
@@ -82,56 +87,39 @@ export async function GET(request: NextRequest) {
       .eq("is_deleted", false)
       .is("parent_comment_id", null);
 
-    // Comentarios padre paginados (los más recientes primero)
-    const { data: parentData, error: parentError } = await supabase
+    // Query de comentarios: paginada o completa según el modo
+    let parentQuery = supabase
       .from("pool_comments")
       .select("*")
       .eq("pool_id", poolId)
       .eq("is_deleted", false)
-      .is("parent_comment_id", null)
-      .order("created_at", { ascending: false })
-      .range(offset, offset + PAGE_SIZE - 1)
+      .order("created_at", { ascending: false });
+
+    if (paginated) {
+      parentQuery = parentQuery.range(offset, offset + PAGE_SIZE - 1);
+    }
+
+    const { data: commentsData, error: commentsError } = await parentQuery
       .returns<PoolCommentRow[]>();
 
-    if (parentError) {
-      console.error("banquillo GET parentError:", parentError);
+    if (commentsError) {
+      console.error("banquillo GET commentsError:", commentsError);
       return NextResponse.json(
         { error: "Error loading comments" },
         { status: 500 }
       );
     }
 
-    const parents = parentData ?? [];
-    const parentIds = parents.map((row) => row.id);
+    const rows = commentsData ?? [];
+    const commentIds = rows.map((row) => row.id);
 
-    // Replies de los comentarios padre cargados
-    let replyRows: PoolCommentRow[] = [];
-    if (parentIds.length > 0) {
-      const { data: repliesData, error: repliesError } = await supabase
-        .from("pool_comments")
-        .select("*")
-        .eq("pool_id", poolId)
-        .eq("is_deleted", false)
-        .in("parent_comment_id", parentIds)
-        .order("created_at", { ascending: true })
-        .returns<PoolCommentRow[]>();
-
-      if (repliesError) {
-        console.error("banquillo GET repliesError:", repliesError);
-      } else {
-        replyRows = repliesData ?? [];
-      }
-    }
-
-    // Reacciones de todos los comentarios visibles (padres + replies)
-    const allIds = [...parentIds, ...replyRows.map((r) => r.id)];
     let reactionRows: PoolCommentReactionRow[] = [];
 
-    if (allIds.length > 0) {
+    if (commentIds.length > 0) {
       const { data: reactionsData, error: reactionsError } = await supabase
         .from("pool_comment_reactions")
         .select("*")
-        .in("comment_id", allIds)
+        .in("comment_id", commentIds)
         .returns<PoolCommentReactionRow[]>();
 
       if (reactionsError) {
@@ -143,16 +131,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Agrupar replies por padre
+    const parents = rows.filter((row) => !row.parent_comment_id);
+    const replies = rows.filter((row) => !!row.parent_comment_id);
+
     const repliesByParent: Record<string, PoolCommentRow[]> = {};
-    for (const reply of replyRows) {
+    for (const reply of replies) {
       const pid = reply.parent_comment_id;
       if (!pid) continue;
       if (!repliesByParent[pid]) repliesByParent[pid] = [];
       repliesByParent[pid].push(reply);
     }
 
-    // Agrupar reacciones por comentario
     const reactionsByComment: Record<string, PoolCommentReactionRow[]> = {};
     for (const reaction of reactionRows) {
       if (!reactionsByComment[reaction.comment_id]) {
@@ -177,7 +166,9 @@ export async function GET(request: NextRequest) {
 
     const comments = parents.map((comment) => ({
       ...comment,
-      replies: (repliesByParent[comment.id] ?? []).map((reply) => ({
+      replies: (repliesByParent[comment.id] ?? []).sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      ).map((reply) => ({
         ...reply,
         reactions: buildReactions(reply.id),
       })),
@@ -189,7 +180,7 @@ export async function GET(request: NextRequest) {
       total: totalCount ?? 0,
       offset,
       pageSize: PAGE_SIZE,
-      currentUserId: user.id,
+      currentUserId: userId,
     });
   } catch (error) {
     console.error("banquillo GET unexpected:", error);

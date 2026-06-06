@@ -267,41 +267,41 @@ stats: {
   hallOfFameEuro: string;
   hallOfFameWorldCup: string;
 };
-  banquillo: {
-    eyebrow: string;
-    title: string;
-    subtitle: string;
-    newPostTitle: string;
-    newCommentPlaceholder: string;
-    replyPlaceholder: string;
-    send: string;
-    sendReply: string;
-    sending: string;
-    reply: string;
-    cancel: string;
-    noMessages: string;
-    loading: string;
-    reload: string;
-    errorLoading: string;
-    writeSomething: string;
-    writeReplySomething: string;
-    responses: string;
-    pinned: string;
-    showReplies: string;
-    hideReplies: string;
-    backToPrediction: string;
-    backToStats: string;
-    participantFallback: string;
-    reactionError: string;
-    postCommentError: string;
-    postReplyError: string;
-    missingPoolId: string;
-    deleteComment: string;
-    deleteError: string;
-    loadMore: string;
-    yourMessage: string;
-    charCount: string;
-  };
+banquillo: {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+  newPostTitle: string;
+  newCommentPlaceholder: string;
+  replyPlaceholder: string;
+  send: string;
+  sendReply: string;
+  sending: string;
+  reply: string;
+  cancel: string;
+  noMessages: string;
+  loading: string;
+  reload: string;
+  errorLoading: string;
+  writeSomething: string;
+  writeReplySomething: string;
+  responses: string;
+  pinned: string;
+  showReplies: string;
+  hideReplies: string;
+  backToPrediction: string;
+  backToStats: string;
+  participantFallback: string;
+  reactionError: string;
+  postCommentError: string;
+  postReplyError: string;
+  missingPoolId: string;
+  deleteComment: string;
+  deleteError: string;
+  loadMore: string;
+  yourMessage: string;
+  charCount: string;
+};
 };
 
 
@@ -614,7 +614,8 @@ banquillo: {
   loadMore: "Ver mensajes anteriores",
   yourMessage: "Tú",
   charCount: "caracteres restantes",
-  },
+},
+
   },
 
   en: {
@@ -918,7 +919,8 @@ banquillo: {
   loadMore: "Load older messages",
   yourMessage: "You",
   charCount: "characters left",
-  },
+},
+
   },
 
   pt: {
@@ -1221,6 +1223,7 @@ banquillo: {
   loadMore: "Ver mensagens anteriores",
   yourMessage: "Você",
   charCount: "caracteres restantes",
-  },
+},
+
   },
 };
