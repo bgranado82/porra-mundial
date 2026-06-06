@@ -262,16 +262,17 @@ function podiumRowClasses(position: number) {
   return "";
 }
 
-// Heatmap por puntos: todos los empatados tienen el mismo color.
-// ratio = points / maxPoints. Verde = más puntos, rojo = menos.
-function getRankHeatClass(points: number, maxPoints: number): string {
-  if (maxPoints <= 0) return "bg-green-50 text-green-900";
+// Heatmap por puntos: degradado continuo verde→rojo según ratio points/maxPoints.
+// Cada puntuación distinta tiene un color ligeramente distinto.
+function getRankHeatStyle(points: number, maxPoints: number): React.CSSProperties {
+  if (maxPoints <= 0) return { backgroundColor: "rgb(220,252,231)", color: "rgb(20,83,45)" };
   const ratio = points / maxPoints;
-  if (ratio >= 0.8) return "bg-green-100 text-green-900";
-  if (ratio >= 0.6) return "bg-lime-100 text-lime-900";
-  if (ratio >= 0.4) return "bg-yellow-100 text-yellow-900";
-  if (ratio >= 0.2) return "bg-orange-100 text-orange-900";
-  return "bg-red-100 text-red-900";
+  // Interpolación HSL: hue 120 (verde) → 0 (rojo), lightness fija 88%
+  const hue = Math.round(ratio * 120);
+  return {
+    backgroundColor: `hsl(${hue}, 70%, 88%)`,
+    color: `hsl(${hue}, 60%, 25%)`,
+  };
 }
 
 // ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────
@@ -597,7 +598,7 @@ function DesktopRow({
     </td>
   );
 
-  const totalHeatClass = getRankHeatClass(row.total_points, maxPoints);
+  const totalHeatStyle = getRankHeatStyle(row.total_points, maxPoints);
   // Fondo de medalla en top 3 (oro/plata/bronce) que prevalece sobre el isOwn
   const podiumBg = podiumRowClasses(row._displayPosition);
   const rowBgClass = podiumBg
@@ -666,7 +667,7 @@ function DesktopRow({
         {numCell(row.extra_points?.golden_glove ?? 0)}
         {numCell(row.extra_points?.top_spanish_scorer ?? 0)}
         {/* TOTAL con heatmap por posición */}
-        <td className={`border-l-2 border-[var(--iberdrola-green)]/20 px-1 py-2.5 text-center tabular-nums ${totalHeatClass}`}>
+        <td className="border-l-2 border-[var(--iberdrola-green)]/20 px-1 py-2.5 text-center tabular-nums" style={totalHeatStyle}>
           <span className="text-base font-black">
             {fmtPts(row.total_points, locale)}
           </span>
@@ -772,7 +773,7 @@ function MobileCard({
   const koValue =
     row.r32_points + row.r16_points + row.qf_points + row.sf_points +
     row.third_points + row.final_points + row.champion_points;
-  const totalHeatClass = getRankHeatClass(row.total_points, maxPoints);
+  const totalHeatStyle = getRankHeatStyle(row.total_points, maxPoints);
   const podiumBg = podiumRowClasses(row._displayPosition);
   const cardBgClass = podiumBg
     ? podiumBg
@@ -796,7 +797,7 @@ function MobileCard({
             </span>
           )}
         </div>
-        <div className={`shrink-0 rounded-md px-2 py-0.5 ${totalHeatClass}`}>
+        <div className="shrink-0 rounded-md px-2 py-0.5" style={totalHeatStyle}>
           <span className="text-base font-black tabular-nums">
             {fmtPts(row.total_points, locale)}
           </span>
