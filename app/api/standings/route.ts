@@ -10,6 +10,36 @@ type SnapshotRow = {
   captured_at: string | null;
 };
 
+// Supabase .in() tiene un límite práctico de ~100 elementos por llamada.
+// Con pools de 300+ participantes hay que hacer las queries en batches
+// y combinar los resultados para no perder predicciones.
+const CHUNK_SIZE = 100;
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
+  return chunks;
+}
+
+async function fetchInChunks<T>(
+  supabase: ReturnType<typeof createAdminClient>,
+  table: string,
+  selectFields: string,
+  idChunks: any[][]
+): Promise<{ data: T[]; error: any }> {
+  const results: T[] = [];
+  for (const chunk of idChunks) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(selectFields)
+      .in("entry_id", chunk)
+      .range(0, 99999);
+    if (error) return { data: [], error };
+    if (data) results.push(...(data as T[]));
+  }
+  return { data: results, error: null };
+}
+
 export async function GET(req: Request) {
   try {
     const supabase = createAdminClient();
@@ -47,6 +77,7 @@ export async function GET(req: Request) {
     if (snapshotsError) return NextResponse.json({ error: snapshotsError.message }, { status: 500 });
 
     const entryIds = (entries ?? []).map((e: any) => e.id);
+    const idChunks = chunkArray(entryIds, CHUNK_SIZE);
 
     const [
       { data: allGroupPredictions, error: groupPredictionsError },
@@ -54,10 +85,10 @@ export async function GET(req: Request) {
       { data: tiebreakRows, error: tiebreakError },
       { data: allExtraPredictions, error: extraPredictionsError },
     ] = await Promise.all([
-      supabase.from("entry_group_predictions").select("entry_id, match_id, home_goals, away_goals").in("entry_id", entryIds).range(0, 99999),
-      supabase.from("entry_knockout_predictions").select("entry_id, match_id, picked_team_id").in("entry_id", entryIds).range(0, 99999),
-      supabase.from("entry_tiebreaks").select("entry_id, scope, scope_value, team_id, priority").in("entry_id", entryIds).range(0, 99999),
-      supabase.from("entry_extra_predictions").select("entry_id, question_key, predicted_value, normalized_value").in("entry_id", entryIds).range(0, 99999),
+      fetchInChunks<any>(supabase, "entry_group_predictions", "entry_id, match_id, home_goals, away_goals", idChunks),
+      fetchInChunks<any>(supabase, "entry_knockout_predictions", "entry_id, match_id, picked_team_id", idChunks),
+      fetchInChunks<any>(supabase, "entry_tiebreaks", "entry_id, scope, scope_value, team_id, priority", idChunks),
+      fetchInChunks<any>(supabase, "entry_extra_predictions", "entry_id, question_key, predicted_value, normalized_value", idChunks),
     ]);
 
     if (groupPredictionsError) return NextResponse.json({ error: groupPredictionsError.message }, { status: 500 });
