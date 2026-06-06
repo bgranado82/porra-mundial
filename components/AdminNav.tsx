@@ -58,6 +58,12 @@ const items = [
     icon: "🔤",
     aliases: ["/admin/normalize"],
   },
+  {
+    href: "/admin/banquillo",
+    label: "La Grada",
+    icon: "💬",
+    aliases: ["/admin/banquillo"],
+  },
 ];
 
 export default function AdminNav() {
