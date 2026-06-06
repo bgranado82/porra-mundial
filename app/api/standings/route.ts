@@ -9,26 +9,68 @@ type SnapshotRow = {
   captured_at: string | null;
 };
 
-async function fetchAll<T>(
+const PAGE = 1000;
+
+async function fetchAllNoFilter(
+  supabase: ReturnType<typeof createAdminClient>,
+  table: string,
+  selectFields: string
+): Promise<any[]> {
+  const results: any[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from(table)
+      .select(selectFields)
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    results.push(...data);
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
+  return results;
+}
+
+async function fetchAllByPoolId(
   supabase: ReturnType<typeof createAdminClient>,
   table: string,
   selectFields: string,
-  filters?: Record<string, string>
-): Promise<T[]> {
-  const PAGE = 1000;
+  poolId: string
+): Promise<any[]> {
+  const results: any[] = [];
   let from = 0;
-  const results: T[] = [];
   while (true) {
-    let query = supabase.from(table).select(selectFields).range(from, from + PAGE - 1);
-    if (filters) {
-      for (const [key, value] of Object.entries(filters)) {
-        query = query.eq(key, value);
-      }
-    }
-    const { data, error } = await query;
+    const { data, error } = await supabase
+      .from(table)
+      .select(selectFields)
+      .eq("pool_id", poolId)
+      .range(from, from + PAGE - 1);
     if (error) throw error;
     if (!data || data.length === 0) break;
-    results.push(...(data as T[]));
+    results.push(...data);
+    if (data.length < PAGE) break;
+    from += PAGE;
+  }
+  return results;
+}
+
+async function fetchSubmittedEntries(
+  supabase: ReturnType<typeof createAdminClient>,
+  poolId: string
+): Promise<any[]> {
+  const results: any[] = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from("entries")
+      .select("id, name, email, company, country, pool_id")
+      .eq("pool_id", poolId)
+      .eq("status", "submitted")
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    results.push(...data);
     if (data.length < PAGE) break;
     from += PAGE;
   }
@@ -58,17 +100,17 @@ export async function GET(req: Request) {
       tiebreakRows,
       allExtraPredictions,
     ] = await Promise.all([
-      fetchAll(supabase, "entries", "id, name, email, company, country, pool_id", { pool_id: poolId, status: "submitted" }),
-      fetchAll(supabase, "entry_scores", "entry_id, pool_id, matchday, stage, points, is_exact, is_outcome", { pool_id: poolId }),
-      fetchAll(supabase, "official_group_results", "match_id, home_goals, away_goals"),
-      fetchAll(supabase, "official_knockout_results", "match_id, picked_team_id"),
-      fetchAll(supabase, "admin_tiebreaks", "scope, scope_value, team_id, priority"),
-      fetchAll(supabase, "official_extra_results", "question_key, official_value"),
-      fetchAll(supabase, "standings_snapshots", "entry_id, position, group_position, captured_at", { pool_id: poolId }),
-      fetchAll(supabase, "entry_group_predictions", "entry_id, match_id, home_goals, away_goals"),
-      fetchAll(supabase, "entry_knockout_predictions", "entry_id, match_id, picked_team_id"),
-      fetchAll(supabase, "entry_tiebreaks", "entry_id, scope, scope_value, team_id, priority"),
-      fetchAll(supabase, "entry_extra_predictions", "entry_id, question_key, predicted_value, normalized_value"),
+      fetchSubmittedEntries(supabase, poolId),
+      fetchAllByPoolId(supabase, "entry_scores", "entry_id, pool_id, matchday, stage, points, is_exact, is_outcome", poolId),
+      fetchAllNoFilter(supabase, "official_group_results", "match_id, home_goals, away_goals"),
+      fetchAllNoFilter(supabase, "official_knockout_results", "match_id, picked_team_id"),
+      fetchAllNoFilter(supabase, "admin_tiebreaks", "scope, scope_value, team_id, priority"),
+      fetchAllNoFilter(supabase, "official_extra_results", "question_key, official_value"),
+      fetchAllByPoolId(supabase, "standings_snapshots", "entry_id, position, group_position, captured_at", poolId),
+      fetchAllNoFilter(supabase, "entry_group_predictions", "entry_id, match_id, home_goals, away_goals"),
+      fetchAllNoFilter(supabase, "entry_knockout_predictions", "entry_id, match_id, picked_team_id"),
+      fetchAllNoFilter(supabase, "entry_tiebreaks", "entry_id, scope, scope_value, team_id, priority"),
+      fetchAllNoFilter(supabase, "entry_extra_predictions", "entry_id, question_key, predicted_value, normalized_value"),
     ]);
 
     const currentStandings = calculateStandings({
