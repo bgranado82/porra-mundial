@@ -269,6 +269,13 @@ export function calculateStandings(input: CalculateStandingsInput): StandingRow[
     groupPredByEntry.get(entryId)![row.match_id] = { homeGoals: row.home_goals, awayGoals: row.away_goals };
   });
 
+  // DEBUG TEMPORAL — borrar después
+  const adrianId = "6f0a13e0-4de8-42d8-a459-d37b5de5a535";
+  const adrianPreds = allGroupPredictions.filter(r => String(r.entry_id) === adrianId);
+  console.log("DEBUG ADRIAN allGroupPredictions:", adrianPreds.length, JSON.stringify(adrianPreds));
+  console.log("DEBUG ADRIAN groupPredByEntry:", JSON.stringify(groupPredByEntry.get(adrianId)));
+  console.log("DEBUG total allGroupPredictions:", allGroupPredictions.length);
+
   const groupMatches = initialMatches.filter((m) => m.stage === "group");
 
   grouped.forEach((current) => {
