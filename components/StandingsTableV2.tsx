@@ -262,15 +262,15 @@ function podiumRowClasses(position: number) {
   return "";
 }
 
-// Heatmap por posición (idéntico al componente antiguo): tramos discretos
-// según ratio (position-1)/(totalRows-1). Verde = arriba, rojo = abajo.
-function getRankHeatClass(position: number, totalRows: number): string {
-  if (totalRows <= 1) return "bg-green-50 text-green-900";
-  const ratio = (position - 1) / (totalRows - 1);
-  if (ratio <= 0.2) return "bg-green-100 text-green-900";
-  if (ratio <= 0.4) return "bg-lime-100 text-lime-900";
-  if (ratio <= 0.6) return "bg-yellow-100 text-yellow-900";
-  if (ratio <= 0.8) return "bg-orange-100 text-orange-900";
+// Heatmap por puntos: todos los empatados tienen el mismo color.
+// ratio = points / maxPoints. Verde = más puntos, rojo = menos.
+function getRankHeatClass(points: number, maxPoints: number): string {
+  if (maxPoints <= 0) return "bg-green-50 text-green-900";
+  const ratio = points / maxPoints;
+  if (ratio >= 0.8) return "bg-green-100 text-green-900";
+  if (ratio >= 0.6) return "bg-lime-100 text-lime-900";
+  if (ratio >= 0.4) return "bg-yellow-100 text-yellow-900";
+  if (ratio >= 0.2) return "bg-orange-100 text-orange-900";
   return "bg-red-100 text-red-900";
 }
 
@@ -303,7 +303,7 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
     }));
   }, [standings]);
 
-  const totalRows = sortedStandings.length;
+  const maxPoints = sortedStandings.length > 0 ? sortedStandings[0].total_points : 0;
 
   // Filtrar por búsqueda
   const filteredStandings = useMemo(() => {
@@ -447,7 +447,7 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
                 <DesktopRow
                   key={row.entry_id}
                   row={row}
-                  totalRows={totalRows}
+                  maxPoints={maxPoints}
                   sortedDays={sortedDays}
                   isExpanded={expandedIds.has(row.entry_id)}
                   onToggleExpand={() => toggleExpanded(row.entry_id)}
@@ -472,7 +472,7 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
             <MobileCard
               key={row.entry_id}
               row={row}
-              totalRows={totalRows}
+              maxPoints={maxPoints}
               sortedDays={sortedDays}
               isExpanded={expandedIds.has(row.entry_id)}
               onToggleExpand={() => toggleExpanded(row.entry_id)}
@@ -570,7 +570,7 @@ function PodiumRow({
 // Fila desktop: principal + (opcional) fila de detalle expandida con jornadas
 function DesktopRow({
   row,
-  totalRows,
+  maxPoints,
   sortedDays,
   isExpanded,
   onToggleExpand,
@@ -578,7 +578,7 @@ function DesktopRow({
   isOwn,
 }: {
   row: any;
-  totalRows: number;
+  maxPoints: number;
   sortedDays: number[];
   isExpanded: boolean;
   onToggleExpand: () => void;
@@ -597,7 +597,7 @@ function DesktopRow({
     </td>
   );
 
-  const totalHeatClass = getRankHeatClass(row._displayPosition, totalRows);
+  const totalHeatClass = getRankHeatClass(row.total_points, maxPoints);
   // Fondo de medalla en top 3 (oro/plata/bronce) que prevalece sobre el isOwn
   const podiumBg = podiumRowClasses(row._displayPosition);
   const rowBgClass = podiumBg
@@ -751,7 +751,7 @@ function KoStat({ label, hits, total }: { label: string; hits: number; total: nu
 // Card móvil
 function MobileCard({
   row,
-  totalRows,
+  maxPoints,
   sortedDays,
   isExpanded,
   onToggleExpand,
@@ -759,7 +759,7 @@ function MobileCard({
   isOwn,
 }: {
   row: any;
-  totalRows: number;
+  maxPoints: number;
   sortedDays: number[];
   isExpanded: boolean;
   onToggleExpand: () => void;
@@ -772,7 +772,7 @@ function MobileCard({
   const koValue =
     row.r32_points + row.r16_points + row.qf_points + row.sf_points +
     row.third_points + row.final_points + row.champion_points;
-  const totalHeatClass = getRankHeatClass(row._displayPosition, totalRows);
+  const totalHeatClass = getRankHeatClass(row.total_points, maxPoints);
   const podiumBg = podiumRowClasses(row._displayPosition);
   const cardBgClass = podiumBg
     ? podiumBg
