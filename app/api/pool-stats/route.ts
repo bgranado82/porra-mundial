@@ -5,6 +5,25 @@ import { teams } from "@/data/teams";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import { getPoolPrizeConfig } from "@/data/settings";
 
+const PAGE = 1000;
+async function fetchAllByIds(supabase: any, table: string, selectFields: string, entryIds: string[]): Promise<any[]> {
+  const results: any[] = [];
+  for (let i = 0; i < entryIds.length; i += PAGE) {
+    const chunk = entryIds.slice(i, i + PAGE);
+    let from = 0;
+    while (true) {
+      const { data, error } = await supabase.from(table).select(selectFields).in("entry_id", chunk).range(from, from + PAGE - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      results.push(...data);
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
+  }
+  return results;
+}
+
+
 type ExtraPredictionRow = {
   question_key: string;
   predicted_value: string | null;
@@ -228,18 +247,8 @@ const text = getText(locale);
     const insightsBuffer: string[] = [];
 
     if (entryIds.length > 0) {
-      const { data: koRows, error: koError } = await supabase
-        .from("entry_knockout_predictions")
-        .select("entry_id, match_id, picked_team_id")
-        .in("entry_id", entryIds)
-        .eq("match_id", "final-1");
-
-      if (koError) {
-        return NextResponse.json(
-          { error: "Error loading champion predictions" },
-          { status: 500 }
-        );
-      }
+      const koRowsAll = await fetchAllByIds(supabase, "entry_knockout_predictions", "entry_id, match_id, picked_team_id", entryIds);
+      const koRows = koRowsAll.filter((r: any) => r.match_id === "final-1");
 
       const teamMap = new Map(teams.map((team) => [team.id, team]));
       const championCounter = new Map<string, number>();
@@ -281,18 +290,7 @@ const text = getText(locale);
         });
       }
 
-      const { data: extraRows, error: extraError } = await supabase
-        .from("entry_extra_predictions")
-        .select("question_key, predicted_value, normalized_value, entry_id")
-        .in("entry_id", entryIds)
-        .returns<(ExtraPredictionRow & { entry_id: string })[]>();
-
-      if (extraError) {
-        return NextResponse.json(
-          { error: "Error loading extra predictions" },
-          { status: 500 }
-        );
-      }
+      const extraRows = await fetchAllByIds(supabase, "entry_extra_predictions", "question_key, predicted_value, normalized_value, entry_id", entryIds);
 
       extras = EXTRA_QUESTIONS.map((question) => {
         const rowsForQuestion = (extraRows ?? []).filter(

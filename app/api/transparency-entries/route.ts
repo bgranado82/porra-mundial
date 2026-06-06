@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
     .select("id, name, company, country")
     .eq("pool_id", poolId)
     .eq("status", "submitted")
-    .order("name", { ascending: true });
+    .order("name", { ascending: true })
+    .range(0, 9999);
 
   if (error) {
     console.error(error);

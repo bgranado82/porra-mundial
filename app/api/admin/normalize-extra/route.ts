@@ -3,6 +3,32 @@ import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient } from "@/utils/supabase/server";
 import { recalculateScoresAll } from "@/lib/recalculateScoresAll";
 
+const PAGE = 1000;
+async function fetchAllNormalize(supabase: any, table: string, selectFields: string, questionKey: string, entryIds: string[]): Promise<any[]> {
+  const results: any[] = [];
+  for (let i = 0; i < entryIds.length; i += PAGE) {
+    const chunk = entryIds.slice(i, i + PAGE);
+    let from = 0;
+    while (true) {
+      const { data, error } = await supabase
+        .from(table)
+        .select(selectFields)
+        .eq("question_key", questionKey)
+        .in("entry_id", chunk)
+        .not("predicted_value", "is", null)
+        .order("normalized_value", { ascending: true })
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      results.push(...data);
+      if (data.length < PAGE) break;
+      from += PAGE;
+    }
+  }
+  return results;
+}
+
+
 async function requireAdmin() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -43,15 +69,7 @@ export async function GET(request: NextRequest) {
   const entryMap = new Map((entries ?? []).map((e: any) => [e.id, e]));
 
   // 2. Predicciones extra para esa pregunta/entradas
-  const { data: preds, error: predsError } = await supabase
-    .from("entry_extra_predictions")
-    .select("entry_id, predicted_value, normalized_value")
-    .eq("question_key", questionKey)
-    .in("entry_id", entryIds)
-    .not("predicted_value", "is", null)
-    .order("normalized_value", { ascending: true });
-
-  if (predsError) return NextResponse.json({ error: predsError.message }, { status: 500 });
+  const preds = await fetchAllNormalize(supabase, "entry_extra_predictions", "entry_id, predicted_value, normalized_value", questionKey, entryIds);
 
   const rows = (preds ?? []).map((p: any) => {
     const entry = entryMap.get(p.entry_id) as any;
