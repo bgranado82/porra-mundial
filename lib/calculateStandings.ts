@@ -363,14 +363,14 @@ export function calculateStandings(input: CalculateStandingsInput): StandingRow[
 
     const predictions: PredictionMap = {};
     allGroupPredictions
-      .filter((row) => row.entry_id === entryId)
+      .filter((row) => String(row.entry_id) === entryId)
       .forEach((row) => {
         predictions[row.match_id] = { homeGoals: row.home_goals, awayGoals: row.away_goals };
       });
 
     const knockoutPredictions: KnockoutPredictionMap = {};
     allKnockoutPredictions
-      .filter((row) => row.entry_id === entryId)
+      .filter((row) => String(row.entry_id) === entryId)
       .forEach((row) => {
         knockoutPredictions[row.match_id] = row.picked_team_id;
       });
