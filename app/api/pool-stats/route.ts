@@ -472,7 +472,7 @@ const text = getText(locale);
       insights,
     };
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=300" } });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });

@@ -24,5 +24,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Error loading entries" }, { status: 500 });
   }
 
-  return NextResponse.json({ items: data ?? [] });
+  return NextResponse.json({ items: data ?? [] }, { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=300" } });
 }

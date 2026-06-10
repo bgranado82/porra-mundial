@@ -160,7 +160,7 @@ export async function GET(req: Request) {
       };
     });
 
-    return NextResponse.json({ days, standings, lastUpdate });
+    return NextResponse.json({ days, standings, lastUpdate }, { headers: { "Cache-Control": "s-maxage=60, stale-while-revalidate=300" } });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Error cargando clasificación" }, { status: 500 });
