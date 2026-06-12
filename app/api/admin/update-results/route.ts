@@ -88,6 +88,11 @@ export async function POST(req: Request) {
 
       const snapRows: any[] = [];
 
+      // Timestamp único del guardado: se escribe en TODAS las filas de TODOS
+      // los pools para que "Actualizado" refleje exactamente cuándo se pulsó
+      // el botón de guardar resultados (idéntico en todos los pools).
+      const capturedAt = new Date().toISOString();
+
       for (const pid of poolIds) {
         const resp = await fetch(`${origin}/api/standings?poolId=${pid}`, {
           headers: { cookie: req.headers.get("cookie") ?? "" },
@@ -116,6 +121,7 @@ export async function POST(req: Request) {
             position: row.position,
             total_points: row.total_points,
             group_position: groupPosMap.get(String(row.entry_id)) ?? row.position,
+            captured_at: capturedAt,
           });
         });
       }
