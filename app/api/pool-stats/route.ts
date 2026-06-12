@@ -292,6 +292,15 @@ const text = getText(locale);
 
       const extraRows = await fetchAllByIds(supabase, "entry_extra_predictions", "question_key, predicted_value, normalized_value, entry_id", entryIds);
 
+      // Items COMPLETOS de cada extra (sin recorte top 8), solo para el
+      // cálculo de insights. El gráfico público sigue usando trimmedItems.
+      const fullExtraItems = new Map<string, Array<{
+        key: string;
+        label: string;
+        count: number;
+        percentage: number;
+      }>>();
+
       extras = EXTRA_QUESTIONS.map((question) => {
         const rowsForQuestion = (extraRows ?? []).filter(
           (row) => row.question_key === question.key
@@ -338,6 +347,8 @@ const text = getText(locale);
         // Vista pública: top 8. Vista admin (full): todos los picks distintos,
         // para poder detectar qué variantes hay que normalizar.
         const trimmedItems = full ? items : items.slice(0, 8);
+
+        fullExtraItems.set(question.key, items);
 
         return {
           questionKey: question.key,
@@ -415,10 +426,12 @@ const text = getText(locale);
         }
       });
 
-      // Extra uniques
+      // Extra uniques — sobre los items COMPLETOS: los picks con 1 voto
+      // quedan al final de la lista ordenada y el recorte top 8 los excluía.
       extras.forEach((extra) => {
         const priority = extra.questionKey === "golden_ball" ? 1 : 2;
-        extra.items.forEach((item) => {
+        const allItems = fullExtraItems.get(extra.questionKey) ?? extra.items;
+        allItems.forEach((item) => {
           if (item.key !== "__no_answer__" && item.count === 1) {
             candidatesUnique.push({
               label: item.label,
@@ -436,11 +449,14 @@ const text = getText(locale);
       }
 
       // 4) Extra más comodín: el extra con MÁS opciones distintas votadas
+      //    Se cuenta sobre los items COMPLETOS: con la lista recortada el
+      //    máximo posible era 8 aunque hubiera 30 opciones reales.
       const extrasByDistinct = extras
         .map((extra) => ({
           title: extra.title,
           // contar opciones reales (sin __no_answer__) que tengan al menos 1 voto
-          distinctCount: extra.items.filter((item) => item.key !== "__no_answer__" && item.count > 0).length,
+          distinctCount: (fullExtraItems.get(extra.questionKey) ?? extra.items)
+            .filter((item) => item.key !== "__no_answer__" && item.count > 0).length,
         }))
         .sort((a, b) => b.distinctCount - a.distinctCount);
 
