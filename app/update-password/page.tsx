@@ -40,23 +40,59 @@ export default function UpdatePasswordPage() {
     localStorage.setItem(LOCALE_KEY, locale);
   }, [locale]);
 
-  // Escuchar el evento PASSWORD_RECOVERY y/o detectar sesión existente.
+  // Marca que la verificación del enlace ha terminado (con o sin éxito). Sirve
+  // para distinguir "todavía verificando" de "verificado y sin sesión válida".
+  const [linkChecked, setLinkChecked] = useState(false);
+
+  // Establecer la sesión de recuperación. Cubre los tres caminos por los que
+  // puede llegar el usuario, en orden de prioridad:
   useEffect(() => {
     let mounted = true;
 
-    // Caso 1: el usuario ya está logueado y entra a /update-password
-    // manualmente. Hay sesión, podemos actualizar la contraseña directamente.
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted && data.session) setReady(true);
-    });
+    async function establishSession() {
+      // Camino A — Flujo PKCE (el que usa @supabase/ssr por defecto): el enlace
+      // del email trae ?code=... en la query. Hay que canjearlo explícitamente
+      // por una sesión; la detección automática NO es fiable en el navegador
+      // móvil y es la causa del "Verificando enlace…" infinito.
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get("code");
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (mounted && !error) {
+            setReady(true);
+            setLinkChecked(true);
+            return;
+          }
+        }
+      } catch {
+        // Continuamos con los siguientes caminos.
+      }
 
-    // Caso 2: llegó desde el email de recuperación. supabase-js procesa el
-    // hash de la URL y dispara PASSWORD_RECOVERY cuando ha establecido la
-    // sesión temporal de recuperación.
+      // Camino B — Ya existe sesión: usuario logueado que entra manualmente, o
+      // flujo hash (#access_token=...) que supabase-js ya procesó.
+      const { data } = await supabase.auth.getSession();
+      if (mounted && data.session) {
+        setReady(true);
+        setLinkChecked(true);
+        return;
+      }
+
+      // Si llegamos aquí sin sesión, dejamos que el listener (camino C) tenga
+      // una última oportunidad antes de marcar el enlace como no válido.
+      if (mounted) setLinkChecked(true);
+    }
+
+    establishSession();
+
+    // Camino C — Evento tardío: en flujo hash, supabase-js puede emitir
+    // PASSWORD_RECOVERY justo después de montar. Lo capturamos por si la
+    // suscripción gana la carrera al procesado del hash.
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (!mounted) return;
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
         setReady(true);
+        setLinkChecked(true);
       }
     });
 
@@ -142,14 +178,16 @@ export default function UpdatePasswordPage() {
 
             <button
               onClick={handleUpdatePassword}
-              disabled={loading || !ready}
+              disabled={loading || (!ready && !linkChecked)}
               className="w-full rounded-xl bg-[var(--iberdrola-green)] py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
             >
               {loading
                 ? t.loading
-                : !ready
+                : !linkChecked
                   ? t.updatePasswordVerifying
-                  : t.updatePasswordButton}
+                  : !ready
+                    ? t.updatePasswordInvalidLink
+                    : t.updatePasswordButton}
             </button>
 
             {message && (
