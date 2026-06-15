@@ -179,6 +179,7 @@ export default function StandingsPageClient({ poolId, backHref, entryId = "" }: 
             standings={data.standings as never}
             locale={locale}
             entryId={entryId}
+            poolId={poolId}
           />
         ) : null}
 

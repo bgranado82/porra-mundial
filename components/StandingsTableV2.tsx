@@ -13,7 +13,7 @@
  * Esta fase aún NO incluye drawer/expansión de detalle. Solo estructura.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Locale, messages } from "@/lib/i18n";
 import { countryFlagUrl } from "@/lib/countryFlags";
 import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
@@ -41,6 +41,7 @@ const T: Record<Locale, Record<string, string>> = {
     hideDetail: "Ocultar detalle",
     expandAll: "Desplegar todo",
     collapseAll: "Contraer todo",
+    favoritesFilter: "Favoritos",
     // tooltips iconos extras
     extraGoalWorld: "Primer goleador del Mundial",
     extraGoalSpain: "Primer goleador de España",
@@ -77,6 +78,7 @@ const T: Record<Locale, Record<string, string>> = {
     hideDetail: "Hide detail",
     expandAll: "Expand all",
     collapseAll: "Collapse all",
+    favoritesFilter: "Favourites",
     extraGoalWorld: "First goal scorer of the World Cup",
     extraGoalSpain: "First goal scorer for Spain",
     extraBoot: "Golden Boot",
@@ -111,6 +113,7 @@ const T: Record<Locale, Record<string, string>> = {
     hideDetail: "Ocultar detalhe",
     expandAll: "Expandir tudo",
     collapseAll: "Contrair tudo",
+    favoritesFilter: "Favoritos",
     extraGoalWorld: "Primeiro gol da Copa",
     extraGoalSpain: "Primeiro gol da Espanha",
     extraBoot: "Chuteira de Ouro",
@@ -180,6 +183,7 @@ type Props = {
   standings: Standing[];
   locale?: Locale;
   entryId?: string;
+  poolId?: string;
 };
 
 // ─── Utilidades ───────────────────────────────────────────────────────────
@@ -276,11 +280,49 @@ function getRankHeatStyle(points: number, maxPoints: number): React.CSSPropertie
 }
 
 // ─── COMPONENTE PRINCIPAL ──────────────────────────────────────────────────
-export default function StandingsTableV2({ days, standings, locale = "es", entryId }: Props) {
+export default function StandingsTableV2({ days, standings, locale = "es", entryId, poolId }: Props) {
   const t = messages[locale];
   const tBase = T[locale];
   const [search, setSearch] = useState("");
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // ─── Favoritos (solo cliente, sin backend) ──────────────────────────────
+  // Cada usuario marca a sus jugadores con una estrella. Se guarda en
+  // localStorage por pool (clave "favoritos:<poolId>"), de modo que es privado
+  // de ese navegador y no toca API, BD ni puntuación. Todos los accesos a
+  // localStorage van envueltos en try/catch: en PWA/iOS en modo privado puede
+  // lanzar excepción, y una excepción aquí NO debe tumbar la clasificación.
+  const favKey = `favoritos:${poolId ?? ""}`;
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
+
+  useEffect(() => {
+    if (!poolId) return;
+    try {
+      const raw = localStorage.getItem(favKey);
+      if (raw) {
+        const ids = JSON.parse(raw);
+        if (Array.isArray(ids)) setFavorites(new Set(ids.map(String)));
+      }
+    } catch {
+      // localStorage no disponible: seguimos sin favoritos, sin romper nada.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poolId]);
+
+  const toggleFavorite = (id: string) => {
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        localStorage.setItem(favKey, JSON.stringify([...next]));
+      } catch {
+        // Si no se puede persistir, al menos funciona en esta sesión.
+      }
+      return next;
+    });
+  };
 
   const toggleExpanded = (id: string) => {
     setExpandedIds((prev) => {
@@ -307,7 +349,7 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
   const maxPoints = sortedStandings.length > 0 ? sortedStandings[0].total_points : 0;
 
   // Filtrar por búsqueda
-  const filteredStandings = useMemo(() => {
+  const searchFiltered = useMemo(() => {
     if (!search.trim()) return sortedStandings;
     const q = search.trim().toLowerCase();
     return sortedStandings.filter(
@@ -318,6 +360,15 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
         (row.country ?? "").toLowerCase().includes(q)
     );
   }, [sortedStandings, search]);
+
+  // Filtro de favoritos: encadenado DESPUÉS de la búsqueda. Solo oculta filas;
+  // no reordena ni cambia _displayPosition, así que cada jugador conserva su
+  // puesto global. Si el filtro está desactivado, devuelve searchFiltered tal
+  // cual → la tabla se comporta EXACTAMENTE igual que antes de este cambio.
+  const filteredStandings = useMemo(() => {
+    if (!showOnlyFavorites) return searchFiltered;
+    return searchFiltered.filter((row) => favorites.has(String(row.entry_id)));
+  }, [searchFiltered, showOnlyFavorites, favorites]);
 
   // Localizar la fila propia en el listado ordenado actual
   const ownRow = useMemo(() => {
@@ -350,6 +401,19 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
           title={allExpanded ? tBase.collapseAll : tBase.expandAll}
         >
           {allExpanded ? `− ${tBase.collapseAll}` : `+ ${tBase.expandAll}`}
+        </button>
+        {/* Filtro de favoritos: deshabilitado si no hay ninguno marcado */}
+        <button
+          onClick={() => setShowOnlyFavorites((v) => !v)}
+          disabled={favorites.size === 0}
+          className={`shrink-0 rounded-full border px-3 py-2 text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+            showOnlyFavorites
+              ? "border-amber-400 bg-amber-50 text-amber-700"
+              : "border-[var(--iberdrola-green-mid)] bg-white text-[var(--iberdrola-forest)]/70 hover:border-[var(--iberdrola-green)] hover:text-[var(--iberdrola-green)]"
+          }`}
+          title={tBase.favoritesFilter}
+        >
+          {showOnlyFavorites ? "★" : "☆"} {tBase.favoritesFilter} ({favorites.size})
         </button>
         <div className="relative flex-1 sm:max-w-72 sm:ml-auto sm:flex-none">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--iberdrola-forest)]/40">🔍</span>
@@ -454,6 +518,8 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
                   onToggleExpand={() => toggleExpanded(row.entry_id)}
                   locale={locale}
                   isOwn={row.entry_id === entryId}
+                  isFavorite={favorites.has(String(row.entry_id))}
+                  onToggleFavorite={() => toggleFavorite(String(row.entry_id))}
                 />
               ))}
               {filteredStandings.length === 0 && (
@@ -479,6 +545,8 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
               onToggleExpand={() => toggleExpanded(row.entry_id)}
               locale={locale}
               isOwn={row.entry_id === entryId}
+              isFavorite={favorites.has(String(row.entry_id))}
+              onToggleFavorite={() => toggleFavorite(String(row.entry_id))}
             />
           ))}
           {filteredStandings.length === 0 && (
@@ -577,6 +645,8 @@ function DesktopRow({
   onToggleExpand,
   locale,
   isOwn,
+  isFavorite,
+  onToggleFavorite,
 }: {
   row: any;
   maxPoints: number;
@@ -585,6 +655,8 @@ function DesktopRow({
   onToggleExpand: () => void;
   locale: Locale;
   isOwn: boolean;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 }) {
   const tx = T[locale];
   const groupsValue = row.group_total + row.extra_group_points;
@@ -611,7 +683,19 @@ function DesktopRow({
     <>
       <tr className={`transition hover:bg-gray-50 ${rowBgClass}`}>
         <td className="px-1 py-2.5 text-center">
-          <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
+          <div className="flex items-center justify-center gap-1">
+            <button
+              onClick={onToggleFavorite}
+              className="shrink-0 text-sm leading-none transition hover:scale-110"
+              title="Favorito"
+              aria-label="Favorito"
+            >
+              <span className={isFavorite ? "text-amber-400" : "text-[var(--iberdrola-forest)]/25"}>
+                {isFavorite ? "★" : "☆"}
+              </span>
+            </button>
+            <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
+          </div>
         </td>
         <td className="px-1 py-2.5 text-center font-bold tabular-nums text-[var(--iberdrola-forest)]/70">
           {row._displayPosition <= 3 ? (
@@ -758,6 +842,8 @@ function MobileCard({
   onToggleExpand,
   locale,
   isOwn,
+  isFavorite,
+  onToggleFavorite,
 }: {
   row: any;
   maxPoints: number;
@@ -766,6 +852,8 @@ function MobileCard({
   onToggleExpand: () => void;
   locale: Locale;
   isOwn: boolean;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 }) {
   const tx = T[locale];
   const groupsValue = row.group_total + row.extra_group_points;
@@ -785,6 +873,16 @@ function MobileCard({
     <div className={`px-3 py-2.5 ${cardBgClass}`}>
       {/* Línea 1: posición (con medalla en top 3) + bandera + nombre + tú | total con heatmap */}
       <div className="flex items-center gap-2">
+        <button
+          onClick={onToggleFavorite}
+          className="shrink-0 text-base leading-none transition active:scale-90"
+          title="Favorito"
+          aria-label="Favorito"
+        >
+          <span className={isFavorite ? "text-amber-400" : "text-[var(--iberdrola-forest)]/25"}>
+            {isFavorite ? "★" : "☆"}
+          </span>
+        </button>
         <span className="shrink-0 w-7 text-center text-sm font-black tabular-nums text-[var(--iberdrola-forest)]/60">
           {row._displayPosition <= 3 ? <PodiumMedal position={row._displayPosition} /> : row._displayPosition}
         </span>
