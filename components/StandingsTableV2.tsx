@@ -30,6 +30,7 @@ const T: Record<Locale, Record<string, string>> = {
     pos: "#",
     player: "Jugador",
     groups: "Grupos",
+    totalGroups: "Total Grupos",
     total: "TOTAL",
     detailByMatchdays: "Detalle por jornadas de fase de grupos",
     matchday: "Jornada",
@@ -67,6 +68,7 @@ const T: Record<Locale, Record<string, string>> = {
     pos: "#",
     player: "Player",
     groups: "Groups",
+    totalGroups: "Total Groups",
     total: "TOTAL",
     detailByMatchdays: "Group stage detail by matchday",
     matchday: "Matchday",
@@ -102,6 +104,7 @@ const T: Record<Locale, Record<string, string>> = {
     pos: "#",
     player: "Jogador",
     groups: "Grupos",
+    totalGroups: "Total Grupos",
     total: "TOTAL",
     detailByMatchdays: "Detalhe por rodada da fase de grupos",
     matchday: "Rodada",
@@ -452,19 +455,20 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
               <col style={{ width: 28 }} />{/* Bandera */}
               <col style={{ width: 160 }} />{/* Jugador */}
               <col />{/* Grupos */}
+              <col />{/* Gol. Mundial */}
+              <col />{/* Gol. España */}
+              <col />{/* Total Grupos */}
               <col />{/* R32 */}
               <col />{/* R16 */}
               <col />{/* QF */}
               <col />{/* SF */}
               <col />{/* Final */}
               <col />{/* Camp. */}
-              <col />{/* X1 */}
-              <col />{/* X2 */}
-              <col />{/* X3 */}
-              <col />{/* X4 */}
-              <col />{/* X5 */}
-              <col />{/* X6 */}
-              <col />{/* X7 */}
+              <col />{/* Bota de Oro */}
+              <col />{/* Balón de Oro */}
+              <col />{/* Joven */}
+              <col />{/* Guante */}
+              <col />{/* Máx. Gol. ESP */}
               <col style={{ width: 70 }} />{/* Total */}
             </colgroup>
             <thead className="sticky top-0 z-10 bg-gray-50 text-[10px] font-bold uppercase tracking-wide text-[var(--iberdrola-forest)]/60 shadow-sm">
@@ -474,15 +478,33 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
                 <th className="px-1 py-3 text-center"></th>
                 <th className="px-2 py-3 text-left">{tBase.player}</th>
                 <th className="px-1 py-3 text-center" title={tBase.groups}>{tBase.groups}</th>
+                {EXTRA_QUESTIONS.filter((q) => q.key === "first_goal_scorer_world" || q.key === "first_goal_scorer_spain").map((q) => {
+                  const labelKey = `extra${q.key === "first_goal_scorer_world" ? "GoalWorld" : "GoalSpain"}` as keyof typeof tBase;
+                  return (
+                    <th
+                      key={q.key}
+                      className="px-1 py-3 text-center"
+                      title={(tBase as any)[labelKey]}
+                    >
+                      <span className="inline-flex items-center justify-center gap-0.5">
+                        <span>{q.icon}</span>
+                        {q.flagUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={q.flagUrl} alt="" className="h-3 w-4 rounded-[2px] border border-gray-100 object-cover shadow-sm" />
+                        )}
+                      </span>
+                    </th>
+                  );
+                })}
+                <th className="px-1 py-3 text-center" title={tBase.totalGroups}>{tBase.totalGroups}</th>
                 <th className="px-1 py-3 text-center" title={tBase.r32}>R32</th>
                 <th className="px-1 py-3 text-center" title={tBase.r16}>R16</th>
                 <th className="px-1 py-3 text-center" title={tBase.qf}>QF</th>
                 <th className="px-1 py-3 text-center" title={tBase.sf}>SF</th>
                 <th className="px-1 py-3 text-center" title={tBase.final}>F</th>
                 <th className="px-1 py-3 text-center" title={tBase.champ}>C</th>
-                {EXTRA_QUESTIONS.map((q) => {
-                  const labelKey = `extra${q.key === "first_goal_scorer_world" ? "GoalWorld" :
-                    q.key === "first_goal_scorer_spain" ? "GoalSpain" :
+                {EXTRA_QUESTIONS.filter((q) => q.key !== "first_goal_scorer_world" && q.key !== "first_goal_scorer_spain").map((q) => {
+                  const labelKey = `extra${
                     q.key === "golden_boot" ? "Boot" :
                     q.key === "golden_ball" ? "Ball" :
                     q.key === "golden_glove" ? "Glove" :
@@ -524,7 +546,7 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
               ))}
               {filteredStandings.length === 0 && (
                 <tr>
-                  <td colSpan={19} className="px-3 py-8 text-center text-sm text-[var(--iberdrola-forest)]/40">
+                  <td colSpan={20} className="px-3 py-8 text-center text-sm text-[var(--iberdrola-forest)]/40">
                     Sin resultados
                   </td>
                 </tr>
@@ -659,7 +681,7 @@ function DesktopRow({
   onToggleFavorite: () => void;
 }) {
   const tx = T[locale];
-  const groupsValue = row.group_total + row.extra_group_points;
+  const totalGroupsValue = row.group_total + row.extra_group_points;
 
   // Celda numérica: blanca, sólo el número (gris claro si 0)
   const numCell = (value: number) => (
@@ -717,7 +739,7 @@ function DesktopRow({
             )}
           </div>
         </td>
-        {/* Grupos con botón + para expandir detalle por jornadas */}
+        {/* Grupos con botón + para expandir detalle por jornadas (solo puntos de partidos) */}
         <td className="px-1 py-2.5 text-center tabular-nums">
           <div className="flex items-center justify-center gap-1">
             <button
@@ -732,10 +754,18 @@ function DesktopRow({
             >
               {isExpanded ? "−" : "+"}
             </button>
-            <span className={groupsValue > 0 ? "font-semibold text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/25"}>
-              {fmtPts(groupsValue, locale)}
+            <span className={row.group_total > 0 ? "font-semibold text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/25"}>
+              {fmtPts(row.group_total, locale)}
             </span>
           </div>
+        </td>
+        {numCell(row.extra_points?.first_goal_scorer_world ?? 0)}
+        {numCell(row.extra_points?.first_goal_scorer_spain ?? 0)}
+        {/* Total Grupos: subtotal partidos + goleadores (lo que antes vivía en la columna Grupos) */}
+        <td className="px-1 py-2.5 text-center tabular-nums">
+          <span className={totalGroupsValue > 0 ? "font-semibold text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/25"}>
+            {fmtPts(totalGroupsValue, locale)}
+          </span>
         </td>
         {numCell(row.r32_points)}
         {numCell(row.r16_points)}
@@ -743,8 +773,6 @@ function DesktopRow({
         {numCell(row.sf_points)}
         {numCell(row.final_points)}
         {numCell(row.champion_points)}
-        {numCell(row.extra_points?.first_goal_scorer_world ?? 0)}
-        {numCell(row.extra_points?.first_goal_scorer_spain ?? 0)}
         {numCell(row.extra_points?.golden_boot ?? 0)}
         {numCell(row.extra_points?.golden_ball ?? 0)}
         {numCell(row.extra_points?.best_young_player ?? 0)}
@@ -761,7 +789,7 @@ function DesktopRow({
       {/* Fila expandida: detalle por jornadas + aciertos KO */}
       {isExpanded && (
         <tr className={isOwn ? "bg-[var(--iberdrola-green-light)]/15" : "bg-gray-50/60"}>
-          <td colSpan={19} className="px-4 py-3">
+          <td colSpan={20} className="px-4 py-3">
             <div className="space-y-3">
               <div>
                 <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[var(--iberdrola-forest)]/50">
@@ -856,7 +884,7 @@ function MobileCard({
   onToggleFavorite: () => void;
 }) {
   const tx = T[locale];
-  const groupsValue = row.group_total + row.extra_group_points;
+  const totalGroupsValue = row.group_total + row.extra_group_points;
   const extrasValue = row.extra_total_points - row.extra_group_points;
   const koValue =
     row.r32_points + row.r16_points + row.qf_points + row.sf_points +
@@ -905,15 +933,32 @@ function MobileCard({
       {/* Línea 2: variación + desglose pequeño + botón expandir */}
       <div className="mt-1 flex items-center gap-2 pl-9">
         <MovementChip movement={row._displayMovement} value={row._displayMovementValue} />
-        <span className="text-[10px] text-[var(--iberdrola-forest)]/50 tabular-nums">
-          G {fmtPts(groupsValue, locale)} · KO {fmtPts(koValue, locale)}
+        <span className="text-[10px] text-[var(--iberdrola-forest)]/50 tabular-nums flex items-center gap-1 flex-wrap">
+          <span>G {fmtPts(row.group_total, locale)}</span>
+          {(() => {
+            const ep = row.extra_points ?? {};
+            const goalItems: Array<{ icon: string; pts: number }> = [
+              { icon: "🥇⚽", pts: ep.first_goal_scorer_world ?? 0 },
+              { icon: "🥇⚽🇪🇸", pts: ep.first_goal_scorer_spain ?? 0 },
+            ].filter((x) => x.pts > 0);
+            if (goalItems.length === 0) return null;
+            return (
+              <span className="flex items-center gap-1">
+                {goalItems.map((it, idx) => (
+                  <span key={idx} className="inline-flex items-center gap-0.5 rounded bg-[var(--iberdrola-green-light)]/40 px-1 py-0.5 tabular-nums">
+                    <span className="text-[9px] leading-none">{it.icon}</span>
+                    <span className="font-bold">+{fmtPts(it.pts, locale)}</span>
+                  </span>
+                ))}
+              </span>
+            );
+          })()}
+          <span>· TG {fmtPts(totalGroupsValue, locale)} · KO {fmtPts(koValue, locale)}</span>
         </span>
-        {/* Iconos de extras con puntos (solo los que han puntuado) */}
+        {/* Iconos de extras con puntos (solo los 5 extras restantes, los que han puntuado) */}
         {(() => {
           const ep = row.extra_points ?? {};
           const items: Array<{ icon: string; pts: number }> = [
-            { icon: "🥇⚽", pts: ep.first_goal_scorer_world ?? 0 },
-            { icon: "🥇⚽🇪🇸", pts: ep.first_goal_scorer_spain ?? 0 },
             { icon: "👟✨", pts: ep.golden_boot ?? 0 },
             { icon: "🏆🌟", pts: ep.golden_ball ?? 0 },
             { icon: "🧒🔥", pts: ep.best_young_player ?? 0 },
