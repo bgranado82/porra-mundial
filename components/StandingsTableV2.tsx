@@ -454,7 +454,7 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
               <col style={{ width: 36 }} />{/* # */}
               <col style={{ width: 28 }} />{/* Bandera */}
               <col style={{ width: 160 }} />{/* Jugador */}
-              <col />{/* Grupos */}
+              <col style={{ width: 78 }} />{/* Grupos */}
               <col />{/* Gol. Mundial */}
               <col />{/* Gol. España */}
               <col />{/* Total Grupos */}
@@ -496,7 +496,7 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
                     </th>
                   );
                 })}
-                <th className="px-1 py-3 text-center" title={tBase.totalGroups}>{tBase.totalGroups}</th>
+                <th className="border-r-2 border-[var(--iberdrola-green)]/20 bg-[var(--iberdrola-green-light)]/20 px-1 py-3 text-center" title={tBase.totalGroups}>{tBase.totalGroups}</th>
                 <th className="px-1 py-3 text-center" title={tBase.r32}>R32</th>
                 <th className="px-1 py-3 text-center" title={tBase.r16}>R16</th>
                 <th className="px-1 py-3 text-center" title={tBase.qf}>QF</th>
@@ -744,7 +744,7 @@ function DesktopRow({
           <div className="flex items-center justify-center gap-1">
             <button
               onClick={onToggleExpand}
-              className={`flex h-5 w-5 items-center justify-center rounded-md text-[11px] font-black transition ${
+              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-[11px] font-black transition ${
                 isExpanded
                   ? "bg-[var(--iberdrola-green)] text-white"
                   : "border border-[var(--iberdrola-green)]/30 text-[var(--iberdrola-green)] hover:bg-[var(--iberdrola-green-light)]/40"
@@ -754,16 +754,24 @@ function DesktopRow({
             >
               {isExpanded ? "−" : "+"}
             </button>
-            <span className={row.group_total > 0 ? "font-semibold text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/25"}>
+            <span className={row.group_total > 0 ? "font-medium text-[var(--iberdrola-forest)]/55" : "text-[var(--iberdrola-forest)]/25"}>
               {fmtPts(row.group_total, locale)}
             </span>
           </div>
         </td>
-        {numCell(row.extra_points?.first_goal_scorer_world ?? 0)}
-        {numCell(row.extra_points?.first_goal_scorer_spain ?? 0)}
-        {/* Total Grupos: subtotal partidos + goleadores (lo que antes vivía en la columna Grupos) */}
         <td className="px-1 py-2.5 text-center tabular-nums">
-          <span className={totalGroupsValue > 0 ? "font-semibold text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/25"}>
+          <span className={(row.extra_points?.first_goal_scorer_world ?? 0) > 0 ? "font-medium text-[var(--iberdrola-forest)]/55" : "text-[var(--iberdrola-forest)]/25"}>
+            {fmtPts(row.extra_points?.first_goal_scorer_world ?? 0, locale)}
+          </span>
+        </td>
+        <td className="px-1 py-2.5 text-center tabular-nums">
+          <span className={(row.extra_points?.first_goal_scorer_spain ?? 0) > 0 ? "font-medium text-[var(--iberdrola-forest)]/55" : "text-[var(--iberdrola-forest)]/25"}>
+            {fmtPts(row.extra_points?.first_goal_scorer_spain ?? 0, locale)}
+          </span>
+        </td>
+        {/* Total Grupos: subtotal partidos + goleadores (lo que antes vivía en la columna Grupos) */}
+        <td className="border-r-2 border-[var(--iberdrola-green)]/20 bg-[var(--iberdrola-green-light)]/20 px-1 py-2.5 text-center tabular-nums">
+          <span className={totalGroupsValue > 0 ? "font-bold text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/25"}>
             {fmtPts(totalGroupsValue, locale)}
           </span>
         </td>
