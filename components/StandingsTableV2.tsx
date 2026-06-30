@@ -496,7 +496,7 @@ export default function StandingsTableV2({ days, standings, locale = "es", entry
                     </th>
                   );
                 })}
-                <th className="border-r-2 border-[var(--iberdrola-green)]/20 bg-[var(--iberdrola-green-light)]/20 px-1 py-3 text-center" title={tBase.totalGroups}>{tBase.totalGroups}</th>
+                <th className="bg-[var(--iberdrola-green-light)]/20 px-1 py-3 text-center" title={tBase.totalGroups}>{tBase.totalGroups}</th>
                 <th className="px-1 py-3 text-center" title={tBase.r32}>R32</th>
                 <th className="px-1 py-3 text-center" title={tBase.r16}>R16</th>
                 <th className="px-1 py-3 text-center" title={tBase.qf}>QF</th>
@@ -770,7 +770,7 @@ function DesktopRow({
           </span>
         </td>
         {/* Total Grupos: subtotal partidos + goleadores (lo que antes vivía en la columna Grupos) */}
-        <td className="border-r-2 border-[var(--iberdrola-green)]/20 bg-[var(--iberdrola-green-light)]/20 px-1 py-2.5 text-center tabular-nums">
+        <td className="bg-[var(--iberdrola-green-light)]/20 px-1 py-2.5 text-center tabular-nums">
           <span className={totalGroupsValue > 0 ? "font-bold text-[var(--iberdrola-forest)]" : "text-[var(--iberdrola-forest)]/25"}>
             {fmtPts(totalGroupsValue, locale)}
           </span>
