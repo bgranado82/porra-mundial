@@ -64,6 +64,12 @@ const items = [
     icon: "💬",
     aliases: ["/admin/banquillo"],
   },
+  {
+    href: "/admin/simulador",
+    label: "Simulador",
+    icon: "🧪",
+    aliases: ["/admin/simulador"],
+  },
 ];
 
 export default function AdminNav() {
