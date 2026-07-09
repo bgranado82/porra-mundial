@@ -24,6 +24,7 @@ import StandingsTable from "@/components/StandingsTableV2";
 import { matches as initialMatches } from "@/data/matches";
 import { teams } from "@/data/teams";
 import { buildRealKnockoutBracket } from "@/lib/realKnockout";
+import { EXTRA_QUESTIONS } from "@/lib/extraQuestions";
 import { Match } from "@/types";
 
 type OfficialGroupRow = { match_id: string; home_goals: number | null; away_goals: number | null };
@@ -278,21 +279,31 @@ export default function SimuladorPageClient() {
         <section className="rounded-2xl border border-[var(--iberdrola-green-mid)] bg-white shadow-sm">
           <AdminSectionHeader title="Preguntas extra" />
           <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-6">
-            {(realData?.officialExtraRows ?? []).map((row) => (
-              <label key={row.question_key} className="flex flex-col gap-1 text-sm">
-                <span className="font-semibold text-[var(--iberdrola-forest)]">
-                  {EXTRA_QUESTION_LABELS[row.question_key] ?? row.question_key}
-                </span>
-                <input
-                  type="text"
-                  defaultValue={extraOverrides[row.question_key] ?? row.official_value ?? ""}
-                  onBlur={(e) =>
-                    setExtraOverrides((prev) => ({ ...prev, [row.question_key]: e.target.value }))
-                  }
-                  className="rounded-lg border border-gray-300 px-2 py-1.5"
-                />
-              </label>
-            ))}
+            {EXTRA_QUESTIONS.map((q) => {
+              const realRow = realData?.officialExtraRows.find((r) => r.question_key === q.key);
+              const isPending = !realRow || !realRow.official_value;
+              return (
+                <label key={q.key} className="flex flex-col gap-1 text-sm">
+                  <span className="font-semibold text-[var(--iberdrola-forest)]">
+                    {q.icon} {EXTRA_QUESTION_LABELS[q.key] ?? q.key}
+                    {isPending && (
+                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-normal text-amber-700">
+                        pendiente
+                      </span>
+                    )}
+                  </span>
+                  <input
+                    type="text"
+                    placeholder={isPending ? "Aún sin resultado real — escribe tu hipótesis" : undefined}
+                    defaultValue={extraOverrides[q.key] ?? realRow?.official_value ?? ""}
+                    onBlur={(e) =>
+                      setExtraOverrides((prev) => ({ ...prev, [q.key]: e.target.value }))
+                    }
+                    className="rounded-lg border border-gray-300 px-2 py-1.5"
+                  />
+                </label>
+              );
+            })}
           </div>
         </section>
 
