@@ -20,6 +20,7 @@ export const HALL_OF_FAME: PoolHallOfFame[] = [
       { tournament: "Euro",      year: 2024, winner: "Txetxu Omaechevarria", country: "es" },
       { tournament: "Euro",      year: 2021, winner: "Iñigo Sendín",          country: "es" },
       { tournament: "Euro",      year: 2016, winner: "Esti Ipiña",             country: "es" },
+      { tournament: "World Cup", year: 2026, winner: "Ignacio Gutierrez Santalo", country: "es" },
       { tournament: "World Cup", year: 2022, winner: "Borja Garayzar",         country: "es" },
       { tournament: "World Cup", year: 2018, winner: "Borja Álvarez Fanjul",   country: "es" },
       { tournament: "World Cup", year: 2014, winner: "Gaizka Agirre",          country: "es" },
